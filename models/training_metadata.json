@@ -1,0 +1,10 @@
+{
+  "success": false,
+  "message": "Not enough login data (0 records). Need at least 10 records to train.",
+  "samples": 0,
+  "anomaly_ratio": 0.0,
+  "rf_f1": null,
+  "iso_f1": null,
+  "trained_at": "2026-07-11T20:37:28.100387",
+  "features": []
+}

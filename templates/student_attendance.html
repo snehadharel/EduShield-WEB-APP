@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}My Attendance{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+    .stat-card.overall .stat-value { color: #8B5CF6; }
+    .stat-card.total .stat-value { color: #2563EB; }
+    .stat-card.present .stat-value { color: #22C55E; }
+    .stat-card.late .stat-value { color: #F59E0B; }
+    .stat-card.absent .stat-value { color: #DC2626; }
+
+    /* ===== COURSE CARDS ===== */
+    .course-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .course-card {
+        background: white;
+        border-radius: 16px;
+        padding: 18px 20px;
+        border: 1px solid #EDF2F7;
+        transition: 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .course-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transform: translateX(4px);
+    }
+    .course-card .info {
+        flex: 1;
+        min-width: 140px;
+    }
+    .course-card .info h4 {
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 2px;
+        font-size: 16px;
+    }
+    .course-card .info .code {
+        font-size: 13px;
+        color: #64748B;
+    }
+    .course-card .stats {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+        flex: 1;
+        min-width: 140px;
+        justify-content: flex-end;
+    }
+    .course-card .stats .numbers {
+        font-size: 14px;
+        color: #475569;
+        display: flex;
+        gap: 8px;
+    }
+    .course-card .stats .numbers .present { color: #22C55E; font-weight: 600; }
+    .course-card .stats .numbers .late { color: #F59E0B; font-weight: 600; }
+    .course-card .stats .numbers .absent { color: #DC2626; font-weight: 600; }
+    .course-card .stats .percentage-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 120px;
+    }
+    .course-card .stats .percentage-wrap .progress {
+        width: 80px;
+        height: 6px;
+        background: #E2E8F0;
+        border-radius: 40px;
+        overflow: hidden;
+    }
+    .course-card .stats .percentage-wrap .progress .bar {
+        height: 100%;
+        border-radius: 40px;
+        transition: width 0.5s ease;
+    }
+    .course-card .stats .percentage-wrap .pct {
+        font-weight: 700;
+        font-size: 16px;
+        min-width: 44px;
+        text-align: right;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94A3B8;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .sub { font-size: 14px; margin-top: 8px; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .course-card { flex-direction: column; align-items: stretch; }
+        .course-card .stats { justify-content: space-between; }
+        .course-card .stats .percentage-wrap { justify-content: space-between; width: 100%; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .course-card .stats { flex-direction: column; align-items: flex-start; }
+        .course-card .stats .numbers { flex-wrap: wrap; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-calendar-check"></i> Attendance Summary</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Dashboard</span>
+                &nbsp;·&nbsp; Your attendance percentage per course
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== AGGREGATE STATS ===== -->
+    {% set total_present = attendance_data|sum(attribute='present') %}
+    {% set total_late = attendance_data|sum(attribute='late') %}
+    {% set total_absent = attendance_data|sum(attribute='absent') %}
+    {% set total_classes = attendance_data|sum(attribute='total') %}
+    {% set overall_pct = ((total_present + total_late * 0.5) / total_classes * 100)|round(1) if total_classes > 0 else 0 %}
+
+    <div class="stats-grid">
+        <div class="stat-card overall">
+            <h4>Overall</h4>
+            <div class="stat-value">{{ overall_pct }}%</div>
+            <div class="stat-sub">weighted attendance</div>
+        </div>
+        <div class="stat-card total">
+            <h4>Total Classes</h4>
+            <div class="stat-value">{{ total_classes }}</div>
+            <div class="stat-sub">all courses</div>
+        </div>
+        <div class="stat-card present">
+            <h4>✅ Present</h4>
+            <div class="stat-value">{{ total_present }}</div>
+            <div class="stat-sub">including late</div>
+        </div>
+        <div class="stat-card late">
+            <h4>⏰ Late</h4>
+            <div class="stat-value">{{ total_late }}</div>
+            <div class="stat-sub">counts half</div>
+        </div>
+        <div class="stat-card absent">
+            <h4>❌ Absent</h4>
+            <div class="stat-value">{{ total_absent }}</div>
+            <div class="stat-sub">missed classes</div>
+        </div>
+    </div>
+
+    <!-- ===== COURSE LIST ===== -->
+    {% if attendance_data %}
+        <div class="course-list">
+            {% for item in attendance_data %}
+            {% set pct = item.percentage %}
+            {% set color = '#22C55E' if pct >= 75 else '#F59E0B' if pct >= 60 else '#DC2626' %}
+            <div class="course-card">
+                <div class="info">
+                    <h4>{{ item.course.course_name }}</h4>
+                    <div class="code">{{ item.course.course_code }}</div>
+                </div>
+                <div class="stats">
+                    <span class="numbers">
+                        <span class="present">{{ item.present }}</span>
+                        <span class="late">{{ item.late }}</span>
+                        <span class="absent">{{ item.absent }}</span>
+                        <span style="color:#94A3B8;">/ {{ item.total }}</span>
+                    </span>
+                    <div class="percentage-wrap">
+                        <div class="progress">
+                            <div class="bar" style="width: {{ pct }}%; background: {{ color }};"></div>
+                        </div>
+                        <span class="pct" style="color: {{ color }};">{{ pct }}%</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="icon">📊</div>
+            <p style="font-size: 18px;">No attendance records found.</p>
+            <p class="sub">Your attendance will appear here once your teacher marks it.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

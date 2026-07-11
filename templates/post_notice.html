@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Post New Notice{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== FORM CARD ===== */
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .form-card .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+    .form-card .form-title i {
+        color: #F59E0B;
+    }
+
+    /* ===== FORM GROUPS ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+    .form-group label .char-count {
+        font-weight: 400;
+        font-size: 13px;
+        color: #94A3B8;
+        float: right;
+    }
+    .form-group .input-wrapper {
+        position: relative;
+    }
+    .form-group .input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+        background: #FAFBFC;
+        font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: #94A3B8;
+    }
+    .form-group input {
+        padding-left: 46px;
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+        line-height: 1.6;
+        padding-left: 18px;
+    }
+    .form-group select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        padding-right: 40px;
+        cursor: pointer;
+    }
+
+    /* ===== PREVIEW ===== */
+    .preview-box {
+        display: none;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #F59E0B;
+    }
+    .preview-box.show {
+        display: block;
+    }
+    .preview-box .preview-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 6px;
+    }
+    .preview-box .preview-content {
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+    .preview-box .preview-meta {
+        font-size: 13px;
+        color: #94A3B8;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .preview-box .preview-meta .target-badge {
+        display: inline-block;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .target-all { background: #FEF3C7; color: #D97706; }
+    .target-student { background: #DCFCE7; color: #16A34A; }
+    .target-teacher { background: #DBEAFE; color: #1D4ED8; }
+
+    /* ===== BUTTONS ===== */
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-primary { background: #F59E0B; }
+    .btn-primary:hover { background: #D97706; }
+    .btn-secondary { background: #64748B; }
+    .btn-outline { background: #E2E8F0; color: #1E293B; }
+    .btn-outline:hover { background: #CBD5E1; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .form-card { padding: 20px; }
+        .btn-group { flex-direction: column; }
+        .btn { justify-content: center; }
+        .form-group input { padding-left: 42px; }
+        .preview-box { padding: 16px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-bullhorn"></i> Post New Notice</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Notices</span>
+                &nbsp;·&nbsp; Announce important information
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-edit"></i> Notice Details
+        </div>
+
+        <form method="POST" id="noticeForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Title -->
+            <div class="form-group">
+                <label>
+                    Title <span class="required">*</span>
+                    <span class="char-count"><span id="titleCount">0</span> / 100</span>
+                </label>
+                <div class="input-wrapper">
+                    <i class="fas fa-heading"></i>
+                    <input type="text" name="title" id="noticeTitle" placeholder="e.g., Important Exam Schedule Change" required maxlength="100" oninput="updateCounts()">
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="form-group">
+                <label>
+                    Content <span class="required">*</span>
+                    <span class="char-count"><span id="contentCount">0</span> / 2000</span>
+                </label>
+                <div class="input-wrapper">
+                    <i class="fas fa-align-left" style="top: 18px; transform: none;"></i>
+                    <textarea name="content" id="noticeContent" rows="6" placeholder="Write your announcement here..." required maxlength="2000" oninput="updateCounts(); updatePreview();"></textarea>
+                </div>
+            </div>
+
+            <!-- Target Audience -->
+            <div class="form-group">
+                <label>Target Audience</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-users"></i>
+                    <select name="target_role" id="targetRole" onchange="updatePreview()">
+                        <option value="all">🌐 Everyone</option>
+                        <option value="student">🎓 Students Only</option>
+                        <option value="teacher">👨‍🏫 Teachers Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Preview Toggle Button -->
+            <div style="margin-bottom: 16px;">
+                <button type="button" class="btn btn-outline" onclick="togglePreview()" style="padding: 8px 20px; font-size: 14px;">
+                    <i class="fas fa-eye"></i> Preview Notice
+                </button>
+            </div>
+
+            <!-- Preview Box -->
+            <div class="preview-box" id="previewBox">
+                <div class="preview-title" id="previewTitle">Your title here</div>
+                <div class="preview-content" id="previewContent">Your content will appear here...</div>
+                <div class="preview-meta">
+                    <span><i class="far fa-calendar-alt"></i> {{ now.strftime('%B %d, %Y') }}</span>
+                    <span>Posted by <strong>{{ session.username }}</strong></span>
+                    <span class="target-badge" id="previewBadge">🌐 Everyone</span>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Post Notice
+                </button>
+                <a href="{{ url_for('view_notices') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    // Update character counts
+    function updateCounts() {
+        const title = document.getElementById('noticeTitle');
+        const content = document.getElementById('noticeContent');
+        document.getElementById('titleCount').textContent = title.value.length;
+        document.getElementById('contentCount').textContent = content.value.length;
+    }
+
+    // Update preview
+    function updatePreview() {
+        const title = document.getElementById('noticeTitle').value.trim() || 'Your title here';
+        const content = document.getElementById('noticeContent').value.trim() || 'Your content will appear here...';
+        const target = document.getElementById('targetRole').value;
+        document.getElementById('previewTitle').textContent = title;
+        document.getElementById('previewContent').textContent = content;
+
+        const badge = document.getElementById('previewBadge');
+        const labels = {
+            'all': '🌐 Everyone',
+            'student': '🎓 Students Only',
+            'teacher': '👨‍🏫 Teachers Only'
+        };
+        badge.textContent = labels[target] || '🌐 Everyone';
+        badge.className = 'target-badge target-' + target;
+    }
+
+    // Toggle preview visibility
+    function togglePreview() {
+        const box = document.getElementById('previewBox');
+        box.classList.toggle('show');
+        if (box.classList.contains('show')) {
+            updatePreview();
+        }
+    }
+
+    // Initial update on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCounts();
+        // Auto-update preview if user starts typing
+        document.getElementById('noticeTitle').addEventListener('input', updatePreview);
+        document.getElementById('noticeContent').addEventListener('input', updatePreview);
+        document.getElementById('targetRole').addEventListener('change', updatePreview);
+    });
+
+    // Form validation (optional)
+    document.getElementById('noticeForm').addEventListener('submit', function(e) {
+        const title = document.getElementById('noticeTitle').value.trim();
+        const content = document.getElementById('noticeContent').value.trim();
+        if (!title || !content) {
+            alert('Please fill in both title and content.');
+            e.preventDefault();
+            return;
+        }
+        if (title.length < 3) {
+            alert('Title must be at least 3 characters.');
+            e.preventDefault();
+            return;
+        }
+        if (content.length < 10) {
+            alert('Content must be at least 10 characters.');
+            e.preventDefault();
+            return;
+        }
+    });
+</script>
+{% endblock %}

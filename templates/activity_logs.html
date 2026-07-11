@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}User Activity Logs{% endblock %}
+
+{% block content %}
+<div style="width: 100%;">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white;">
+        <h2>📋 User Activity Audit Trail</h2>
+        <p>Complete history of user actions (logins, registrations, profile updates, course actions, etc.).</p>
+    </div>
+
+    {% if logs %}
+    <div style="background: white; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: #2c3e50; color: white;">
+                    <th style="padding: 12px; text-align: left;">Time (Nepal)</th>
+                    <th style="padding: 12px; text-align: left;">User</th>
+                    <th style="padding: 12px; text-align: left;">Action</th>
+                    <th style="padding: 12px; text-align: left;">Details</th>
+                    <th style="padding: 12px; text-align: left;">IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 12px;">
+                        {% if log.timestamp_local %}
+                            {{ log.timestamp_local.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {% elif log.timestamp %}
+                            {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px;">
+                        <strong>{{ log.username }}</strong> (ID: {{ log.user_id }})
+                    </td>
+                    <td style="padding: 12px;">
+                        {% set action_lower = log.action.lower() %}
+                        {% if 'login' in action_lower %}
+                            <span style="background: #1e88e5; color: white; padding: 4px 10px; border-radius: 40px;">🔐 {{ log.action }}</span>
+                        {% elif 'register' in action_lower %}
+                            <span style="background: #43a047; color: white; padding: 4px 10px; border-radius: 40px;">📝 {{ log.action }}</span>
+                        {% elif 'profile' in action_lower %}
+                            <span style="background: #fb8c00; color: white; padding: 4px 10px; border-radius: 40px;">👤 {{ log.action }}</span>
+                        {% elif 'course' in action_lower or 'enroll' in action_lower %}
+                            <span style="background: #8e24aa; color: white; padding: 4px 10px; border-radius: 40px;">📚 {{ log.action }}</span>
+                        {% elif 'assignment' in action_lower or 'exam' in action_lower or 'grade' in action_lower %}
+                            <span style="background: #d81b60; color: white; padding: 4px 10px; border-radius: 40px;">📝 {{ log.action }}</span>
+                        {% elif 'material' in action_lower %}
+                            <span style="background: #00acc1; color: white; padding: 4px 10px; border-radius: 40px;">📄 {{ log.action }}</span>
+                        {% elif 'teacher_approved' in action_lower %}
+                            <span style="background: #2e7d32; color: white; padding: 4px 10px; border-radius: 40px;">✅ {{ log.action }}</span>
+                        {% elif 'trusted_network' in action_lower %}
+                            <span style="background: #6c757d; color: white; padding: 4px 10px; border-radius: 40px;">🏫 {{ log.action }}</span>
+                        {% else %}
+                            <span style="background: #6c757d; color: white; padding: 4px 10px; border-radius: 40px;">{{ log.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; max-width: 300px; word-break: break-word;">{{ log.details or '-' }}</td>
+                    <td style="padding: 12px;">{{ log.ip_address or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="background: white; border-radius: 20px; padding: 40px; text-align: center; color: #6c757d;">
+        <p>No activity logs recorded yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        table, thead, tbody, th, td, tr {
+            display: block;
+        }
+        thead {
+            display: none;
+        }
+        tr {
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 10px;
+        }
+        td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: none;
+        }
+        td:before {
+            content: attr(data-label);
+            font-weight: bold;
+            width: 40%;
+        }
+        /* Add data-labels manually via JS or keep as is - for simplicity, we rely on the header */
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Exam{% endblock %}
+
+{% block content %}
+<div style="width: 100%; max-width: 700px; margin: 0 auto;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white;">
+        <h2>📅 Schedule New Exam</h2>
+        <p>Add an exam to your course.</p>
+    </div>
+
+    <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Course</label>
+                <select name="course_id" required class="form-control" style="width: 100%; padding: 12px; border-radius: 12px;">
+                    {% for course in courses %}
+                    <option value="{{ course.id }}">{{ course.course_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Exam Title</label>
+                <input type="text" name="title" required style="width: 100%; padding: 12px; border-radius: 12px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Description</label>
+                <textarea name="description" rows="3" style="width: 100%; padding: 12px; border-radius: 12px;"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Exam Date</label>
+                <input type="date" name="exam_date" required style="width: 100%; padding: 12px; border-radius: 12px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Start Time</label>
+                <input type="time" name="start_time" required style="width: 100%; padding: 12px; border-radius: 12px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Duration (minutes)</label>
+                <input type="number" name="duration_minutes" required style="width: 100%; padding: 12px; border-radius: 12px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Total Marks</label>
+                <input type="number" name="total_marks" value="100" required style="width: 100%; padding: 12px; border-radius: 12px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="is_online" value="1" style="width: auto;">
+                    Enable online timed exam (MCQ — add questions after scheduling)
+                </label>
+            </div>
+            <button type="submit" class="btn" style="background: #43a047;">Schedule Exam</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .btn {
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

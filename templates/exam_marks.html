@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Marks - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.85;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+    .page-header .exam-info {
+        background: rgba(255,255,255,0.15);
+        padding: 6px 16px;
+        border-radius: 40px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .page-header .exam-info span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+    .stat-card.total .stat-value { color: #2563EB; }
+    .stat-card.graded .stat-value { color: #22C55E; }
+    .stat-card.notgraded .stat-value { color: #F59E0B; }
+    .stat-card.average .stat-value { color: #8B5CF6; }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 10px 16px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 14px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .search-bar .clear-btn {
+        padding: 10px 18px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 13px;
+    }
+    .search-bar .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    /* ===== BULK ACTIONS ===== */
+    .bulk-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+    .bulk-actions .btn-sm {
+        padding: 8px 18px;
+        border-radius: 40px;
+        border: none;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .bulk-actions .btn-sm:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-sm-success { background: #DCFCE7; color: #16A34A; }
+    .btn-sm-danger { background: #FEE2E2; color: #DC2626; }
+    .btn-sm-outline { background: #E2E8F0; color: #1E293B; }
+    .btn-sm-outline:hover { background: #CBD5E1; }
+
+    /* ===== FORM / TABLE ===== */
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .student-table thead th {
+        background: #F8FAFC;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #1E293B;
+        border-bottom: 2px solid #E2E8F0;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    .student-table tbody td {
+        padding: 10px 16px;
+        border-bottom: 1px solid #F1F5F9;
+        vertical-align: middle;
+    }
+    .student-table tbody tr:hover {
+        background: #FAFBFC;
+    }
+    .student-table tbody tr.hidden {
+        display: none;
+    }
+    .student-table .marks-input {
+        width: 100px;
+        padding: 8px 12px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: 0.2s;
+        background: #FAFBFC;
+    }
+    .student-table .marks-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    .student-table .marks-input.has-grade {
+        border-color: #22C55E;
+        background: #F0FDF4;
+    }
+    .student-table .student-name {
+        font-weight: 600;
+        color: #0F172A;
+    }
+    .student-table .student-username {
+        font-size: 13px;
+        color: #94A3B8;
+        display: block;
+    }
+    .student-table .status-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 40px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    .badge-graded { background: #DCFCE7; color: #16A34A; }
+    .badge-notgraded { background: #FEF3C7; color: #D97706; }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid #F1F5F9;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-success { background: #22C55E; }
+    .btn-secondary { background: #64748B; }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94A3B8;
+    }
+    .empty-state .icon { font-size: 42px; margin-bottom: 10px; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .page-header .exam-info { justify-content: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .search-bar { flex-direction: column; }
+        .search-bar input { width: 100%; }
+        .student-table thead { display: none; }
+        .student-table tbody tr { display: block; margin-bottom: 12px; border: 1px solid #E2E8F0; border-radius: 12px; padding: 10px; }
+        .student-table tbody td { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: none; }
+        .student-table tbody td:before { content: attr(data-label); font-weight: 600; font-size: 13px; color: #64748B; }
+        .student-table .marks-input { width: 80px; }
+        .form-actions { flex-direction: column; }
+        .form-actions .btn { justify-content: center; }
+        .bulk-actions { flex-direction: column; align-items: stretch; }
+        .bulk-actions .btn-sm { justify-content: center; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-pen"></i> Enter Marks</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Exams</span>
+                &nbsp;·&nbsp; {{ exam.course_name }}
+            </div>
+        </div>
+        <div class="exam-info">
+            <span><i class="fas fa-file-alt"></i> {{ exam.title }}</span>
+            <span><i class="fas fa-star"></i> {{ exam.total_marks }} marks</span>
+        </div>
+    </div>
+
+    <!-- ===== STATS CARDS ===== -->
+    {% set graded = students|selectattr('marks', 'ne', '')|list %}
+    {% set notgraded = students|rejectattr('marks', 'ne', '')|list %}
+    {% set avg = (graded|map(attribute='marks')|map('int')|sum / graded|length)|round(1) if graded|length > 0 else 0 %}
+    {% set total = students|length %}
+
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <h4>Total Students</h4>
+            <div class="stat-value">{{ total }}</div>
+        </div>
+        <div class="stat-card graded">
+            <h4>Graded</h4>
+            <div class="stat-value">{{ graded|length }}</div>
+            <div class="stat-sub">✅ marks entered</div>
+        </div>
+        <div class="stat-card notgraded">
+            <h4>Not Graded</h4>
+            <div class="stat-value">{{ notgraded|length }}</div>
+            <div class="stat-sub">⏳ pending</div>
+        </div>
+        <div class="stat-card average">
+            <h4>Average</h4>
+            <div class="stat-value">{{ avg }}</div>
+            <div class="stat-sub">out of {{ exam.total_marks }}</div>
+        </div>
+    </div>
+
+    <!-- ===== BULK ACTIONS ===== -->
+    <div class="bulk-actions">
+        <button type="button" class="btn-sm btn-sm-success" onclick="markAll({{ exam.total_marks }})">
+            <i class="fas fa-check-double"></i> Mark All Graded
+        </button>
+        <button type="button" class="btn-sm btn-sm-outline" onclick="markAll('')">
+            <i class="fas fa-undo"></i> Clear All
+        </button>
+        <span style="font-size:13px;color:#94A3B8;display:flex;align-items:center;margin-left:8px;">
+            <i class="fas fa-info-circle"></i> Bulk fill or clear all marks
+        </span>
+    </div>
+
+    <!-- ===== SEARCH BAR ===== -->
+    <div class="search-bar">
+        <input type="text" id="studentSearch" placeholder="🔍 Search students by name or username..." onkeyup="filterStudents()">
+        <button class="clear-btn" onclick="document.getElementById('studentSearch').value=''; filterStudents();">Clear</button>
+    </div>
+
+    <!-- ===== FORM ===== -->
+    <div class="form-card">
+        {% if students %}
+        <form method="POST" id="marksForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div style="overflow-x: auto;">
+                <table class="student-table" id="studentTable">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th style="text-align: center;">Marks</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr data-name="{{ (student.full_name or student.username)|lower }}" data-username="{{ student.username|lower }}">
+                            <td data-label="Student">
+                                <span class="student-name">{{ student.full_name or student.username }}</span>
+                                {% if student.full_name and student.username != student.full_name %}
+                                    <span class="student-username">{{ student.username }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Marks" style="text-align: center;">
+                                <input type="number" 
+                                       name="marks_{{ student.id }}" 
+                                       value="{{ student.marks }}" 
+                                       min="0" 
+                                       max="{{ exam.total_marks }}" 
+                                       step="1"
+                                       class="marks-input"
+                                       id="marks_{{ student.id }}"
+                                       onchange="updateStatus(this)">
+                            </td>
+                            <td data-label="Status" style="text-align: center;">
+                                <span class="status-badge {% if student.marks != '' and student.marks is not none %}badge-graded{% else %}badge-notgraded{% endif %}" id="status_{{ student.id }}">
+                                    {% if student.marks != '' and student.marks is not none %}
+                                        ✅ Graded
+                                    {% else %}
+                                        ⏳ Not Graded
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Save Marks
+                </button>
+                <a href="{{ url_for('list_exams') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">👤</div>
+            <p style="font-size: 18px;">No students enrolled in this course yet.</p>
+            <p class="sub" style="color:#94A3B8;font-size:14px;margin-top:6px;">Students will appear here once they enroll.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    // Update status badge when marks change
+    function updateStatus(input) {
+        const id = input.id.replace('marks_', '');
+        const statusEl = document.getElementById('status_' + id);
+        const value = input.value.trim();
+        
+        if (value !== '' && !isNaN(value) && parseInt(value) >= 0) {
+            statusEl.textContent = '✅ Graded';
+            statusEl.className = 'status-badge badge-graded';
+            input.classList.add('has-grade');
+        } else {
+            statusEl.textContent = '⏳ Not Graded';
+            statusEl.className = 'status-badge badge-notgraded';
+            input.classList.remove('has-grade');
+        }
+        
+        // Update stats (optional - can be done on submit)
+    }
+
+    // Mark all students with a specific value
+    function markAll(value) {
+        const inputs = document.querySelectorAll('.marks-input');
+        inputs.forEach(input => {
+            input.value = value;
+            updateStatus(input);
+        });
+    }
+
+    // Filter students by search
+    function filterStudents() {
+        const query = document.getElementById('studentSearch').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#studentTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.dataset.name || '';
+            const username = row.dataset.username || '';
+            if (name.includes(query) || username.includes(query)) {
+                row.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        // Show/hide no results message
+        const table = document.getElementById('studentTable');
+        const existingMsg = document.getElementById('noResultsMsg');
+        if (existingMsg) existingMsg.remove();
+
+        if (visibleCount === 0 && query) {
+            const tbody = table.querySelector('tbody');
+            const msg = document.createElement('tr');
+            msg.id = 'noResultsMsg';
+            msg.innerHTML = `
+                <td colspan="3" style="text-align:center;padding:30px;color:#94A3B8;">
+                    <div style="font-size:42px;margin-bottom:10px;">🔍</div>
+                    <p style="font-size:18px;">No students match "<strong>${query}</strong>"</p>
+                    <p style="font-size:14px;color:#94A3B8;">Try a different search term.</p>
+                </td>
+            `;
+            tbody.appendChild(msg);
+        }
+    }
+
+    // Form validation (optional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('marksForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const inputs = document.querySelectorAll('.marks-input');
+                let hasInvalid = false;
+                inputs.forEach(input => {
+                    const val = input.value.trim();
+                    if (val !== '' && (isNaN(val) || parseInt(val) < 0 || parseInt(val) > {{ exam.total_marks }})) {
+                        hasInvalid = true;
+                        input.style.borderColor = '#EF4444';
+                    } else {
+                        input.style.borderColor = '';
+                    }
+                });
+                if (hasInvalid) {
+                    alert('Please enter valid marks (0 to {{ exam.total_marks }}) for all fields.');
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Pending Teacher Approvals{% endblock %}
+{% block content %}
+<h2>Pending Teacher Registrations</h2>
+{% if pending %}
+<table class="table">
+    <thead>
+        <tr><th>Username</th><th>Email</th><th>Registered On</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+        {% for teacher in pending %}
+        <tr>
+            <td>{{ teacher.username }}</td>
+            <td>{{ teacher.email }}</td>
+            <td>{{ teacher.created_at }}</td>
+            <td><a href="{{ url_for('approve_teacher', user_id=teacher.id) }}" class="btn btn-success btn-sm">Approve</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No pending teacher registrations.</p>
+{% endif %}
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Admin Dashboard</a>
+{% endblock %}

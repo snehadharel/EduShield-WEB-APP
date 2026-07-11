@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Trusted Networks{% endblock %}
+
+{% block content %}
+<div style="width: 100%;">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white;">
+        <h2>🏫 Trusted College Networks (IP Whitelist)</h2>
+        <p>Logins from these IP ranges will have their risk score lowered by 40%.</p>
+    </div>
+
+    <!-- Add Network Card -->
+    <div style="background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        <h3 style="color: #1565c0; margin-bottom: 20px;">➕ Add Trusted Network</h3>
+        <form method="POST" action="{{ url_for('add_trusted_network') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-weight: 600;">Network (CIDR or single IP)</label>
+                    <input type="text" name="network" placeholder="e.g., 192.168.1.0/24" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px;">
+                </div>
+                <div>
+                    <label style="font-weight: 600;">Description</label>
+                    <input type="text" name="description" placeholder="e.g., Main campus Wi‑Fi" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px;">
+                </div>
+            </div>
+            <button type="submit" class="btn" style="background: #43a047; margin-top: 20px;">Add Network</button>
+        </form>
+    </div>
+
+    <!-- Current Whitelist Table -->
+    <div style="background: white; border-radius: 20px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        <h3 style="color: #e65100; margin-bottom: 20px;">📋 Current Whitelist</h3>
+        {% if networks %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #2c3e50; color: white;">
+                        <th style="padding: 12px; text-align: left;">Network</th>
+                        <th style="padding: 12px; text-align: left;">Description</th>
+                        <th style="padding: 12px; text-align: left;">Added On (Nepal Time)</th>
+                        <th style="padding: 12px; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for net in networks %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;"><code style="background: #f8f9fa; padding: 4px 8px; border-radius: 6px;">{{ net.network }}</code></td>
+                        <td style="padding: 12px;">{{ net.description or '-' }}</td>
+                        <td style="padding: 12px;">{{ net.created_at_local.strftime('%Y-%m-%d %H:%M:%S') if net.created_at_local else '-' }}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <a href="{{ url_for('delete_trusted_network', network_id=net.id) }}" class="btn-small" style="background: #d81b60; color: white; padding: 6px 12px; border-radius: 40px; text-decoration: none;" onclick="return confirm('Remove this network?')">🗑️ Remove</a>
+                        </td>
+                    <tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="text-align: center; color: #6c757d;">No trusted networks configured. Add your college IP ranges above.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .btn, .btn-small {
+        display: inline-block;
+        text-decoration: none;
+        padding: 8px 20px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 500;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-small {
+        font-size: 13px;
+        padding: 5px 14px;
+    }
+    .btn:hover, .btn-small:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102,126,234,0.2);
+    }
+    @media (max-width: 768px) {
+        .btn, .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}

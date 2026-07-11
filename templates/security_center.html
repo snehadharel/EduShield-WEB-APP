@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}Security Center{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+    }
+    .page-header p {
+        color: #64748B;
+        font-size: 15px;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS / TABLES ===== */
+    .section-card {
+        background: white;
+        border-radius: 24px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .section-title .spacer {
+        flex: 1;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    th, td {
+        padding: 12px 12px;
+        text-align: left;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    th {
+        background: #F8FAFC;
+        font-weight: 600;
+        color: #1E293B;
+    }
+
+    /* Badges */
+    .risk-badge {
+        background: #FEE2E2;
+        color: #DC2626;
+        padding: 4px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .risk-low {
+        background: #DCFCE7;
+        color: #16A34A;
+    }
+    .current-badge {
+        background: #22C55E;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .active-badge {
+        background: #E2E8F0;
+        color: #475569;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+    }
+    .trusted-badge {
+        background: #DCFCE7;
+        color: #16A34A;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    /* Buttons */
+    .btn-remove {
+        background: #FEE2E2;
+        color: #DC2626;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-remove:hover {
+        background: #FECACA;
+    }
+    .btn-danger {
+        background: #EF4444;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-danger:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+
+    .device-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .device-card:last-child { border-bottom: none; }
+    .device-info h4 {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .device-info p {
+        font-size: 13px;
+        color: #64748B;
+    }
+
+    .empty-message {
+        color: #94A3B8;
+        text-align: center;
+        padding: 40px 0;
+        font-size: 14px;
+    }
+
+    @media (max-width: 640px) {
+        .section-card { padding: 16px; }
+        th, td { padding: 8px; font-size: 12px; }
+        .tab-btn { font-size: 12px; padding: 10px 8px; }
+        .section-title { flex-direction: column; align-items: stretch; gap: 8px; }
+        .btn-danger { width: 100%; text-align: center; }
+    }
+</style>
+
+<div>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>🛡️ Security Center</h1>
+        <p>Monitor your login activity, active sessions, and trusted devices.</p>
+    </div>
+
+    <!-- ===== TABS ===== -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="history">📋 Login History</button>
+        <button class="tab-btn" data-tab="sessions">🖥️ Active Sessions</button>
+        <button class="tab-btn" data-tab="devices">📱 Trusted Devices</button>
+    </div>
+
+    <!-- ===== TAB 1: Login History ===== -->
+    <div id="tab-history" class="tab-content active">
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-history"></i> Login History (Last 50)
+            </div>
+            <div class="table-container">
+                {% if login_history %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time (Nepal)</th>
+                            <th>IP Address</th>
+                            <th>Device</th>
+                            <th>Risk Score</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in login_history %}
+                        <tr>
+                            <td>{{ log.login_time_local.strftime('%Y-%m-%d %H:%M:%S') if log.login_time_local else 'Unknown' }}</td>
+                            <td>{{ log.ip_address }}</td>
+                            <td>{{ log.device[:40] if log.device else '-' }}</td>
+                            <td>
+                                {% if log.risk_score >= 70 %}
+                                    <span class="risk-badge">{{ log.risk_score }}%</span>
+                                {% elif log.risk_score >= 40 %}
+                                    <span class="risk-badge" style="background:#FEF3C7; color:#D97706;">{{ log.risk_score }}%</span>
+                                {% else %}
+                                    <span class="risk-badge risk-low">{{ log.risk_score }}%</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.status }}</td>
+                            <td>{{ log.action }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-message">No login history available.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB 2: Active Sessions ===== -->
+    <div id="tab-sessions" class="tab-content">
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-desktop"></i> Active Sessions
+                <span class="spacer"></span>
+                <form method="POST" action="{{ url_for('logout_other_sessions') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-danger" onclick="return confirm('This will log you out on all other devices. Continue?')">
+                        <i class="fas fa-sign-out-alt"></i> Logout all other devices
+                    </button>
+                </form>
+            </div>
+            {% if sessions %}
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Device / IP</th>
+                                <th>Location</th>
+                                <th>Login Time (Nepal)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr style="{% if session.is_current %}background: #F0FDF4;{% endif %}">
+                                <td>
+                                    <i class="fas fa-{% if 'mobile' in session.device|lower %}mobile-alt{% elif 'tablet' in session.device|lower %}tablet-alt{% else %}laptop{% endif %}"></i>
+                                    {{ session.device or 'Unknown Device' }}
+                                    <br><small style="color: #64748B;">{{ session.ip_address }}</small>
+                                </td>
+                                <td>{{ session.geo_country or 'Unknown' }}</td>
+                                <td>{{ session.login_time_local.strftime('%Y-%m-%d %H:%M:%S') if session.login_time_local else 'Unknown' }}</td>
+                                <td>
+                                    {% if session.is_current %}
+                                        <span class="current-badge"><i class="fas fa-check-circle"></i> This device</span>
+                                    {% else %}
+                                        <span class="active-badge"><i class="fas fa-circle"></i> Active</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size: 12px; color: #94A3B8; margin-top: 12px;">
+                    <i class="fas fa-info-circle"></i> Showing the last 10 active sessions.
+                </p>
+            {% else %}
+                <div class="empty-message">No active sessions found.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===== TAB 3: Trusted Devices ===== -->
+    <div id="tab-devices" class="tab-content">
+        <div class="section-card">
+            <div class="section-title">
+                <i class="fas fa-laptop"></i> Trusted Devices
+            </div>
+            {% if devices %}
+                {% for device in devices %}
+                <div class="device-card">
+                    <div class="device-info">
+                        <h4>{{ device.device_label or 'Device' }}</h4>
+                        <p>IP: {{ device.ip_address or 'Unknown' }} • Last used: {{ device.last_used_local.strftime('%Y-%m-%d %H:%M') if device.last_used_local else 'Never' }}</p>
+                        <p style="font-size: 11px; color: #94A3B8;">Fingerprint: {{ device.device_fingerprint[:20] if device.device_fingerprint else 'N/A' }}...</p>
+                    </div>
+                    <div>
+                        <span class="trusted-badge"><i class="fas fa-check-circle"></i> Trusted</span>
+                        <form method="POST" action="{{ url_for('remove_trusted_device', device_id=device.id) }}" style="display: inline-block; margin-left: 12px;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-remove" onclick="return confirm('Remove this trusted device?')">Remove</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-message">No trusted devices registered. When you log in with "Remember this device", it will appear here.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ===== TAB JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Show selected tab content
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}

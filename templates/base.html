@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduShield {% block title %}{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F8FAFC; color: #1E293B; }
+
+        /* ========== SIDEBAR (BLUE BACKGROUND) ========== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: #1E3A8A;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            padding: 28px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            flex-shrink: 0;
+        }
+        .logo h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+        .logo span {
+            font-size: 11px;
+            color: #CBD5E1;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* User profile (without bell) */
+        .user-profile {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .user-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-info p {
+            font-size: 12px;
+            color: #CBD5E1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Navigation menu */
+        .nav-menu {
+            flex: 1;
+            padding: 16px 16px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .nav-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        .nav-menu::-webkit-scrollbar-track {
+            background: #1E3A8A;
+        }
+        .nav-menu::-webkit-scrollbar-thumb {
+            background: #3B82F6;
+            border-radius: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            margin-bottom: 4px;
+            border-radius: 12px;
+            color: #E2E8F0;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .nav-item i {
+            width: 24px;
+            font-size: 16px;
+            color: #CBD5E1;
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .nav-item:hover i {
+            color: white;
+        }
+        .nav-item.active {
+            background: #2563EB;
+            color: white;
+        }
+        .nav-item.active i {
+            color: white;
+        }
+
+        .sidebar-footer {
+            padding: 16px 16px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            flex-shrink: 0;
+        }
+        .logout-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            color: #FCA5A5;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .logout-item i {
+            width: 24px;
+            color: #FCA5A5;
+        }
+        .logout-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #FECACA;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 260px;
+            padding: 32px 40px;
+            min-height: 100vh;
+            background: #F8FAFC;
+        }
+
+        /* Flash messages */
+        .flash-messages { margin-bottom: 28px; }
+        .flash {
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: white;
+            border-left: 4px solid;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .flash.success { border-left-color: #22C55E; background: #F0FDF4; color: #166534; }
+        .flash.error { border-left-color: #EF4444; background: #FEF2F2; color: #991B1B; }
+        .flash.warning { border-left-color: #F59E0B; background: #FFFBEB; color: #92400E; }
+        .flash.info { border-left-color: #3B82F6; background: #EFF6FF; color: #1E40AF; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+            .main-content { margin-left: 0; padding: 20px; }
+        }
+
+        /* Notification Dropdown (styles kept for reuse in dashboard) */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .notification-bell i {
+            font-size: 26px;
+            color: #1E293B;
+            transition: opacity 0.2s;
+        }
+        .notification-bell:hover i {
+            opacity: 0.7;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #EF4444;
+            color: white;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            display: none;
+            min-width: 20px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            width: 380px;
+            max-height: 420px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+            border: 1px solid #E2E8F0;
+            z-index: 1000;
+            padding: 8px 0;
+            background: white;
+        }
+        .notification-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+        .notification-dropdown::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        .dropdown-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #E2E8F0;
+            font-weight: 600;
+            color: #1E293B;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 2;
+            border-radius: 16px 16px 0 0;
+        }
+        .dropdown-header span {
+            background: #E2E8F0;
+            padding: 2px 10px;
+            border-radius: 40px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        .dropdown-header button {
+            background: none;
+            border: none;
+            color: #2563EB;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .notification-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .notification-item:hover {
+            background: #E2E8F0 !important;
+        }
+        .notification-item.unread {
+            background: #F0F7FF;
+        }
+        .notification-item .msg {
+            font-size: 14px;
+            color: #1E293B;
+        }
+        .notification-item .time {
+            font-size: 11px;
+            color: #94A3B8;
+            margin-top: 4px;
+        }
+        .notification-empty {
+            padding: 20px;
+            text-align: center;
+            color: #94A3B8;
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .notification-dropdown {
+                width: calc(100vw - 32px);
+                right: -16px;
+            }
+        }
+
+        /* AI Chat Widget (unchanged) */
+        .ai-chat-toggle {
+            position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+            border-radius: 50%; background: linear-gradient(135deg, #2563EB, #1E40AF);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3); display: flex;
+            align-items: center; justify-content: center; cursor: pointer; z-index: 10000;
+        }
+        .ai-chat-toggle:hover { transform: scale(1.05); }
+        .ai-chat-toggle i { font-size: 28px; color: white; }
+        .ai-chat-window {
+            position: fixed; bottom: 96px; right: 24px; width: 380px; height: 500px;
+            background: white; border-radius: 24px; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+            display: none; flex-direction: column; overflow: hidden; z-index: 10001;
+            border: 1px solid #E2E8F0;
+        }
+        .ai-chat-header { background: #1E293B; color: white; padding: 16px; display: flex; justify-content: space-between; }
+        .ai-chat-header h4 { display: flex; align-items: center; gap: 8px; }
+        .ai-chat-header button { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
+        .ai-chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #F8FAFC; }
+        .chat-message { display: flex; gap: 10px; align-items: flex-start; }
+        .chat-message.user { justify-content: flex-end; }
+        .chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 18px; font-size: 14px; }
+        .chat-message.user .chat-bubble { background: #2563EB; color: white; border-bottom-right-radius: 4px; }
+        .chat-message.ai .chat-bubble { background: white; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .chat-avatar { width: 28px; height: 28px; background: #E2E8F0; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .ai-chat-input { padding: 12px; border-top: 1px solid #E2E8F0; display: flex; gap: 8px; background: white; }
+        .ai-chat-input input { flex: 1; padding: 10px 14px; border: 1px solid #E2E8F0; border-radius: 40px; outline: none; }
+        .ai-chat-input input:focus { border-color: #2563EB; }
+        .ai-chat-input button { background: #2563EB; border: none; border-radius: 40px; padding: 0 16px; color: white; cursor: pointer; }
+        .typing-indicator { display: flex; gap: 4px; padding: 8px 0; }
+        .typing-indicator span { width: 6px; height: 6px; background: #94A3B8; border-radius: 50%; animation: blink 1.4s infinite; }
+        @keyframes blink { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+        @media (max-width: 480px) { .ai-chat-window { width: calc(100% - 32px); right: 16px; bottom: 80px; height: 70vh; } }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0;">EduShield</h2>
+            <p style="font-size: 11px; color: #CBD5E1; margin-top: 4px; font-weight: 500;">AI Security Portal</p>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-avatar">{{ session.username[0].upper() if session.username else 'U' }}</div>
+            <div class="user-info">
+                <h4>{{ session.username if session.username else 'User' }}</h4>
+                <p>{% if session.is_admin %}Administrator{% else %}{{ session.role|capitalize if session.role else 'Student' }}{% endif %}</p>
+            </div>
+        </div>
+
+        <div class="nav-menu">
+            {% if session.user_id %}
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{{ url_for('list_courses') }}" class="nav-item {% if request.endpoint == 'list_courses' %}active{% endif %}">
+                    <i class="fas fa-book-open"></i> My Courses
+                </a>
+                <a href="{{ url_for('list_assignments') }}" class="nav-item {% if request.endpoint == 'list_assignments' %}active{% endif %}">
+                    <i class="fas fa-tasks"></i> Assignments
+                </a>
+                <a href="{{ url_for('view_routine') }}" class="nav-item {% if request.endpoint == 'view_routine' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> Routine
+                </a>
+                <a href="{{ url_for('list_exams') }}" class="nav-item {% if request.endpoint == 'list_exams' %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i> Exams
+                </a>
+                {% if session.role == 'student' %}
+                <a href="{{ url_for('view_attendance') }}" class="nav-item {% if request.endpoint == 'view_attendance' %}active{% endif %}">
+                    <i class="fas fa-calendar-check"></i> Attendance
+                </a>
+                {% elif session.role == 'teacher' %}
+                <a href="{{ url_for('list_courses') }}" class="nav-item {% if request.endpoint == 'list_courses' %}active{% endif %}">
+                    <i class="fas fa-calendar-check"></i> Mark Attendance
+                </a>
+                {% elif session.role == 'admin' %}
+                <a href="{{ url_for('view_attendance') }}" class="nav-item {% if request.endpoint == 'view_attendance' %}active{% endif %}">
+                    <i class="fas fa-calendar-check"></i> Student Attendance
+                </a>
+                {% else %}
+                <a href="{{ url_for('view_attendance') }}" class="nav-item">
+                    <i class="fas fa-calendar-check"></i> Attendance
+                </a>
+            {% endif %}
+            {% if session.role == 'student' %}
+                <a href="{{ url_for('grades_summary') }}" class="nav-item {% if request.endpoint == 'grades_summary' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i> Grades
+                </a>
+        {% elif session.role == 'teacher' %}
+            <a href="{{ url_for('teacher_gradebook_overview') }}" class="nav-item {% if request.endpoint == 'teacher_gradebook_overview' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Gradebook
+            </a>
+        {% elif session.is_admin %}
+            <a href="{{ url_for('list_courses') }}" class="nav-item {% if request.endpoint == 'list_courses' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Grades
+            </a>
+{% endif %}
+                <a href="{{ url_for('security_center') }}" class="nav-item {% if request.endpoint == 'security_center' %}active{% endif %}">
+                    <i class="fas fa-shield-alt"></i> Security Center
+                </a>
+                <a href="{{ url_for('profile') }}" class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+                <a href="{{ url_for('settings') }}" class="nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+
+                <!-- Notices Section -->
+                <a href="{{ url_for('view_notices') }}" class="nav-item {% if request.endpoint == 'view_notices' %}active{% endif %}">
+                    <i class="fas fa-bullhorn"></i> Notices
+                </a>
+                {% if session.role in ['teacher', 'admin'] %}
+                <a href="{{ url_for('post_notice') }}" class="nav-item {% if request.endpoint == 'post_notice' %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i> Post Notice
+                </a>
+                {% endif %}
+
+                <!-- Admin Section -->
+                {% if session.is_admin %}
+                <div style="margin-top: 16px; margin-bottom: 8px; padding-left: 12px;">
+                    <span style="font-size: 10px; font-weight: 600; color: #CBD5E1; text-transform: uppercase;">Administration</span>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class="fas fa-user-shield"></i> Admin Dashboard
+                </a>
+                <a href="{{ url_for('ids_dashboard') }}" class="nav-item {% if request.endpoint == 'ids_dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i> IDS Analytics
+                </a>
+                <a href="{{ url_for('attack_logs') }}" class="nav-item {% if request.endpoint == 'attack_logs' %}active{% endif %}">
+                    <i class="fas fa-bug"></i> Attack Logs
+                </a>
+                <a href="{{ url_for('activity_logs') }}" class="nav-item {% if request.endpoint == 'activity_logs' %}active{% endif %}">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <a href="{{ url_for('trusted_networks') }}" class="nav-item {% if request.endpoint == 'trusted_networks' %}active{% endif %}">
+                    <i class="fas fa-network-wired"></i> Trusted Networks
+                </a>
+                <a href="{{ url_for('behavior_analytics') }}" class="nav-item {% if request.endpoint == 'behavior_analytics' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i> Behavior Analytics
+                </a>
+                <a href="{{ url_for('risk_explanations') }}" class="nav-item {% if request.endpoint == 'risk_explanations' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> SHAP Explanations
+                </a>
+                <a href="{{ url_for('security_heatmap') }}" class="nav-item {% if request.endpoint == 'security_heatmap' %}active{% endif %}">
+                    <i class="fas fa-map-marked-alt"></i> Risk Heatmap
+                </a>
+                <a href="{{ url_for('bias_analysis') }}" class="nav-item {% if request.endpoint == 'bias_analysis' %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i> Bias Analysis
+                </a>
+                <a href="{{ url_for('ml_training_dashboard') }}" class="nav-item {% if request.endpoint == 'ml_training_dashboard' %}active{% endif %}">
+                    <i class="fas fa-brain"></i> ML Training
+                </a>
+                <a href="{{ url_for('admin_audit_logs') }}" class="nav-item {% if request.endpoint == 'admin_audit_logs' %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i> Audit Logs
+                </a>
+                <a href="{{ url_for('admin_sessions') }}" class="nav-item {% if request.endpoint == 'admin_sessions' %}active{% endif %}">
+                    <i class="fas fa-users"></i> Active Sessions
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% if session.user_id %}
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="logout-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- AI Chat Widget -->
+    <div class="ai-chat-toggle" id="aiChatToggle"><i class="fas fa-robot"></i></div>
+    <div class="ai-chat-window" id="aiChatWindow">
+        <div class="ai-chat-header"><h4><i class="fas fa-robot"></i> EduShield AI</h4><button id="closeChatWindow"><i class="fas fa-times"></i></button></div>
+        <div class="ai-chat-messages" id="aiChatMessages">
+            <div class="chat-message ai"><div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble">Hello! I'm your AI assistant. Ask me about the portal, security, or any question.</div></div>
+        </div>
+        <div class="ai-chat-input"><input type="text" id="aiChatInput" placeholder="Type a message..." autocomplete="off"><button id="sendChatBtn">Send</button></div>
+    </div>
+
+    <!-- ========== NOTIFICATION JAVASCRIPT (still used on dashboard) ========== -->
+    <script>
+        (function() {
+            const bell = document.getElementById('notificationBell');
+            const dropdown = document.getElementById('notificationDropdown');
+            const badge = document.getElementById('notificationBadge');
+            const dropdownBadge = document.getElementById('dropdownBadge');
+            const list = document.getElementById('notificationList');
+            const markAllBtn = document.getElementById('markAllReadBtn');
+
+            function getCsrfToken() {
+                const token = document.querySelector('input[name="csrf_token"]');
+                return token ? token.value : '';
+            }
+
+            function fetchCount() {
+                fetch('/api/notifications/count')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.count > 0) {
+                            if (badge) {
+                                badge.style.display = 'block';
+                                badge.textContent = data.count;
+                            }
+                        } else {
+                            if (badge) {
+                                badge.style.display = 'none';
+                            }
+                        }
+                    })
+                    .catch(console.error);
+            }
+
+            function fetchList() {
+                fetch('/api/notifications/list')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!list) return;
+                        if (data.length === 0) {
+                            list.innerHTML = '<div class="notification-empty">No notifications</div>';
+                            if (dropdownBadge) dropdownBadge.textContent = '0';
+                            return;
+                        }
+                        let html = '';
+                        let unreadCount = 0;
+                        data.forEach(notif => {
+                            if (!notif.is_read) unreadCount++;
+                            const link = notif.link || '#';
+                            const unreadClass = notif.is_read ? '' : 'unread';
+                            html += `
+                                <div class="notification-item ${unreadClass}" data-id="${notif.id}" data-link="${link}">
+                                    <div class="msg">${notif.message}</div>
+                                    <div class="time">${notif.time}</div>
+                                </div>
+                            `;
+                        });
+                        list.innerHTML = html;
+                        if (dropdownBadge) dropdownBadge.textContent = unreadCount;
+
+                        document.querySelectorAll('.notification-item').forEach(item => {
+                            item.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const id = this.dataset.id;
+                                const link = this.dataset.link;
+                                fetch(`/api/notifications/read/${id}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ csrf_token: getCsrfToken() })
+                                })
+                                .then(() => {
+                                    this.classList.remove('unread');
+                                    fetchCount();
+                                    fetchList();
+                                    if (link && link !== '#') {
+                                        window.location.href = link;
+                                    }
+                                })
+                                .catch(console.error);
+                            });
+                        });
+                    })
+                    .catch(console.error);
+            }
+
+            if (bell) {
+                bell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (!dropdown) return;
+                    const isOpen = dropdown.style.display === 'block';
+                    dropdown.style.display = isOpen ? 'none' : 'block';
+                    if (!isOpen) {
+                        fetchList();
+                        fetchCount();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function() {
+                if (dropdown) dropdown.style.display = 'none';
+            });
+
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    fetch('/api/notifications/read_all', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ csrf_token: getCsrfToken() })
+                    })
+                    .then(() => {
+                        fetchList();
+                        fetchCount();
+                    })
+                    .catch(console.error);
+                });
+            }
+
+            fetchCount();
+            setInterval(fetchCount, 15000);
+
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    fetchCount();
+                }
+            });
+        })();
+    </script>
+
+    <!-- AI Chat Script -->
+    <script>
+        const toggleBtn = document.getElementById('aiChatToggle');
+        const chatWindow = document.getElementById('aiChatWindow');
+        const closeBtn = document.getElementById('closeChatWindow');
+        const messagesDiv = document.getElementById('aiChatMessages');
+        const chatInput = document.getElementById('aiChatInput');
+        const sendBtn = document.getElementById('sendChatBtn');
+        toggleBtn.addEventListener('click', () => { chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none'; });
+        closeBtn.addEventListener('click', () => { chatWindow.style.display = 'none'; });
+        function addChatMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${sender}`;
+            if (sender === 'ai') {
+                msgDiv.innerHTML = `<div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble">${escapeHtml(text)}</div>`;
+            } else {
+                msgDiv.innerHTML = `<div class="chat-bubble">${escapeHtml(text)}</div>`;
+            }
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        let typingIndicator = null;
+        function showTyping() {
+            if (typingIndicator) return;
+            typingIndicator = document.createElement('div');
+            typingIndicator.className = 'chat-message ai';
+            typingIndicator.innerHTML = `<div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="typing-indicator"><span></span><span></span><span></span></div>`;
+            messagesDiv.appendChild(typingIndicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        function removeTyping() { if (typingIndicator) { typingIndicator.remove(); typingIndicator = null; } }
+        async function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+            showTyping();
+            try {
+                const response = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message }) });
+                const data = await response.json();
+                removeTyping();
+                addChatMessage(data.response, 'ai');
+            } catch (error) {
+                removeTyping();
+                addChatMessage('Sorry, I encountered an error.', 'ai');
+            }
+        }
+        sendBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+    </script>
+</body>
+</html>

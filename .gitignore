@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+academic_portal.db
+.venv/
+venv311/
+venv/
+.idea/
+.vscode/

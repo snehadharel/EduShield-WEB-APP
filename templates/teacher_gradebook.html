@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Gradebook – {{ course.course_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 { font-size: 24px; font-weight: 700; margin:0; display: flex; align-items: center; gap: 12px; }
+    .page-header .subtitle { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+    .page-header .back-link { color: white; text-decoration: none; font-size: 14px; opacity:0.8; transition:0.2s; }
+    .page-header .back-link:hover { opacity:1; text-decoration:underline; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 16px; padding: 16px; border: 1px solid #EDF2F7; text-align: center; }
+    .stat-card h4 { font-size: 12px; text-transform: uppercase; color: #64748B; letter-spacing:0.5px; margin-bottom:4px; }
+    .stat-card .stat-value { font-size: 28px; font-weight: 800; color: #0F172A; }
+    .stat-card .stat-sub { font-size: 13px; color: #64748B; margin-top:2px; }
+    .gradebook-card { background: white; border-radius: 20px; padding: 24px; border: 1px solid #EDF2F7; overflow-x: auto; }
+    .gradebook-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 500px; }
+    .gradebook-table th { background: #F8FAFC; padding: 12px 8px; text-align: left; font-weight: 600; color: #1E293B; border-bottom: 2px solid #E2E8F0; }
+    .gradebook-table td { padding: 8px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+    .gradebook-table tr:hover { background: #FAFBFC; }
+    .gradebook-table .marks-input { width: 60px; padding: 4px 6px; border: 1.5px solid #E2E8F0; border-radius: 8px; text-align: center; }
+    .gradebook-table .marks-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+    .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; padding-top: 16px; border-top: 1px solid #F1F5F9; justify-content: space-between; align-items: center; }
+    .btn { display: inline-block; padding: 10px 24px; border-radius: 40px; color: white; font-weight: 600; font-size: 15px; transition: 0.2s; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .btn-success { background: #22C55E; }
+    .btn-secondary { background: #64748B; }
+    .btn-outline { background: #E2E8F0; color: #1E293B; }
+    .btn-outline:hover { background: #CBD5E1; }
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .gradebook-table { font-size: 12px; min-width: 400px; }
+        .gradebook-table .marks-input { width: 48px; }
+        .btn-group { flex-direction: column; align-items: stretch; }
+        .btn { justify-content: center; }
+    }
+</style>
+
+<div>
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-chalkboard-teacher"></i> Gradebook</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Courses</span>
+                &nbsp;·&nbsp; {{ course.course_name }} ({{ course.course_code }})
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-users"></i> {{ students|length }} students
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><h4>Students</h4><div class="stat-value">{{ students|length }}</div></div>
+        <div class="stat-card"><h4>Average</h4><div class="stat-value">{{ avg_mark }}</div><div class="stat-sub">overall</div></div>
+        <div class="stat-card"><h4>Highest</h4><div class="stat-value">{{ highest_score }}</div><div class="stat-sub">score</div></div>
+        <div class="stat-card"><h4>Pending</h4><div class="stat-value">{{ pending_grades }}</div><div class="stat-sub">students</div></div>
+    </div>
+
+    <div class="gradebook-card">
+        <form method="POST" id="gradebookForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <table class="gradebook-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        {% for ass in assessments %}
+                        <th style="text-align:center;">
+                            <div style="font-size:12px;font-weight:500;color:#475569;word-break:break-word;max-width:80px;">{{ ass.title }}</div>
+                            <div style="font-size:10px;color:#94A3B8;">({{ ass.max_marks }})</div>
+                        </th>
+                        {% endfor %}
+                        <th style="text-align:center;">Total</th>
+                        <th style="text-align:center;">%</th>
+                        <th style="text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in grade_data %}
+                    <tr>
+                        <td>{{ row.student_name }}</td>
+                        {% for ass in assessments %}
+                        {% set mark = row.marks.get(ass.id) %}
+                        {% set field_name = ass.type ~ '_' ~ ass.id ~ '_' ~ row.student_id %}
+                        <td style="text-align:center;">
+                            <input type="number" name="{{ field_name }}" value="{{ mark if mark is not none else '' }}"
+                                   class="marks-input" min="0" max="{{ ass.max_marks }}" step="0.5" placeholder="—">
+                        </td>
+                        {% endfor %}
+                        {% set total_obtained = 0 %}
+                        {% set total_possible = 0 %}
+                        {% for ass in assessments %}
+                            {% set m = row.marks.get(ass.id) %}
+                            {% if m is not none %}
+                                {% set total_obtained = total_obtained + m %}
+                                {% set total_possible = total_possible + ass.max_marks %}
+                            {% endif %}
+                        {% endfor %}
+                        {% set pct = (total_obtained / total_possible * 100)|round(1) if total_possible > 0 else 0 %}
+                        <td style="text-align:center;font-weight:700;">{{ total_obtained }}</td>
+                        <td style="text-align:center;font-weight:600;color:{% if pct >= 70 %}#22C55E{% elif pct >= 50 %}#F59E0B{% else %}#DC2626{% endif %};">
+                            {{ pct }}%
+                        </td>
+                        <td style="text-align:center;">
+                            {% if total_possible > 0 %}
+                                {% if pct >= 50 %}
+                                    <span style="background:#DCFCE7;color:#16A34A;padding:2px 10px;border-radius:20px;font-size:12px;">Pass</span>
+                                {% else %}
+                                    <span style="background:#FEE2E2;color:#DC2626;padding:2px 10px;border-radius:20px;font-size:12px;">Fail</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color:#94A3B8;">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="btn-group">
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save All</button>
+                    <button type="button" class="btn btn-outline" onclick="fillAll()"><i class="fas fa-fill-drip"></i> Fill All</button>
+                    <button type="button" class="btn btn-outline" onclick="clearAll()"><i class="fas fa-undo"></i> Clear All</button>
+                </div>
+                <a href="{{ url_for('teacher_gradebook_overview') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function fillAll() {
+        const inputs = document.querySelectorAll('.marks-input');
+        inputs.forEach(inp => { if (inp.value.trim() === '') inp.value = 0; });
+    }
+    function clearAll() {
+        if (confirm('Clear all marks?')) {
+            document.querySelectorAll('.marks-input').forEach(inp => inp.value = '');
+        }
+    }
+</script>
+{% endblock %}

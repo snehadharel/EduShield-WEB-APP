@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Grade Submission – {{ submission.assignment_title }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        background: white;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-bar .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-bar .stat strong {
+        color: #0F172A;
+    }
+    .stats-bar .stat .num {
+        background: #F1F5F9;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+    }
+
+    /* ===== FORM CARD ===== */
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .form-card .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+    .form-card .form-title i {
+        color: #667eea;
+    }
+
+    /* ===== SUBMISSION PREVIEW ===== */
+    .submission-box {
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #667eea;
+    }
+    .submission-box .label {
+        font-size: 13px;
+        color: #64748B;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+    .submission-box .text {
+        font-size: 15px;
+        color: #1E293B;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .submission-box .file-link {
+        margin-top: 10px;
+    }
+    .submission-box .file-link a {
+        color: #2563EB;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .submission-box .file-link a:hover {
+        text-decoration: underline;
+    }
+
+    /* ===== FORM GROUPS ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+    .form-group label .char-count {
+        font-weight: 400;
+        font-size: 13px;
+        color: #94A3B8;
+        float: right;
+    }
+    .form-group .input-wrapper {
+        position: relative;
+    }
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+        background: #FAFBFC;
+        font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: #94A3B8;
+    }
+    .form-group .max-hint {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .form-group .max-hint i {
+        color: #3B82F6;
+        font-size: 13px;
+    }
+
+    .grade-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .grade-input-wrapper input {
+        width: 120px;
+        flex-shrink: 0;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+        padding: 14px 12px;
+    }
+    .grade-input-wrapper .out-of {
+        font-size: 16px;
+        color: #64748B;
+    }
+    .grade-input-wrapper .out-of strong {
+        color: #0F172A;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-success { background: #22C55E; }
+    .btn-success:hover { background: #16A34A; }
+    .btn-secondary { background: #64748B; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .form-card { padding: 20px; }
+        .btn-group { flex-direction: column; }
+        .btn { justify-content: center; }
+        .grade-input-wrapper { flex-direction: column; align-items: stretch; }
+        .grade-input-wrapper input { width: 100%; }
+        .submission-box { padding: 16px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-graduation-cap"></i> Grade Submission</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Assignments</span>
+                &nbsp;·&nbsp; {{ submission.assignment_title }}
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-user"></i> {{ submission.student_name }}
+        </div>
+    </div>
+
+    <!-- ===== STATS BAR ===== -->
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-file-alt"></i> <strong>Assignment:</strong> {{ submission.assignment_title }}</span>
+        <span class="stat"><i class="fas fa-user"></i> <strong>Student:</strong> {{ submission.student_name }}</span>
+        <span class="stat"><i class="fas fa-star"></i> <strong>Total Marks:</strong> <span class="num">{{ submission.total_marks }}</span></span>
+        <span class="stat"><i class="fas fa-calendar-alt"></i> <strong>Submitted:</strong> {{ submission.submitted_at.strftime('%b %d, %Y at %I:%M %p') if submission.submitted_at else '—' }}</span>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-edit"></i> Submission Preview & Grading
+        </div>
+
+        <!-- Submission Preview -->
+        <div class="submission-box">
+            <div class="label"><i class="fas fa-pencil-alt"></i> Submission Text</div>
+            <div class="text">{{ submission.submission_text or 'No text submitted.' }}</div>
+            {% if submission.file_url %}
+            <div class="file-link">
+                <i class="fas fa-paperclip"></i>
+                <a href="{{ submission.file_url }}" target="_blank">Download / View Attachment</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" id="gradeForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Grade Input -->
+            <div class="form-group">
+                <label>
+                    Grade <span class="required">*</span>
+                    <span style="font-weight:400;color:#94A3B8;font-size:13px;">(out of {{ submission.total_marks }})</span>
+                </label>
+                <div class="grade-input-wrapper">
+                    <input type="number" name="grade" id="gradeInput" 
+                           min="0" max="{{ submission.total_marks }}" step="1"
+                           placeholder="—" required
+                           value="{{ submission.grade if submission.grade is not none else '' }}">
+                    <span class="out-of">/ <strong>{{ submission.total_marks }}</strong> marks</span>
+                </div>
+                <div class="max-hint">
+                    <i class="fas fa-info-circle"></i>
+                    Enter a number between 0 and {{ submission.total_marks }}
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="form-group">
+                <label>
+                    Feedback
+                    <span class="char-count"><span id="feedbackCount">0</span> / 500</span>
+                </label>
+                <div class="input-wrapper">
+                    <textarea name="feedback" id="feedbackInput" rows="4" maxlength="500" 
+                              placeholder="Provide constructive feedback for the student..."
+                              oninput="document.getElementById('feedbackCount').textContent = this.value.length;">{{ submission.feedback or '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Submit Grade
+                </button>
+                <a href="{{ url_for('list_assignments') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const gradeInput = document.getElementById('gradeInput');
+        const form = document.getElementById('gradeForm');
+
+        // Initial feedback count
+        const feedback = document.getElementById('feedbackInput');
+        if (feedback) {
+            document.getElementById('feedbackCount').textContent = feedback.value.length;
+        }
+
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const grade = gradeInput.value.trim();
+            if (grade === '') {
+                alert('Please enter a grade.');
+                e.preventDefault();
+                return;
+            }
+            const num = Number(grade);
+            if (isNaN(num) || num < 0 || num > {{ submission.total_marks }}) {
+                alert('Please enter a valid grade between 0 and {{ submission.total_marks }}.');
+                e.preventDefault();
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %}

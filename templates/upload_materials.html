@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Material - {{ course.course_name }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.85;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        background: white;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-bar .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-bar .stat strong {
+        color: #0F172A;
+    }
+
+    /* ===== FORM CARD ===== */
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #EDF2F7;
+    }
+    .form-card .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+    .form-card .form-title i {
+        color: #667eea;
+    }
+
+    /* ===== FORM GROUP ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+    .form-group .input-wrapper {
+        position: relative;
+    }
+    .form-group .input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+    }
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+        background: #FAFBFC;
+        font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: #94A3B8;
+    }
+    .form-group input {
+        padding-left: 46px;
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    .form-group .hint {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: #F8FAFC;
+        border-radius: 8px;
+    }
+    .form-group .hint i {
+        color: #3B82F6;
+        font-size: 14px;
+    }
+    .form-group .hint .example {
+        background: #E2E8F0;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #1E293B;
+    }
+
+    /* ===== FILE TYPE PREVIEW ===== */
+    .file-preview {
+        display: none;
+        padding: 12px 16px;
+        background: #F0FDF4;
+        border-radius: 12px;
+        border: 1px solid #22C55E;
+        margin-top: 8px;
+        font-size: 14px;
+        color: #166534;
+    }
+    .file-preview.show {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .file-preview .icon {
+        font-size: 24px;
+    }
+    .file-preview .info {
+        flex: 1;
+    }
+    .file-preview .info .name {
+        font-weight: 600;
+        word-break: break-all;
+    }
+    .file-preview .info .size {
+        font-size: 12px;
+        color: #64748B;
+    }
+
+    /* ===== BUTTON ===== */
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .btn-secondary { background: #64748B; }
+    .btn-success { background: #22C55E; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .form-card { padding: 20px; }
+        .btn-group { flex-direction: column; }
+        .btn { justify-content: center; }
+        .form-group input { padding-left: 42px; }
+    }
+    @media (max-width: 480px) {
+        .form-card { padding: 16px; }
+        .form-group input { padding: 12px 14px; padding-left: 38px; font-size: 14px; }
+        .form-group textarea { padding: 12px 14px; font-size: 14px; }
+        .page-header h2 { font-size: 20px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-upload"></i> Upload Material</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Materials</span>
+                &nbsp;·&nbsp; {{ course.course_name }} ({{ course.course_code }})
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-chalkboard-teacher"></i> {{ course.teacher_name or 'Your Course' }}
+        </div>
+    </div>
+
+    <!-- ===== STATS BAR ===== -->
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-book"></i> <strong>Course:</strong> {{ course.course_name }}</span>
+        <span class="stat"><i class="fas fa-tag"></i> <strong>Code:</strong> {{ course.course_code }}</span>
+        <span class="stat"><i class="fas fa-user-tie"></i> <strong>Teacher:</strong> {{ course.teacher_name or 'N/A' }}</span>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-file-upload"></i> Upload New Material
+        </div>
+
+        <form method="POST" id="uploadForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Title -->
+            <div class="form-group">
+                <label>Title <span class="required">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-heading"></i>
+                    <input type="text" name="title" id="materialTitle" placeholder="e.g., Lecture Notes - Chapter 1" required autofocus>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label>Description</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-align-left" style="top: 18px; transform: none;"></i>
+                    <textarea name="description" id="materialDesc" rows="4" placeholder="Brief description of the material..."></textarea>
+                </div>
+            </div>
+
+            <!-- File URL -->
+            <div class="form-group">
+                <label>File URL <span class="required">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-link"></i>
+                    <input type="url" name="file_url" id="fileUrl" placeholder="https://drive.google.com/file/d/..." required>
+                </div>
+                <div class="hint">
+                    <i class="fas fa-info-circle"></i>
+                    Supported links: Google Drive, OneDrive, Dropbox, or any direct file URL.
+                    <span class="example">Example: https://drive.google.com/file/d/123abc/view</span>
+                </div>
+            </div>
+
+            <!-- File Preview (shows when URL is entered) -->
+            <div class="file-preview" id="filePreview">
+                <span class="icon">📄</span>
+                <div class="info">
+                    <div class="name" id="fileName">filename.pdf</div>
+                    <div class="size" id="fileSize">File link detected</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Material
+                </button>
+                <a href="{{ url_for('course_materials', course_id=course.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlInput = document.getElementById('fileUrl');
+        const preview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const titleInput = document.getElementById('materialTitle');
+
+        // Show file preview when URL is entered
+        urlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url && url.startsWith('http')) {
+                preview.classList.add('show');
+                // Extract filename from URL
+                let name = url.split('/').pop();
+                // Remove query parameters
+                if (name.includes('?')) name = name.split('?')[0];
+                if (name.includes('#')) name = name.split('#')[0];
+                if (name && name.length > 0) {
+                    fileName.textContent = name;
+                } else {
+                    fileName.textContent = 'File from URL';
+                }
+                // Auto-populate title if empty
+                if (!titleInput.value.trim() && name) {
+                    const cleanName = name.replace(/[_-]/g, ' ').replace(/\.[^.]+$/, '');
+                    titleInput.value = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                }
+            } else {
+                preview.classList.remove('show');
+            }
+        });
+
+        // Form validation
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Please enter a valid file URL.');
+                e.preventDefault();
+                return;
+            }
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('Please enter a valid URL starting with http:// or https://');
+                e.preventDefault();
+                return;
+            }
+            if (!document.querySelector('[name="title"]').value.trim()) {
+                alert('Please enter a title for the material.');
+                e.preventDefault();
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %}

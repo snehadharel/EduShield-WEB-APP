@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+
+{% block title %}Add Routine Entry{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS BAR ===== */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    background: white;
+    padding: 14px 20px;
+    border-radius: 16px;
+    border: 1px solid #EDF2F7;
+}
+.stats-bar .stat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #475569;
+    text-align: center;
+}
+.stats-bar .stat strong {
+    color: #0F172A;
+}
+.stats-bar .stat .num {
+    background: #F1F5F9;
+    padding: 2px 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 15px;
+    min-width: 30px;
+    text-align: center;
+}
+
+    /* ===== FORM CARD ===== */
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .form-card .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+    .form-card .form-title i {
+        color: #22C55E;
+    }
+
+    /* ===== FORM GROUPS ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+    .form-group .input-wrapper {
+        position: relative;
+    }
+    .form-group .input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+    }
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+        background: #FAFBFC;
+        font-family: inherit;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+    .form-group select {
+        padding-right: 46px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+    }
+    .form-group select:focus,
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .form-group input {
+        padding-left: 46px;
+    }
+    .form-group input[type="time"] {
+        padding-left: 46px;
+        cursor: pointer;
+    }
+    .form-group .hint {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .form-group .hint i {
+        color: #3B82F6;
+        font-size: 13px;
+    }
+
+    /* Day selection with visual badges */
+    .day-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+    }
+    .day-option {
+        padding: 10px 6px;
+        border: 2px solid #E2E8F0;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.2s;
+        font-weight: 500;
+        font-size: 13px;
+        background: #FAFBFC;
+        color: #64748B;
+    }
+    .day-option:hover {
+        border-color: #94A3B8;
+        background: #F1F5F9;
+    }
+    .day-option.selected {
+        border-color: #667eea;
+        background: #EFF6FF;
+        color: #2563EB;
+    }
+    .day-option input {
+        display: none;
+    }
+    .day-option .short {
+        font-size: 11px;
+        color: #94A3B8;
+        display: block;
+        margin-top: 2px;
+    }
+
+    /* ===== PREVIEW ===== */
+    .preview-box {
+        display: none;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #22C55E;
+    }
+    .preview-box.show {
+        display: block;
+    }
+    .preview-box .preview-day {
+        font-weight: 600;
+        color: #2563EB;
+    }
+    .preview-box .preview-time {
+        font-size: 14px;
+        color: #475569;
+    }
+    .preview-box .preview-course {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 4px 0;
+    }
+    .preview-box .preview-room {
+        font-size: 14px;
+        color: #64748B;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-primary { background: #22C55E; }
+    .btn-primary:hover { background: #16A34A; }
+    .btn-secondary { background: #64748B; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .form-card { padding: 20px; }
+        .btn-group { flex-direction: column; }
+        .btn { justify-content: center; }
+        .day-options { grid-template-columns: repeat(4, 1fr); }
+        .form-group input { padding-left: 42px; }
+        .preview-box { padding: 16px; }
+    }
+    @media (max-width: 480px) {
+        .day-options { grid-template-columns: repeat(4, 1fr); }
+        .day-option { font-size: 12px; padding: 8px 4px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-calendar-plus"></i> Add Routine Entry</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Routine</span>
+                &nbsp;·&nbsp; Add a class to the weekly schedule
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-chalkboard-teacher"></i> {{ session.username }}
+        </div>
+    </div>
+
+    <!-- ===== STATS BAR ===== -->
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-calendar-alt"></i> <strong>Total Routines:</strong> <span class="num">{{ routines_count|default(0) }}</span></span>
+        <span class="stat"><i class="fas fa-book"></i> <strong>Available Courses:</strong> <span class="num">{{ courses|length }}</span></span>
+        <span class="stat"><i class="fas fa-clock"></i> <strong>Today:</strong> <span class="num">{{ now.strftime('%A') }}</span></span>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-edit"></i> Routine Details
+        </div>
+
+        <form method="POST" id="routineForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Course -->
+            <div class="form-group">
+                <label>Course <span class="required">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-book"></i>
+                    <select name="course_id" id="courseSelect" required onchange="updatePreview()">
+                        <option value="">— Select a course —</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.course_name }} ({{ course.course_code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Day of Week -->
+            <div class="form-group">
+                <label>Day of Week <span class="required">*</span></label>
+                <div class="day-options" id="dayOptions">
+                    {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                    {% for day in days %}
+                    <label class="day-option" data-day="{{ day }}" onclick="selectDay(this, '{{ day }}')">
+                        <input type="radio" name="day_of_week" value="{{ day }}" required>
+                        {{ day[:3] }}
+                        <span class="short">{{ day }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="hint">
+                    <i class="fas fa-info-circle"></i> Click on a day to select it
+                </div>
+            </div>
+
+            <!-- Start & End Time -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label>Start Time <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-play"></i>
+                        <input type="time" name="start_time" id="startTime" required onchange="updatePreview(); validateTime()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>End Time <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-stop"></i>
+                        <input type="time" name="end_time" id="endTime" required onchange="updatePreview(); validateTime()">
+                    </div>
+                </div>
+            </div>
+            <div id="timeError" style="color: #EF4444; font-size: 14px; margin-top: -12px; margin-bottom: 16px; display: none;">
+                <i class="fas fa-exclamation-circle"></i> End time must be after start time.
+            </div>
+
+            <!-- Room -->
+            <div class="form-group">
+                <label>Room Number <span class="required">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-door-open"></i>
+                    <input type="text" name="room" id="roomInput" placeholder="e.g., Room 201, Lab 3" required oninput="updatePreview()">
+                </div>
+            </div>
+
+            <!-- Preview Toggle -->
+            <div style="margin-bottom: 16px;">
+                <button type="button" class="btn btn-secondary" onclick="togglePreview()" style="padding: 8px 20px; font-size: 14px; background: #E2E8F0; color: #1E293B;">
+                    <i class="fas fa-eye"></i> Preview Entry
+                </button>
+            </div>
+
+            <!-- Preview Box -->
+            <div class="preview-box" id="previewBox">
+                <div class="preview-day" id="previewDay">Monday</div>
+                <div class="preview-time" id="previewTime">09:00 – 10:30</div>
+                <div class="preview-course" id="previewCourse">Course Name (CODE)</div>
+                <div class="preview-room" id="previewRoom"><i class="fas fa-door-open"></i> Room: Not set</div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-plus-circle"></i> Add Routine
+                </button>
+                <a href="{{ url_for('view_routine') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    // --- Day selection ---
+    function selectDay(element, day) {
+        document.querySelectorAll('.day-option').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        element.querySelector('input[type="radio"]').checked = true;
+        updatePreview();
+    }
+
+    // --- Time validation ---
+    function validateTime() {
+        const start = document.getElementById('startTime').value;
+        const end = document.getElementById('endTime').value;
+        const error = document.getElementById('timeError');
+        const submitBtn = document.getElementById('submitBtn');
+        if (start && end) {
+            if (start >= end) {
+                error.style.display = 'block';
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = 0.5;
+                return false;
+            } else {
+                error.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = 1;
+                return true;
+            }
+        }
+        return true;
+    }
+
+    // --- Update preview ---
+    function updatePreview() {
+        const courseSelect = document.getElementById('courseSelect');
+        const selectedDay = document.querySelector('.day-option.selected');
+        const start = document.getElementById('startTime').value;
+        const end = document.getElementById('endTime').value;
+        const room = document.getElementById('roomInput').value || 'Not set';
+
+        const day = selectedDay ? selectedDay.dataset.day : 'Monday';
+        const courseText = courseSelect.options[courseSelect.selectedIndex]?.text || 'Course Name (CODE)';
+        const timeText = (start && end) ? `${start} – ${end}` : '09:00 – 10:30';
+
+        document.getElementById('previewDay').textContent = day;
+        document.getElementById('previewTime').textContent = timeText;
+        document.getElementById('previewCourse').textContent = courseText;
+        document.getElementById('previewRoom').innerHTML = `<i class="fas fa-door-open"></i> Room: ${room}`;
+    }
+
+    // --- Toggle preview ---
+    function togglePreview() {
+        const box = document.getElementById('previewBox');
+        box.classList.toggle('show');
+        if (box.classList.contains('show')) {
+            updatePreview();
+        }
+    }
+
+    // --- Auto-preview on change ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-select the current day
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const options = document.querySelectorAll('.day-option');
+        options.forEach(opt => {
+            if (opt.dataset.day === today) {
+                selectDay(opt, today);
+            }
+        });
+        // If no day selected, select Monday
+        if (!document.querySelector('.day-option.selected')) {
+            const first = document.querySelector('.day-option');
+            if (first) selectDay(first, first.dataset.day);
+        }
+
+        // Update preview on any change
+        document.getElementById('courseSelect').addEventListener('change', updatePreview);
+        document.getElementById('startTime').addEventListener('change', function() { validateTime(); updatePreview(); });
+        document.getElementById('endTime').addEventListener('change', function() { validateTime(); updatePreview(); });
+        document.getElementById('roomInput').addEventListener('input', updatePreview);
+
+        // Initial preview
+        updatePreview();
+    });
+
+    // --- Form validation ---
+    document.getElementById('routineForm').addEventListener('submit', function(e) {
+        if (!validateTime()) {
+            e.preventDefault();
+            alert('End time must be after start time.');
+            return;
+        }
+        const daySelected = document.querySelector('.day-option.selected');
+        if (!daySelected) {
+            e.preventDefault();
+            alert('Please select a day.');
+            return;
+        }
+        const course = document.getElementById('courseSelect').value;
+        if (!course) {
+            e.preventDefault();
+            alert('Please select a course.');
+            return;
+        }
+        const room = document.getElementById('roomInput').value.trim();
+        if (!room) {
+            e.preventDefault();
+            alert('Please enter a room number.');
+            return;
+        }
+    });
+</script>
+{% endblock %}

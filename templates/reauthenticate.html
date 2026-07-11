@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Re‑authentication Required{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>⚠️ Suspicious Activity Detected</h2>
+    <p>Our system has detected unusual behavior from your session. For your security, please re‑enter your password to continue.</p>
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label>Your Password</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit">Verify Identity</button>
+    </form>
+</div>
+{% endblock %}

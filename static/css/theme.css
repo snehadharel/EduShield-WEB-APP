@@ -1,0 +1,78 @@
+/* EduShield shared design tokens — light theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #1e40af;
+    --primary-dark: #1e3a8a;
+    --primary-light: #3b82f6;
+    --accent-teal: #0d9488;
+    --accent-orange: #ea580c;
+    --accent-pink: #db2777;
+    --bg-page: #f4f8fc;
+    --bg-soft: #e8f4f8;
+    --bg-mint: #d1fae5;
+    --bg-white: #ffffff;
+    --text: #1e293b;
+    --text-heading: #1a2b6d;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --border: #e2e8f0;
+    --input-bg: #f8fafc;
+    --card-radius: 20px;
+    --shadow: 0 20px 50px rgba(26, 43, 109, 0.12);
+    --shadow-sm: 0 4px 20px rgba(26, 43, 109, 0.06);
+    --shadow-md: 0 12px 40px rgba(26, 43, 109, 0.1);
+    --shadow-lg: 0 20px 50px rgba(26, 43, 109, 0.12);
+}
+
+.edu-page-bg {
+    background:
+        radial-gradient(ellipse 80% 60% at 10% 20%, rgba(209, 250, 229, 0.7) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 90% 10%, rgba(219, 234, 254, 0.8) 0%, transparent 45%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(224, 242, 254, 0.6) 0%, transparent 50%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg-page) 50%, #eef6fa 100%);
+}
+
+.edu-brand-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+}
+
+.edu-brand-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+}
+
+.edu-back-home {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 50;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 40px;
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.edu-back-home:hover {
+    color: var(--primary);
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-md);
+}

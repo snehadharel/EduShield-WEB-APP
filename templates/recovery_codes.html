@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduShield - Recovery Codes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .recovery-card {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            padding: 40px;
+            text-align: center;
+        }
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+        .warning-box {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+            text-align: left;
+            color: #92400E;
+        }
+        .warning-box i {
+            margin-right: 8px;
+            color: #F59E0B;
+        }
+        .codes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0;
+            background: #F8FAFC;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #E2E8F0;
+        }
+        .code-item {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #1E293B;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #E2E8F0;
+        }
+        .btn-copy {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 4px;
+        }
+        .btn-copy:hover {
+            background: #1D4ED8;
+            transform: translateY(-2px);
+        }
+        .btn-dashboard {
+            background: #22C55E;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 12px;
+        }
+        .btn-dashboard:hover {
+            background: #16A34A;
+            transform: translateY(-2px);
+        }
+        .footer-note {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #94A3B8;
+        }
+        .footer-note span {
+            background: #E2E8F0;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+        @media (max-width: 480px) {
+            .codes-grid { grid-template-columns: 1fr; }
+            .recovery-card { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="recovery-card">
+        <div class="logo">
+            <h1>🔐 Backup Codes</h1>
+        </div>
+
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Save these codes NOW!</strong> You will not see them again.
+            <br><small>Each code can only be used once. Keep them in a safe place.</small>
+        </div>
+
+        <p style="color: #475569; font-size: 14px; margin-bottom: 8px;">
+            Use these 8‑digit codes if you lose access to your authenticator app.
+        </p>
+
+        <div class="codes-grid" id="codesContainer">
+            {% for code in codes %}
+                <div class="code-item">{{ code }}</div>
+            {% endfor %}
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-copy" onclick="copyCodes()">
+                <i class="fas fa-copy"></i> Copy All
+            </button>
+            <button class="btn-copy" onclick="downloadCodes()">
+                <i class="fas fa-download"></i> Download
+            </button>
+        </div>
+
+        <a href="{{ url_for('dashboard') }}" class="btn-dashboard" style="text-decoration: none; display: inline-block; background: #22C55E; color: white; border: none; padding: 14px 32px; border-radius: 40px; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 12px;">
+            <i class="fas fa-check-circle"></i> I have saved these codes
+        </a>
+
+        <div class="footer-note">
+            🔒 Protected by <span>AI Intrusion Detection</span>
+        </div>
+    </div>
+
+    <script>
+        function copyCodes() {
+            const codes = document.querySelectorAll('.code-item');
+            const text = Array.from(codes).map(el => el.textContent).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Backup codes copied to clipboard!');
+            }).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                alert('Backup codes copied to clipboard!');
+            });
+        }
+
+        function downloadCodes() {
+            const codes = document.querySelectorAll('.code-item');
+            const text = Array.from(codes).map(el => el.textContent).join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'edushield_backup_codes.txt';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

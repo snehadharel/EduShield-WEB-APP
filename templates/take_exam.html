@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Take Exam — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<style>
+    .exam-timer {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: #1e293b;
+        color: white;
+        padding: 14px 24px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .timer-urgent { background: #991b1b !important; }
+    .question-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .option-label {
+        display: block;
+        padding: 10px 14px;
+        margin: 6px 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .option-label:hover { background: #f8fafc; }
+    .option-label input { margin-right: 10px; }
+</style>
+
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="exam-timer" id="timerBar">
+        <div>
+            <strong>{{ exam.title }}</strong>
+            <span style="opacity: 0.8; margin-left: 12px;">{{ exam.course_name }}</span>
+        </div>
+        <div>Time left: <strong id="countdown">--:--</strong></div>
+    </div>
+
+    <form method="POST" id="examForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="auto_submit" id="autoSubmit" value="0">
+
+        {% for q in questions %}
+        <div class="question-card">
+            <p><strong>Q{{ loop.index }}.</strong> {{ q.question_text }} <span style="color:#64748b;">({{ q.marks }} mark{{ 's' if q.marks != 1 else '' }})</span></p>
+            {% for opt, letter in [(q.option_a,'A'),(q.option_b,'B'),(q.option_c,'C'),(q.option_d,'D')] %}
+            <label class="option-label">
+                <input type="radio" name="q_{{ q.id }}" value="{{ letter }}"
+                    {% if existing_answers.get(q.id) == letter %}checked{% endif %} required>
+                {{ letter }}) {{ opt }}
+            </label>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" id="submitBtn" style="width: 100%; background: #43a047; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 1rem; cursor: pointer; margin-top: 8px;">
+            Submit Exam
+        </button>
+    </form>
+</div>
+
+<script>
+(function() {
+    var secondsLeft = {{ duration_seconds }};
+    var countdownEl = document.getElementById('countdown');
+    var timerBar = document.getElementById('timerBar');
+    var form = document.getElementById('examForm');
+    var autoField = document.getElementById('autoSubmit');
+    var submitted = false;
+
+    function pad(n) { return n < 10 ? '0' + n : n; }
+    function tick() {
+        if (submitted) return;
+        if (secondsLeft <= 0) {
+            countdownEl.textContent = '00:00';
+            submitted = true;
+            autoField.value = '1';
+            form.submit();
+            return;
+        }
+        var m = Math.floor(secondsLeft / 60);
+        var s = secondsLeft % 60;
+        countdownEl.textContent = pad(m) + ':' + pad(s);
+        if (secondsLeft <= 60) timerBar.classList.add('timer-urgent');
+        secondsLeft--;
+        setTimeout(tick, 1000);
+    }
+    tick();
+
+    form.addEventListener('submit', function() {
+        submitted = true;
+        document.getElementById('submitBtn').disabled = true;
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (!submitted) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+})();
+</script>
+{% endblock %}

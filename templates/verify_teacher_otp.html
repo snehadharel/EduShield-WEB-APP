@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}OTP Verification{% endblock %}
+
+{% block content %}
+<div style="width: 100%; max-width: 500px; margin: 0 auto;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white; text-align: center;">
+        <h2>🔐 OTP Verification</h2>
+        <p>An OTP has been sent to your registered email address. Please enter it below.</p>
+    </div>
+
+    <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 8px;">OTP Code</label>
+                <input type="text" name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required style="width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; font-size: 18px; text-align: center; letter-spacing: 4px;">
+            </div>
+            <button type="submit" class="btn" style="background: #43a047; width: 100%; padding: 12px;">Verify & Login</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+
+{% block title %}Bias Analysis (Ethical Hypothesis){% endblock %}
+
+{% block content %}
+<style>
+    /* ===== BIAS ANALYSIS STYLES ===== */
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header h1 i {
+        color: #667eea;
+    }
+    .page-header p {
+        color: #64748B;
+        font-size: 15px;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+        min-width: 80px;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS ===== */
+    .chart-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .chart-card h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 16px;
+        border-left: 4px solid #667eea;
+        padding-left: 12px;
+    }
+    .chart-card canvas {
+        max-height: 320px;
+        width: 100% !important;
+    }
+
+    /* ===== P-VALUE ===== */
+    .p-value {
+        font-size: 14px;
+        margin-top: 16px;
+        padding: 10px 16px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #E2E8F0;
+    }
+    .significant {
+        color: #d81b60;
+        font-weight: bold;
+    }
+    .not-significant {
+        color: #43a047;
+        font-weight: bold;
+    }
+    .text-muted {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 12px;
+        padding: 8px 12px;
+        background: #F8FAFC;
+        border-radius: 8px;
+    }
+
+    /* ===== SUMMARY TAB ===== */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    .summary-card {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .summary-card h4 {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #0F172A;
+        border-bottom: 1px solid #F1F5F9;
+        padding-bottom: 8px;
+    }
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 14px;
+        color: #475569;
+        border-bottom: 1px solid #F8FAFC;
+    }
+    .summary-item .label { font-weight: 500; }
+    .summary-item .value { font-weight: 600; }
+    .summary-item .alert-rate { color: #d81b60; }
+    .summary-item .alert-rate.low { color: #43a047; }
+
+    .pvalue-summary {
+        margin-top: 16px;
+        padding: 12px 16px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+    }
+    .pvalue-summary strong { color: #0F172A; }
+
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #94A3B8;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .summary-grid { grid-template-columns: 1fr; }
+        .tab-btn { font-size: 12px; padding: 10px 8px; }
+        .chart-card canvas { max-height: 250px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <h1><i class="fas fa-chart-bar"></i> Bias Analysis Dashboard</h1>
+        <p>Testing the ethical hypothesis: no disproportionate false positive rates across user groups.</p>
+    </div>
+
+    <!-- ===== TABS ===== -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="charts">📊 Charts</button>
+        <button class="tab-btn" data-tab="summary">📋 Summary</button>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 1: CHARTS -->
+    <!-- ============================================= -->
+    <div id="tab-charts" class="tab-content active">
+        <!-- ISP Analysis -->
+        <div class="chart-card">
+            <h3>🌐 Alert Rate by ISP Type</h3>
+            <canvas id="ispChart" width="400" height="300"></canvas>
+            {% if isp_pvalue %}
+            <div class="p-value">
+                Chi‑square p‑value: 
+                {% if isp_pvalue < 0.05 %}
+                    <span class="significant">{{ isp_pvalue }} (significant difference)</span>
+                {% else %}
+                    <span class="not-significant">{{ isp_pvalue }} (no significant difference)</span>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="p-value">Insufficient data for statistical test.</div>
+            {% endif %}
+            <div class="text-muted">
+                Alert rate = (blocked + OTP‑required) / total logins. Hypothesis: rates should be similar across ISPs (College_WiFi, WorldLink, Ncell, NTC).
+            </div>
+        </div>
+
+        <!-- Device Analysis -->
+        <div class="chart-card">
+            <h3>📱 Alert Rate by Device Type</h3>
+            <canvas id="deviceChart" width="400" height="300"></canvas>
+            {% if device_pvalue %}
+            <div class="p-value">
+                Chi‑square p‑value: 
+                {% if device_pvalue < 0.05 %}
+                    <span class="significant">{{ device_pvalue }} (significant difference)</span>
+                {% else %}
+                    <span class="not-significant">{{ device_pvalue }} (no significant difference)</span>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="p-value">Insufficient data for statistical test.</div>
+            {% endif %}
+        </div>
+
+        <!-- Hour Analysis -->
+        <div class="chart-card">
+            <h3>⏰ Alert Rate by Login Hour</h3>
+            <canvas id="hourChart" width="400" height="300"></canvas>
+            {% if hour_pvalue %}
+            <div class="p-value">
+                Chi‑square p‑value: 
+                {% if hour_pvalue < 0.05 %}
+                    <span class="significant">{{ hour_pvalue }} (significant difference)</span>
+                {% else %}
+                    <span class="not-significant">{{ hour_pvalue }} (no significant difference)</span>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="p-value">Insufficient data for statistical test.</div>
+            {% endif %}
+            <div class="text-muted">
+                Unusual hours = 21:00 – 07:59. The system should not penalise students who study late.
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 2: SUMMARY -->
+    <!-- ============================================= -->
+    <div id="tab-summary" class="tab-content">
+        <div class="summary-grid">
+            <!-- ISP Summary -->
+            <div class="summary-card">
+                <h4>🌐 ISP Totals</h4>
+                {% if isp_totals %}
+                    {% for isp, vals in isp_totals.items() %}
+                    <div class="summary-item">
+                        <span class="label">{{ isp }}</span>
+                        <span class="value">{{ vals.total }} logins <span class="{% if vals.alert > vals.total * 0.2 %}alert-rate{% else %}alert-rate low{% endif %}">({{ vals.alert }} alerts)</span></span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-message">No ISP data available.</div>
+                {% endif %}
+            </div>
+
+            <!-- Device Summary -->
+            <div class="summary-card">
+                <h4>📱 Device Totals</h4>
+                {% if device_totals %}
+                    {% for dev, vals in device_totals.items() %}
+                    <div class="summary-item">
+                        <span class="label">{{ dev }}</span>
+                        <span class="value">{{ vals.total }} logins <span class="{% if vals.alert > vals.total * 0.2 %}alert-rate{% else %}alert-rate low{% endif %}">({{ vals.alert }} alerts)</span></span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-message">No device data available.</div>
+                {% endif %}
+            </div>
+
+            <!-- Hour Summary -->
+            <div class="summary-card">
+                <h4>⏰ Hour Totals</h4>
+                {% if hour_totals %}
+                    <div class="summary-item">
+                        <span class="label">Normal (8-20)</span>
+                        <span class="value">{{ hour_totals.normal.total }} logins <span class="{% if hour_totals.normal.alert > hour_totals.normal.total * 0.2 %}alert-rate{% else %}alert-rate low{% endif %}">({{ hour_totals.normal.alert }} alerts)</span></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Unusual (21-7)</span>
+                        <span class="value">{{ hour_totals.unusual.total }} logins <span class="{% if hour_totals.unusual.alert > hour_totals.unusual.total * 0.2 %}alert-rate{% else %}alert-rate low{% endif %}">({{ hour_totals.unusual.alert }} alerts)</span></span>
+                    </div>
+                {% else %}
+                    <div class="empty-message">No hour data available.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- P‑Value Summary -->
+        <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #EDF2F7;">
+            <h3 style="font-size: 16px; font-weight: 700; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #667eea; padding-left: 12px;">📊 Statistical Summary</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                <div class="pvalue-summary">
+                    <strong>ISP</strong>
+                    {% if isp_pvalue %}
+                        <br><span style="font-size: 20px; font-weight: 700; {% if isp_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">{{ isp_pvalue }}</span>
+                        <br><small>{% if isp_pvalue < 0.05 %}⚠️ Significant difference{% else %}✅ No significant difference{% endif %}</small>
+                    {% else %}
+                        <br><span style="color:#94A3B8;">—</span>
+                    {% endif %}
+                </div>
+                <div class="pvalue-summary">
+                    <strong>Device</strong>
+                    {% if device_pvalue %}
+                        <br><span style="font-size: 20px; font-weight: 700; {% if device_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">{{ device_pvalue }}</span>
+                        <br><small>{% if device_pvalue < 0.05 %}⚠️ Significant difference{% else %}✅ No significant difference{% endif %}</small>
+                    {% else %}
+                        <br><span style="color:#94A3B8;">—</span>
+                    {% endif %}
+                </div>
+                <div class="pvalue-summary">
+                    <strong>Hour</strong>
+                    {% if hour_pvalue %}
+                        <br><span style="font-size: 20px; font-weight: 700; {% if hour_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">{{ hour_pvalue }}</span>
+                        <br><small>{% if hour_pvalue < 0.05 %}⚠️ Significant difference{% else %}✅ No significant difference{% endif %}</small>
+                    {% else %}
+                        <br><span style="color:#94A3B8;">—</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CHART SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Store chart instances for resize on tab switch
+    const charts = {};
+
+    // ============================================================
+    // 1. ISP CHART
+    // ============================================================
+    const ispLabels = {{ isp_labels | tojson }};
+    const ispRates = {{ isp_rates | tojson }};
+    if (ispLabels && ispLabels.length) {
+        charts.isp = new Chart(document.getElementById('ispChart'), {
+            type: 'bar',
+            data: {
+                labels: ispLabels,
+                datasets: [{
+                    label: 'Alert Rate (%)',
+                    data: ispRates,
+                    backgroundColor: '#667eea'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Alert Rate (%)' } }
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // 2. DEVICE CHART
+    // ============================================================
+    const deviceLabels = {{ device_labels | tojson }};
+    const deviceRates = {{ device_rates | tojson }};
+    if (deviceLabels && deviceLabels.length) {
+        charts.device = new Chart(document.getElementById('deviceChart'), {
+            type: 'bar',
+            data: {
+                labels: deviceLabels,
+                datasets: [{
+                    label: 'Alert Rate (%)',
+                    data: deviceRates,
+                    backgroundColor: '#764ba2'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Alert Rate (%)' } }
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // 3. HOUR CHART
+    // ============================================================
+    const hourLabels = {{ hour_labels | tojson | safe }};
+    const hourRates = {{ hour_rates | tojson | safe }};
+    if (hourLabels && hourLabels.length) {
+        charts.hour = new Chart(document.getElementById('hourChart'), {
+            type: 'bar',
+            data: {
+                labels: hourLabels,
+                datasets: [{
+                    label: 'Alert Rate (%)',
+                    data: hourRates,
+                    backgroundColor: '#f39c12'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Alert Rate (%)' } }
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // TAB SWITCHING – resize charts when Charts tab is shown
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Switch active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+
+                // If Charts tab is activated, resize all charts
+                if (this.dataset.tab === 'charts') {
+                    Object.values(charts).forEach(chart => {
+                        if (chart && chart.resize) {
+                            setTimeout(() => chart.resize(), 100);
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

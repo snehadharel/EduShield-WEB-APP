@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}My Exam Marks{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+    .stat-card.total .stat-value { color: #2563EB; }
+    .stat-card.graded .stat-value { color: #22C55E; }
+    .stat-card.notgraded .stat-value { color: #F59E0B; }
+    .stat-card.average .stat-value { color: #8B5CF6; }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 12px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    .search-bar .clear-btn {
+        padding: 12px 20px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .search-bar .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    /* ===== MARKS CARD ===== */
+    .marks-card {
+        background: white;
+        border-radius: 16px;
+        padding: 18px 20px;
+        border: 1px solid #EDF2F7;
+        transition: 0.2s;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .marks-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transform: translateX(4px);
+    }
+    .marks-card .info {
+        flex: 2;
+        min-width: 160px;
+    }
+    .marks-card .info h4 {
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 2px;
+        font-size: 16px;
+    }
+    .marks-card .info .course {
+        font-size: 13px;
+        color: #2563EB;
+        font-weight: 500;
+    }
+    .marks-card .info .date {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 4px;
+    }
+    .marks-card .info .date i {
+        margin-right: 4px;
+    }
+    .marks-card .score {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .marks-card .score .marks-obtained {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .marks-card .score .marks-obtained span {
+        font-size: 14px;
+        font-weight: 400;
+        color: #64748B;
+    }
+    .marks-card .score .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .status-graded { background: #DCFCE7; color: #16A34A; }
+    .status-notgraded { background: #FEF3C7; color: #D97706; }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94A3B8;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .sub { font-size: 14px; margin-top: 8px; }
+
+    .hidden { display: none; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .marks-card { flex-direction: column; align-items: stretch; }
+        .marks-card .score { justify-content: space-between; }
+        .search-bar { flex-direction: column; }
+        .search-bar input { width: 100%; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .marks-card .score { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-chart-bar"></i> My Exam Marks</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Exams</span>
+                &nbsp;·&nbsp; View your scores for all exams across courses
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATS CARDS ===== -->
+    {% set graded = exams|selectattr('marks_obtained', 'ne', 'Not graded')|list %}
+    {% set notgraded = exams|rejectattr('marks_obtained', 'ne', 'Not graded')|list %}
+    {% set total = exams|length %}
+    {% set avg = (graded|map(attribute='marks_obtained')|sum / graded|length)|round(1) if graded|length > 0 else 0 %}
+
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <h4>Total Exams</h4>
+            <div class="stat-value">{{ total }}</div>
+            <div class="stat-sub">enrolled</div>
+        </div>
+        <div class="stat-card graded">
+            <h4>Graded</h4>
+            <div class="stat-value">{{ graded|length }}</div>
+            <div class="stat-sub">✅ scored</div>
+        </div>
+        <div class="stat-card notgraded">
+            <h4>Not Graded</h4>
+            <div class="stat-value">{{ notgraded|length }}</div>
+            <div class="stat-sub">⏳ pending</div>
+        </div>
+        <div class="stat-card average">
+            <h4>Average Score</h4>
+            <div class="stat-value">{{ avg }}</div>
+            <div class="stat-sub">out of {{ exams[0].total_marks if exams else 100 }}</div>
+        </div>
+    </div>
+
+    <!-- ===== SEARCH BAR ===== -->
+    <div class="search-bar">
+        <input type="text" id="examSearch" placeholder="🔍 Search by exam title or course..." onkeyup="filterExams()">
+        <button class="clear-btn" onclick="document.getElementById('examSearch').value=''; filterExams();">Clear</button>
+    </div>
+
+    <!-- ===== MARKS LIST ===== -->
+    <div id="examGrid">
+        {% if exams %}
+            {% for exam in exams %}
+            <div class="marks-card" data-title="{{ exam.title|lower }}" data-course="{{ exam.course_name|lower }}">
+                <div class="info">
+                    <h4>{{ exam.title }}</h4>
+                    <div class="course"><i class="fas fa-book"></i> {{ exam.course_name }}</div>
+                    <div class="date"><i class="fas fa-calendar-alt"></i> {{ exam.exam_date }} at {{ exam.start_time }}</div>
+                </div>
+                <div class="score">
+                    {% if exam.marks_obtained != 'Not graded' %}
+                        <span class="marks-obtained">{{ exam.marks_obtained }} <span>/ {{ exam.total_marks }}</span></span>
+                        <span class="status-badge status-graded"><i class="fas fa-check-circle"></i> Graded</span>
+                    {% else %}
+                        <span class="marks-obtained" style="color: #F59E0B;">—</span>
+                        <span class="status-badge status-notgraded"><i class="fas fa-clock"></i> Not Graded</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📊</div>
+                <p style="font-size: 18px;">No exam records found.</p>
+                <p class="sub">Your exam marks will appear here once you have taken exams.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== FILTER SCRIPT ===== -->
+<script>
+    function filterExams() {
+        const query = document.getElementById('examSearch').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.marks-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const title = card.dataset.title || '';
+            const course = card.dataset.course || '';
+            if (title.includes(query) || course.includes(query)) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        // Show/hide no results message
+        const grid = document.getElementById('examGrid');
+        const existingMsg = document.getElementById('noResultsMsg');
+        if (existingMsg) existingMsg.remove();
+
+        if (visibleCount === 0 && query) {
+            const msg = document.createElement('div');
+            msg.id = 'noResultsMsg';
+            msg.className = 'empty-state';
+            msg.style.marginTop = '16px';
+            msg.innerHTML = `
+                <div style="font-size: 42px; margin-bottom: 10px;">🔍</div>
+                <p style="font-size: 18px;">No exams match "<strong>${query}</strong>"</p>
+                <p class="sub">Try a different search term.</p>
+            `;
+            grid.appendChild(msg);
+        }
+    }
+</script>
+{% endblock %}

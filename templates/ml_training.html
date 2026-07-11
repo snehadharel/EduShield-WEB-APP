@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}ML Model Retraining Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== ML TRAINING STYLES ===== */
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header h1 i {
+        color: #2563EB;
+    }
+    .page-header p {
+        color: #64748B;
+        font-size: 15px;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+        min-width: 80px;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== STATS GRID ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .stat-card h3 {
+        font-size: 13px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+
+    /* ===== ALERT / STATUS ===== */
+    .alert {
+        background: #EFF6FF;
+        border-left: 4px solid #2563EB;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+    .alert strong {
+        color: #1E40AF;
+    }
+    .alert .detail {
+        font-size: 14px;
+        color: #475569;
+        margin-top: 4px;
+    }
+
+    /* ===== PIPELINE ===== */
+    .pipeline {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .pipeline h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 0;
+        margin-bottom: 16px;
+        border-left: 4px solid #2563EB;
+        padding-left: 12px;
+        color: #0F172A;
+    }
+    .pipeline-steps {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 15px;
+    }
+    .step {
+        flex: 1;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid #E2E8F0;
+        min-width: 100px;
+    }
+    .step-number {
+        width: 32px;
+        height: 32px;
+        background: #2563EB;
+        color: white;
+        border-radius: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    .step .step-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #0F172A;
+    }
+    .step .step-desc {
+        font-size: 12px;
+        color: #64748B;
+        display: block;
+        margin-top: 4px;
+    }
+
+    /* ===== TRAINING TAB ===== */
+    .training-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .training-card .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+    .training-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+    }
+    .training-card p {
+        color: #64748B;
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+    .btn-retrain {
+        background: linear-gradient(135deg, #2563EB, #1E40AF);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 40px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 18px;
+        transition: 0.25s;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-retrain:hover {
+        transform: translateY(-3px);
+        filter: brightness(1.05);
+        box-shadow: 0 12px 28px -10px rgba(37,99,235,0.4);
+    }
+    .btn-retrain:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .training-history {
+        margin-top: 24px;
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid #EDF2F7;
+        text-align: left;
+    }
+    .training-history h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 12px;
+        border-left: 4px solid #F59E0B;
+        padding-left: 12px;
+    }
+    .history-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #F1F5F9;
+        font-size: 14px;
+        color: #475569;
+    }
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    .history-item .status-success {
+        color: #16A34A;
+        font-weight: 600;
+    }
+    .history-item .status-failed {
+        color: #DC2626;
+        font-weight: 600;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .pipeline-steps { flex-direction: column; }
+        .step { min-width: auto; }
+        .tab-btn { font-size: 12px; padding: 10px 8px; }
+        .training-card { padding: 24px; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .btn-retrain { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <h1><i class="fas fa-brain"></i> ML Model Retraining Dashboard</h1>
+        <p>End‑to‑end lifecycle: collect login logs → train ensemble → deploy for adaptive authentication.</p>
+    </div>
+
+    <!-- ===== TABS ===== -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+        <button class="tab-btn" data-tab="training">⚙️ Training</button>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 1: OVERVIEW -->
+    <!-- ============================================= -->
+    <div id="tab-overview" class="tab-content active">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Login records</h3>
+                <div class="stat-value">{{ metadata.login_count|default(login_count) if metadata else login_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Model loaded</h3>
+                <div class="stat-value" style="color: {% if model_loaded %}#22C55E{% else %}#EF4444{% endif %};">{{ "✅ Yes" if model_loaded else "❌ No" }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Random Forest F1</h3>
+                <div class="stat-value">{{ metadata.rf_f1|default('—') if metadata else '—' }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Isolation Forest F1</h3>
+                <div class="stat-value">{{ metadata.iso_f1|default('—') if metadata else '—' }}</div>
+            </div>
+        </div>
+
+        <!-- Model Status -->
+        <div class="alert">
+            <strong>{% if model_loaded %}✅ Ensemble model active{% else %}⚠️ Ensemble model not loaded{% endif %}</strong>
+            <div class="detail">
+                Model file updated: {{ model_file_mtime.strftime('%Y-%m-%d %H:%M:%S') if model_file_mtime else 'Unknown' }}
+                {% if metadata and metadata.trained_at %}
+                    <br>Last training: {{ metadata.trained_at }}
+                {% endif %}
+            </div>
+            {% if not model_loaded %}
+                <div class="detail" style="color: #DC2626; margin-top: 8px;">
+                    ⚠️ Model not loaded. Click the "Training" tab and retrain the model.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Training Pipeline -->
+        <div class="pipeline">
+            <h2>🔄 Training Pipeline</h2>
+            <div class="pipeline-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <span class="step-label">Data</span>
+                    <span class="step-desc">login_logs table</span>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <span class="step-label">Balance</span>
+                    <span class="step-desc">SMOTE oversampling</span>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <span class="step-label">Train</span>
+                    <span class="step-desc">RF + Isolation Forest</span>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <span class="step-label">Save</span>
+                    <span class="step-desc">ensemble_risk.pkl</span>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <span class="step-label">Deploy</span>
+                    <span class="step-desc">Reload in Flask</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 2: TRAINING -->
+    <!-- ============================================= -->
+    <div id="tab-training" class="tab-content">
+        <div class="training-card">
+            <div class="icon">🤖</div>
+            <h2>Retrain the Ensemble Model</h2>
+            <p>
+                {% if metadata and metadata.samples %}
+                    Current training data: <strong>{{ metadata.samples }}</strong> records.
+                {% else %}
+                    Training data will be pulled from the <strong>login_logs</strong> table.
+                {% endif %}
+                <br>
+                <small style="color: #94A3B8;">Retraining may take 10–30 seconds depending on data size.</small>
+            </p>
+
+            <form method="POST" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-retrain">
+                    <i class="fas fa-sync-alt"></i> Retrain Model Now
+                </button>
+            </form>
+        </div>
+
+        <!-- Training History (if metadata exists) -->
+        {% if metadata %}
+        <div class="training-history">
+            <h3>📋 Training History</h3>
+            <div class="history-item">
+                <span>Training date</span>
+                <span><strong>{{ metadata.trained_at or 'Unknown' }}</strong></span>
+            </div>
+            <div class="history-item">
+                <span>Total records</span>
+                <span><strong>{{ metadata.samples or '—' }}</strong></span>
+            </div>
+            <div class="history-item">
+                <span>Anomaly ratio</span>
+                <span><strong>{{ (metadata.anomaly_ratio * 100)|round(2) if metadata.anomaly_ratio else '—' }}%</strong></span>
+            </div>
+            <div class="history-item">
+                <span>Random Forest F1</span>
+                <span><strong class="{% if metadata.rf_f1 and metadata.rf_f1 > 0.7 %}status-success{% else %}status-failed{% endif %}">{{ metadata.rf_f1 or '—' }}</strong></span>
+            </div>
+            <div class="history-item">
+                <span>Isolation Forest F1</span>
+                <span><strong class="{% if metadata.iso_f1 and metadata.iso_f1 > 0.7 %}status-success{% else %}status-failed{% endif %}">{{ metadata.iso_f1 or '—' }}</strong></span>
+            </div>
+            <div class="history-item" style="border-bottom: none;">
+                <span>Status</span>
+                <span><strong class="{% if metadata.success %}status-success{% else %}status-failed{% endif %}">{% if metadata.success %}✅ Training successful{% else %}❌ Training failed{% endif %}</strong></span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== TAB JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Show selected tab content
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}

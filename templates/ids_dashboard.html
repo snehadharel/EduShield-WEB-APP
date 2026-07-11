@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+
+{% block title %}IDS Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== IDS STYLES ===== */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 28px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .page-header .btn {
+        padding: 8px 18px;
+        border-radius: 40px;
+        border: none;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-refresh {
+        background: #667eea;
+        color: white;
+    }
+    .btn-refresh:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+    }
+    .btn-export {
+        background: #22C55E;
+        color: white;
+    }
+    .btn-export:hover {
+        background: #16A34A;
+        transform: translateY(-2px);
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+        min-width: 80px;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== STATS ===== */
+    .stats-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);
+        border: 1px solid #F1F5F9;
+        text-align: center;
+    }
+    .stat-card h3 {
+        font-size: 13px;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .stat-card .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+
+    /* ===== CHARTS GRID ===== */
+    .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+    .chart-container {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .chart-container h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-top: 0;
+        margin-bottom: 16px;
+        border-left: 4px solid #2563EB;
+        padding-left: 12px;
+    }
+    .chart-container canvas {
+        max-width: 100%;
+        height: auto;
+        max-height: 280px;
+        width: 100% !important;
+    }
+
+    /* ===== ALERTS TABLE ===== */
+    .alert-feed {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        overflow-x: auto;
+    }
+    .alert-feed h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        border-left: 4px solid #2563EB;
+        padding-left: 12px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    th {
+        background: #F8FAFC;
+        font-weight: 600;
+        color: #1E293B;
+    }
+    tr.high-risk {
+        background: #FEF2F2;
+    }
+    tr:hover {
+        background: #FAFBFC;
+    }
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #94A3B8;
+        font-size: 14px;
+    }
+    .timestamp {
+        font-size: 12px;
+        color: #94A3B8;
+        margin-top: 20px;
+        text-align: right;
+    }
+    @media (max-width: 768px) {
+        .stats-summary { grid-template-columns: 1fr 1fr; }
+        .stat-card .stat-value { font-size: 24px; }
+        .chart-grid { grid-template-columns: 1fr; }
+        .chart-container canvas { max-height: 220px; }
+        .page-header { flex-direction: column; align-items: stretch; }
+        .page-header .actions { justify-content: flex-start; }
+    }
+    @media (max-width: 480px) {
+        .stats-summary { grid-template-columns: 1fr; }
+        .tab-btn { font-size: 12px; padding: 10px 8px; }
+    }
+</style>
+
+<!-- ===== HEADER ===== -->
+<div class="page-header">
+    <h1><i class="fas fa-shield-alt"></i> Intrusion Detection System</h1>
+    <div class="actions">
+        <a href="{{ url_for('export_logs') }}" class="btn btn-export"><i class="fas fa-file-export"></i> Export Logs</a>
+        <button class="btn btn-refresh" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Refresh</button>
+    </div>
+</div>
+
+<!-- ===== TABS ===== -->
+<div class="tab-header">
+    <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+    <button class="tab-btn" data-tab="charts">📈 Charts</button>
+    <button class="tab-btn" data-tab="alerts">⚠️ Alerts</button>
+</div>
+
+<!-- ============================================= -->
+<!-- TAB 1: OVERVIEW -->
+<!-- ============================================= -->
+<div id="tab-overview" class="tab-content active">
+    <!-- Stats Cards -->
+    <div class="stats-summary">
+        <div class="stat-card">
+            <h3>Total Alerts (30d)</h3>
+            <div class="stat-value">{{ alerts|length if alerts else 0 }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>High Risk (≥7)</h3>
+            <div class="stat-value">{{ alerts|selectattr('risk_score', 'ge', 7)|list|length }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Blocked Actions</h3>
+            <div class="stat-value">{{ alerts|selectattr('action', 'in', ['block', 'block_ip_bruteforce'])|list|length }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>OTP Required</h3>
+            <div class="stat-value">{{ alerts|selectattr('action', 'equalto', 'otp_required')|list|length }}</div>
+        </div>
+    </div>
+
+    <!-- Quick Summary (optional) -->
+    <div style="background: white; border-radius: 20px; padding: 20px; border: 1px solid #EDF2F7;">
+        <h2 style="font-size: 16px; font-weight: 700; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #2563EB; padding-left: 12px;">📌 Quick Summary</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div><span style="font-weight:600;">Latest alert:</span> {% if alerts %}{{ alerts[0].login_time | string | truncate(19, True, '') }}{% else %}None{% endif %}</div>
+            <div><span style="font-weight:600;">Most blocked IP:</span> {% if top_blocked_ips %}{{ top_blocked_ips[0].ip_address }} ({{ top_blocked_ips[0].cnt }}×){% else %}—{% endif %}</div>
+            <div><span style="font-weight:600;">Peak attack day:</span> {% if trend %}{{ trend | sort(attribute='attacks', reverse=True) | first | attr('date') }}{% else %}—{% endif %}</div>
+            <div><span style="font-weight:600;">Total logins (7d):</span> {{ trend | sum(attribute='total') if trend else 0 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- TAB 2: CHARTS -->
+<!-- ============================================= -->
+<div id="tab-charts" class="tab-content">
+    <div class="chart-grid">
+        <!-- Attack Trend -->
+        <div class="chart-container">
+            <h2>📈 Attack Trend (last 7 days)</h2>
+            <canvas id="trendChart" width="400" height="280"></canvas>
+            {% if not trend %}<div class="no-data">No login data available for the last 7 days.</div>{% endif %}
+        </div>
+
+        <!-- Risk Distribution -->
+        <div class="chart-container">
+            <h2>📊 Risk Score Distribution</h2>
+            <canvas id="riskChart" width="400" height="280"></canvas>
+            {% if not risk_dist %}<div class="no-data">No risk scores recorded yet.</div>{% endif %}
+        </div>
+
+        <!-- OTP Triggers -->
+        <div class="chart-container">
+            <h2>🔐 OTP Triggers per Day (last 7 days)</h2>
+            <canvas id="otpChart" width="400" height="280"></canvas>
+            {% if not otp_freq %}<div class="no-data">No OTP triggers in last 7 days.</div>{% endif %}
+        </div>
+
+        <!-- Top Blocked IPs -->
+        <div class="chart-container">
+            <h2>🚫 Top Blocked IPs (last 7 days)</h2>
+            <canvas id="ipChart" width="400" height="280"></canvas>
+            {% if not top_blocked_ips %}<div class="no-data">No blocked IPs in last 7 days.</div>{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- TAB 3: ALERTS -->
+<!-- ============================================= -->
+<div id="tab-alerts" class="tab-content">
+    <div class="alert-feed">
+        <h2>⚠️ Real‑time Alerts (latest 50)</h2>
+        {% if alerts %}
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr><th>Time</th><th>User</th><th>IP Address</th><th>Risk</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr class="{% if alert.risk_score >= 7 %}high-risk{% endif %}">
+                        <td>{{ alert.login_time | string | truncate(19, True, '') }}</td>
+                        <td>{{ alert.username or 'Unknown' }}</td>
+                        <td>{{ alert.ip_address or 'N/A' }}</td>
+                        <td>{{ alert.risk_score }}</td>
+                        <td>{{ alert.action }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-data">No alerts recorded yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Timestamp -->
+<div class="timestamp">
+    Last updated: {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else 'Unknown' }}
+</div>
+
+<!-- ===== CHART SCRIPTS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Store chart instances for resize on tab switch
+    const charts = {};
+
+    // ============================================================
+    // 1. TREND CHART
+    // ============================================================
+    const trendData = {{ trend | default([]) | tojson | safe }};
+    if (trendData && trendData.length) {
+        charts.trend = new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: trendData.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Total Logins',
+                        data: trendData.map(d => d.total),
+                        borderColor: '#3498db',
+                        fill: false,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Attacks (Blocked/OTP)',
+                        data: trendData.map(d => d.attacks),
+                        borderColor: '#e74c3c',
+                        fill: false,
+                        tension: 0.2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    }
+
+    // ============================================================
+    // 2. RISK DISTRIBUTION – BINNED
+    // ============================================================
+    const riskDistRaw = {{ risk_dist | default([]) | tojson | safe }};
+    if (riskDistRaw && riskDistRaw.length) {
+        const bins = {};
+        const binLabels = [];
+        // Create bins 0-10, 11-20, ... 91-100, 100+
+        for (let i = 0; i <= 90; i += 10) {
+            const label = (i === 0) ? '0-10' : `${i+1}-${i+10}`;
+            bins[label] = 0;
+            binLabels.push(label);
+        }
+        bins['100+'] = 0;
+        binLabels.push('100+');
+        
+        riskDistRaw.forEach(item => {
+            const score = item.risk_score;
+            let binKey;
+            if (score <= 10) binKey = '0-10';
+            else if (score <= 20) binKey = '11-20';
+            else if (score <= 30) binKey = '21-30';
+            else if (score <= 40) binKey = '31-40';
+            else if (score <= 50) binKey = '41-50';
+            else if (score <= 60) binKey = '51-60';
+            else if (score <= 70) binKey = '61-70';
+            else if (score <= 80) binKey = '71-80';
+            else if (score <= 90) binKey = '81-90';
+            else if (score <= 100) binKey = '91-100';
+            else binKey = '100+';
+            bins[binKey] += item.cnt;
+        });
+        
+        const labels = Object.keys(bins);
+        const data = Object.values(bins);
+        
+        charts.risk = new Chart(document.getElementById('riskChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Count',
+                    data: data,
+                    backgroundColor: '#f39c12'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    // ============================================================
+    // 3. OTP TRIGGERS
+    // ============================================================
+    const otpData = {{ otp_freq | default([]) | tojson | safe }};
+    if (otpData && otpData.length) {
+        charts.otp = new Chart(document.getElementById('otpChart'), {
+            type: 'line',
+            data: {
+                labels: otpData.map(d => d.date),
+                datasets: [{
+                    label: 'OTP Requests',
+                    data: otpData.map(d => d.otp_cnt),
+                    borderColor: '#27ae60',
+                    fill: false,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    }
+
+    // ============================================================
+    // 4. TOP BLOCKED IPS (horizontal bar)
+    // ============================================================
+    const blockedIps = {{ top_blocked_ips | default([]) | tojson | safe }};
+    if (blockedIps && blockedIps.length) {
+        charts.ip = new Chart(document.getElementById('ipChart'), {
+            type: 'bar',
+            data: {
+                labels: blockedIps.map(d => d.ip_address),
+                datasets: [{
+                    label: 'Block Count',
+                    data: blockedIps.map(d => d.cnt),
+                    backgroundColor: '#e74c3c'
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // ============================================================
+    // TAB SWITCHING – resize charts when Charts tab is shown
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Switch active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+
+                // If Charts tab is activated, resize all charts
+                if (this.dataset.tab === 'charts') {
+                    Object.values(charts).forEach(chart => {
+                        if (chart && chart.resize) {
+                            setTimeout(() => chart.resize(), 100);
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

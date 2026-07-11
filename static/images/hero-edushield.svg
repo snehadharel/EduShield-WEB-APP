@@ -1,0 +1,96 @@
+<svg viewBox="0 0 520 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Student learning with AI security protection">
+  <defs>
+    <linearGradient id="bgGlow" x1="260" y1="0" x2="260" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#312e81" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#0f172a" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="260" y1="80" x2="260" y2="340" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="screenGrad" x1="200" y1="240" x2="320" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ambient background -->
+  <rect width="520" height="420" rx="20" fill="url(#bgGlow)"/>
+  <circle cx="260" cy="210" r="140" fill="#6366f1" fill-opacity="0.08" filter="url(#softGlow)"/>
+
+  <!-- neural network nodes (AI) -->
+  <g opacity="0.55" stroke="#818cf8" stroke-width="1.2">
+    <line x1="90" y1="120" x2="150" y2="90"/><line x1="150" y1="90" x2="200" y2="110"/>
+    <line x1="320" y1="110" x2="370" y2="90"/><line x1="370" y1="90" x2="430" y2="120"/>
+    <line x1="150" y1="90" x2="260" y2="70"/><line x1="370" y1="90" x2="260" y2="70"/>
+    <circle cx="90" cy="120" r="5" fill="#22d3ee"/><circle cx="150" cy="90" r="5" fill="#818cf8"/>
+    <circle cx="200" cy="110" r="4" fill="#6366f1"/><circle cx="320" cy="110" r="4" fill="#6366f1"/>
+    <circle cx="370" cy="90" r="5" fill="#818cf8"/><circle cx="430" cy="120" r="5" fill="#22d3ee"/>
+    <circle cx="260" cy="70" r="6" fill="#a78bfa"/>
+  </g>
+
+  <!-- main shield -->
+  <path d="M260 95 L175 130 V210 C175 268 210 305 260 325 C310 305 345 268 345 210 V130 L260 95Z" fill="url(#shieldGrad)" fill-opacity="0.25" stroke="url(#shieldGrad)" stroke-width="2.5"/>
+  <path d="M260 115 L195 143 V208 C195 255 222 283 260 298 C298 283 325 255 325 208 V143 L260 115Z" fill="url(#shieldGrad)" fill-opacity="0.15"/>
+
+  <!-- student figure -->
+  <circle cx="260" cy="168" r="28" fill="#fcd9b6"/>
+  <path d="M232 168 C232 148 244 136 260 136 C276 136 288 148 288 168" fill="#1e293b"/>
+  <ellipse cx="260" cy="218" rx="42" ry="28" fill="#4f46e5"/>
+
+  <!-- laptop -->
+  <rect x="195" y="248" width="130" height="82" rx="10" fill="url(#screenGrad)" stroke="#6366f1" stroke-width="2"/>
+  <rect x="205" y="258" width="110" height="58" rx="4" fill="#1e293b"/>
+  <!-- code lines on screen -->
+  <rect x="215" y="268" width="50" height="4" rx="2" fill="#22d3ee" opacity="0.9"/>
+  <rect x="215" y="278" width="70" height="3" rx="1.5" fill="#818cf8" opacity="0.7"/>
+  <rect x="215" y="286" width="60" height="3" rx="1.5" fill="#6366f1" opacity="0.5"/>
+  <rect x="215" y="294" width="45" height="3" rx="1.5" fill="#a78bfa" opacity="0.6"/>
+  <path d="M180 330 H340 L350 345 H170 Z" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+
+  <!-- floating feature badges -->
+  <g transform="translate(72, 200)">
+    <rect width="72" height="72" rx="14" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <rect x="18" y="22" width="36" height="28" rx="4" fill="none" stroke="#22d3ee" stroke-width="2"/>
+    <line x1="24" y1="30" x2="48" y2="30" stroke="#818cf8" stroke-width="2"/>
+    <line x1="24" y1="38" x2="42" y2="38" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="36" y="62" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter,sans-serif" font-weight="600">EXAMS</text>
+  </g>
+
+  <g transform="translate(376, 188)">
+    <rect width="72" height="72" rx="14" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <path d="M36 20 L48 28 V42 C48 50 42 56 36 58 C30 56 24 50 24 42 V28 Z" fill="none" stroke="#a78bfa" stroke-width="2"/>
+    <circle cx="36" cy="38" r="4" fill="#22d3ee"/>
+    <text x="36" y="62" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter,sans-serif" font-weight="600">SECURE</text>
+  </g>
+
+  <g transform="translate(88, 72)">
+    <rect width="64" height="64" rx="14" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <rect x="16" y="18" width="32" height="24" rx="3" fill="none" stroke="#6366f1" stroke-width="2"/>
+    <line x1="20" y1="26" x2="44" y2="26" stroke="#818cf8" stroke-width="1.5"/>
+    <line x1="20" y1="32" x2="38" y2="32" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="32" y="54" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="Inter,sans-serif" font-weight="600">COURSES</text>
+  </g>
+
+  <g transform="translate(368, 68)">
+    <rect width="64" height="64" rx="14" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <rect x="18" y="28" width="8" height="18" rx="2" fill="#22d3ee"/>
+    <rect x="30" y="22" width="8" height="24" rx="2" fill="#818cf8"/>
+    <rect x="42" y="26" width="8" height="20" rx="2" fill="#6366f1"/>
+    <text x="32" y="54" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="Inter,sans-serif" font-weight="600">ANALYTICS</text>
+  </g>
+
+  <!-- lock icon on shield -->
+  <g transform="translate(248, 248)">
+    <rect x="4" y="14" width="16" height="14" rx="3" fill="#22d3ee"/>
+    <path d="M8 14 V10 C8 6.5 10.5 4 14 4 C17.5 4 20 6.5 20 10 V14" stroke="#22d3ee" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,682 @@
+{% extends "base.html" %}
+
+{% block title %}My Documents{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 12px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+    .stat-card.total .stat-value { color: #2563EB; }
+    .stat-card.pdf .stat-value { color: #DC2626; }
+    .stat-card.image .stat-value { color: #22C55E; }
+    .stat-card.other .stat-value { color: #F59E0B; }
+
+    /* ===== UPLOAD FORM CARD ===== */
+    .upload-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        margin-bottom: 28px;
+    }
+    .upload-card .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 12px;
+    }
+    .upload-card .card-title i {
+        color: #22C55E;
+    }
+    .upload-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .form-group {
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+    .form-group input[type="text"] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 14px;
+        transition: 0.2s;
+        background: #FAFBFC;
+    }
+    .form-group input[type="text"]:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    .file-drop-zone {
+        border: 2px dashed #E2E8F0;
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        transition: 0.3s;
+        cursor: pointer;
+        background: #FAFBFC;
+        position: relative;
+    }
+    .file-drop-zone:hover {
+        border-color: #667eea;
+        background: #F8FAFC;
+    }
+    .file-drop-zone.dragover {
+        border-color: #667eea;
+        background: #EFF6FF;
+    }
+    .file-drop-zone .icon {
+        font-size: 42px;
+        color: #94A3B8;
+        margin-bottom: 8px;
+    }
+    .file-drop-zone .text {
+        font-size: 14px;
+        color: #64748B;
+    }
+    .file-drop-zone .text strong {
+        color: #2563EB;
+    }
+    .file-drop-zone .text .extensions {
+        font-size: 12px;
+        color: #94A3B8;
+        display: block;
+        margin-top: 4px;
+    }
+    .file-drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .file-preview {
+        display: none;
+        margin-top: 12px;
+        padding: 12px 16px;
+        background: #F0FDF4;
+        border-radius: 12px;
+        border: 1px solid #22C55E;
+        font-size: 14px;
+        color: #166534;
+        align-items: center;
+        gap: 10px;
+    }
+    .file-preview.show {
+        display: flex;
+    }
+    .file-preview .info {
+        flex: 1;
+    }
+    .file-preview .info .name {
+        font-weight: 600;
+    }
+    .file-preview .info .size {
+        font-size: 12px;
+        color: #64748B;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-success { background: #22C55E; }
+    .btn-secondary { background: #64748B; }
+
+    /* ===== DOCUMENTS LIST ===== */
+    .documents-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .documents-card .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .documents-card .card-title span i {
+        color: #e65100;
+    }
+    .documents-card .card-title .count {
+        font-size: 14px;
+        font-weight: 500;
+        color: #64748B;
+    }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 10px 16px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 14px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    .search-bar .clear-btn {
+        padding: 10px 18px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 13px;
+    }
+    .search-bar .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    /* ===== DOCUMENT ITEMS ===== */
+    .doc-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .doc-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        border: 1px solid #EDF2F7;
+        border-radius: 12px;
+        transition: 0.2s;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .doc-item:hover {
+        border-color: #667eea;
+        background: #FAFBFC;
+        transform: translateX(4px);
+    }
+    .doc-item .info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+        min-width: 160px;
+    }
+    .doc-item .info .file-icon {
+        font-size: 28px;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+    .file-icon-pdf { background: #FEE2E2; color: #DC2626; }
+    .file-icon-doc { background: #DBEAFE; color: #1D4ED8; }
+    .file-icon-txt { background: #FEF3C7; color: #D97706; }
+    .file-icon-image { background: #DCFCE7; color: #16A34A; }
+    .file-icon-default { background: #F1F5F9; color: #64748B; }
+    .doc-item .info .details h4 {
+        font-weight: 600;
+        color: #0F172A;
+        margin-bottom: 2px;
+        font-size: 15px;
+    }
+    .doc-item .info .details .meta {
+        font-size: 13px;
+        color: #94A3B8;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .doc-item .info .details .meta .type-badge {
+        display: inline-block;
+        padding: 1px 10px;
+        border-radius: 40px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .type-pdf { background: #FEE2E2; color: #DC2626; }
+    .type-doc { background: #DBEAFE; color: #1D4ED8; }
+    .type-txt { background: #FEF3C7; color: #D97706; }
+    .type-image { background: #DCFCE7; color: #16A34A; }
+    .type-default { background: #F1F5F9; color: #64748B; }
+    .doc-item .actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .doc-item .actions .btn-sm {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .doc-item .actions .btn-sm:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-sm-primary { background: #2563EB; color: white; }
+    .btn-sm-danger { background: #FEE2E2; color: #DC2626; }
+    .btn-sm-danger:hover { background: #FECACA; }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94A3B8;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+    .empty-state .sub { font-size: 14px; margin-top: 6px; }
+
+    .hidden { display: none; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .upload-grid { grid-template-columns: 1fr; }
+        .search-bar { flex-direction: column; }
+        .search-bar input { width: 100%; }
+        .doc-item { flex-direction: column; align-items: stretch; }
+        .doc-item .actions { justify-content: flex-end; }
+        .doc-item .info .file-icon { width: 36px; height: 36px; font-size: 22px; }
+        .btn { justify-content: center; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-folder-open"></i> My Documents</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Profile</span>
+                &nbsp;·&nbsp; Upload and manage your personal documents
+            </div>
+        </div>
+        {% if documents %}
+            <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+                <i class="fas fa-file"></i> {{ documents|length }} documents
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== STATS CARDS ===== -->
+    {% set total = documents|length %}
+    {% set pdf_count = documents|selectattr('file_path', 'search', '.pdf')|list|length %}
+    {% set doc_count = documents|selectattr('file_path', 'search', '.doc')|list|length + documents|selectattr('file_path', 'search', '.docx')|list|length %}
+    {% set image_count = documents|selectattr('file_path', 'search', '.jpg')|list|length + documents|selectattr('file_path', 'search', '.png')|list|length + documents|selectattr('file_path', 'search', '.jpeg')|list|length %}
+    {% set other_count = total - pdf_count - doc_count - image_count %}
+
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <h4>Total</h4>
+            <div class="stat-value">{{ total }}</div>
+            <div class="stat-sub">documents</div>
+        </div>
+        <div class="stat-card pdf">
+            <h4>📄 PDF</h4>
+            <div class="stat-value">{{ pdf_count }}</div>
+            <div class="stat-sub">files</div>
+        </div>
+        <div class="stat-card image">
+            <h4>🖼️ Images</h4>
+            <div class="stat-value">{{ image_count }}</div>
+            <div class="stat-sub">JPG, PNG</div>
+        </div>
+        <div class="stat-card other">
+            <h4>📂 Other</h4>
+            <div class="stat-value">{{ other_count }}</div>
+            <div class="stat-sub">DOC, TXT, etc.</div>
+        </div>
+    </div>
+
+    <!-- ===== UPLOAD FORM CARD ===== -->
+    <div class="upload-card">
+        <div class="card-title">
+            <i class="fas fa-cloud-upload-alt"></i> Upload New Document
+        </div>
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="upload-grid">
+                <div>
+                    <div class="form-group">
+                        <label>Document Name <span class="required">*</span></label>
+                        <input type="text" name="document_name" id="docName" placeholder="e.g., Resume, Transcript, ID Card" required>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label>Description <span style="font-weight:400;color:#94A3B8;">(optional)</span></label>
+                        <input type="text" name="description" id="docDesc" placeholder="Brief description of the document">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>File <span class="required">*</span> <span style="font-weight:400;color:#94A3B8;font-size:13px;">(PDF, DOC, DOCX, TXT, JPG, PNG)</span></label>
+                <div class="file-drop-zone" id="dropZone">
+                    <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="text">
+                        <strong>Click or drag & drop</strong> your file here
+                        <span class="extensions">Supports: PDF, DOC, DOCX, TXT, JPG, PNG (Max 16MB)</span>
+                    </div>
+                    <input type="file" name="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" required>
+                </div>
+                <div class="file-preview" id="filePreview">
+                    <span style="font-size:24px;">📄</span>
+                    <div class="info">
+                        <div class="name" id="fileName">file.pdf</div>
+                        <div class="size" id="fileSize">0 KB</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-upload"></i> Upload Document
+            </button>
+        </form>
+    </div>
+
+    <!-- ===== DOCUMENTS LIST ===== -->
+    <div class="documents-card">
+        <div class="card-title">
+            <span><i class="fas fa-file-alt"></i> Your Documents</span>
+            <span class="count">{{ documents|length }} file(s)</span>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="docSearch" placeholder="🔍 Search by name or description..." onkeyup="filterDocs()">
+            <button class="clear-btn" onclick="document.getElementById('docSearch').value=''; filterDocs();">Clear</button>
+        </div>
+
+        <!-- Document List -->
+        {% if documents %}
+            <div class="doc-list" id="docGrid">
+                {% for doc in documents %}
+                {% set ext = doc.file_path.split('.')[-1].lower() %}
+                {% set icon_class = 'file-icon-pdf' if ext == 'pdf' else 'file-icon-doc' if ext in ['doc', 'docx'] else 'file-icon-image' if ext in ['jpg', 'jpeg', 'png', 'gif', 'svg'] else 'file-icon-txt' if ext == 'txt' else 'file-icon-default' %}
+                {% set type_class = 'type-pdf' if ext == 'pdf' else 'type-doc' if ext in ['doc', 'docx'] else 'type-image' if ext in ['jpg', 'jpeg', 'png', 'gif', 'svg'] else 'type-txt' if ext == 'txt' else 'type-default' %}
+                {% set icon = '📄' if ext == 'pdf' else '📝' if ext in ['doc', 'docx'] else '🖼️' if ext in ['jpg', 'jpeg', 'png'] else '📃' if ext == 'txt' else '📎' %}
+                <div class="doc-item" data-name="{{ doc.document_name|lower }}" data-desc="{{ (doc.description or '')|lower }}">
+                    <div class="info">
+                        <div class="file-icon {{ icon_class }}">{{ icon }}</div>
+                        <div class="details">
+                            <h4>{{ doc.document_name }}</h4>
+                            <div class="meta">
+                                <span>{{ doc.description or 'No description' }}</span>
+                                <span><i class="far fa-calendar-alt"></i> {{ doc.uploaded_at.strftime('%b %d, %Y') if doc.uploaded_at else 'Unknown' }}</span>
+                                <span class="type-badge {{ type_class }}">{{ ext|upper }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <a href="{{ url_for('static', filename=doc.file_path.replace('static/', '')) }}" target="_blank" class="btn-sm btn-sm-primary">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_document', doc_id=doc.id) }}" style="display:inline;" onsubmit="return confirm('Delete this document?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-sm btn-sm-danger">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📁</div>
+                <p style="font-size:18px;">No documents uploaded yet.</p>
+                <p class="sub">Use the form above to upload your first document.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    // --- File Drop Zone ---
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            updateFilePreview(fileInput.files[0]);
+        }
+    });
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            updateFilePreview(this.files[0]);
+        }
+    });
+
+    function updateFilePreview(file) {
+        preview.classList.add('show');
+        fileName.textContent = file.name;
+        let size = file.size;
+        if (size < 1024) fileSize.textContent = size + ' B';
+        else if (size < 1048576) fileSize.textContent = (size / 1024).toFixed(1) + ' KB';
+        else fileSize.textContent = (size / 1048576).toFixed(1) + ' MB';
+        // Auto-fill document name from filename if empty
+        const docName = document.getElementById('docName');
+        if (!docName.value.trim()) {
+            const name = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+            docName.value = name.charAt(0).toUpperCase() + name.slice(1);
+        }
+    }
+
+    // --- Search/Filter ---
+    function filterDocs() {
+        const query = document.getElementById('docSearch').value.toLowerCase().trim();
+        const items = document.querySelectorAll('.doc-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const name = item.dataset.name || '';
+            const desc = item.dataset.desc || '';
+            if (name.includes(query) || desc.includes(query)) {
+                item.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+
+        // Update count in the title
+        const countSpan = document.querySelector('.card-title .count');
+        if (countSpan) {
+            countSpan.textContent = visibleCount + ' file(s)';
+        }
+
+        // Show/hide no results message
+        const grid = document.getElementById('docGrid');
+        const existingMsg = document.getElementById('noResultsMsg');
+        if (existingMsg) existingMsg.remove();
+
+        if (visibleCount === 0 && query) {
+            const msg = document.createElement('div');
+            msg.id = 'noResultsMsg';
+            msg.className = 'empty-state';
+            msg.style.gridColumn = '1 / -1';
+            msg.innerHTML = `
+                <div style="font-size:42px;margin-bottom:10px;">🔍</div>
+                <p style="font-size:18px;">No documents match "<strong>${query}</strong>"</p>
+                <p class="sub">Try a different search term.</p>
+            `;
+            grid.appendChild(msg);
+        }
+    }
+
+    // --- Form validation ---
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        const name = document.getElementById('docName').value.trim();
+        const file = document.getElementById('fileInput').files[0];
+        if (!name) {
+            alert('Please enter a document name.');
+            e.preventDefault();
+            return;
+        }
+        if (!file) {
+            alert('Please select a file to upload.');
+            e.preventDefault();
+            return;
+        }
+        const maxSize = 16 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File size exceeds 16MB limit.');
+            e.preventDefault();
+            return;
+        }
+    });
+</script>
+{% endblock %}

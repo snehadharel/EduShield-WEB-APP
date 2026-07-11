@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}SHAP Detail — Log #{{ log.id }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        color: white;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: underline;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+    }
+
+    /* ===== INFO CARD ===== */
+    .info-card {
+        background: white;
+        border-radius: 20px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 32px;
+        align-items: center;
+    }
+    .info-card .item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .info-card .item strong {
+        color: #0F172A;
+    }
+    .info-card .risk-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .info-card .risk-factors {
+        font-size: 13px;
+        color: #64748B;
+        background: #F8FAFC;
+        padding: 4px 12px;
+        border-radius: 8px;
+        margin-top: 4px;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 24px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+        min-width: 80px;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        margin-bottom: 24px;
+    }
+    .card h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 16px;
+        border-left: 4px solid #2563EB;
+        padding-left: 12px;
+    }
+    .card .subtitle {
+        font-size: 14px;
+        color: #64748B;
+        margin-bottom: 16px;
+    }
+    .card .geo-factors {
+        background: #F8FAFC;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 16px;
+        border-left: 3px solid #F59E0B;
+    }
+    .card .chart-wrapper {
+        text-align: center;
+    }
+    .card .chart-wrapper img {
+        max-width: 100%;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+    }
+    .card .base-note {
+        font-size: 12px;
+        color: #94A3B8;
+        margin-top: 12px;
+        text-align: right;
+    }
+
+    /* ===== TABLE ===== */
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    .contrib-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .contrib-table th {
+        background: #2c3e50;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .contrib-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #E2E8F0;
+        vertical-align: middle;
+    }
+    .contrib-table tr:hover {
+        background: #F8FAFC;
+    }
+    .contrib-table .pct-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 40px;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .no-data {
+        text-align: center;
+        padding: 40px 0;
+        color: #94A3B8;
+        font-size: 14px;
+    }
+    .summary-box {
+        font-size: 14px;
+        color: #475569;
+        padding: 12px 16px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        border-left: 4px solid #667eea;
+    }
+    .summary-box code {
+        background: #E2E8F0;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .info-card { flex-direction: column; align-items: stretch; gap: 8px; }
+        .tab-btn { font-size: 12px; padding: 8px 10px; min-width: 60px; }
+        .contrib-table, .contrib-table thead, .contrib-table tbody, .contrib-table th, .contrib-table td, .contrib-table tr {
+            display: block;
+        }
+        .contrib-table thead { display: none; }
+        .contrib-table tr { margin-bottom: 12px; border: 1px solid #E2E8F0; border-radius: 12px; padding: 10px; }
+        .contrib-table td { display: flex; justify-content: space-between; padding: 6px 8px; border-bottom: none; }
+        .contrib-table td:before { content: attr(data-label); font-weight: bold; width: 40%; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <h2><i class="fas fa-chart-pie"></i> SHAP Explanation — Login #{{ log.id }}</h2>
+        <a href="{{ url_for('risk_explanations') }}" class="back-link">← All Explanations</a>
+    </div>
+
+    <!-- ===== LOGIN INFO ===== -->
+    <div class="info-card">
+        <span class="item"><strong>User:</strong> {{ log.username or 'Unknown' }}</span>
+        <span class="item"><strong>IP:</strong> {{ log.ip_address }}</span>
+        <span class="item">
+            <strong>Risk:</strong>
+            <span class="risk-badge" style="background: {% if log.risk_score >= 70 %}#d81b60{% elif log.risk_score >= 40 %}#fb8c00{% else %}#43a047{% endif %};">
+                {{ log.risk_score }}%
+            </span>
+        </span>
+        <span class="item"><strong>Action:</strong> {{ log.action }}</span>
+        <span class="item"><strong>Time:</strong> {{ log.login_time.strftime('%Y-%m-%d %H:%M:%S') if log.login_time else '—' }}</span>
+        {% if log.risk_factors %}
+            <span class="risk-factors"><strong>Factors:</strong> {{ log.risk_factors }}</span>
+        {% endif %}
+    </div>
+
+    {% if shap %}
+    <!-- ===== TABS ===== -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="chart">📊 SHAP Chart</button>
+        <button class="tab-btn" data-tab="details">📋 Contribution Details</button>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 1: SHAP CHART -->
+    <!-- ============================================= -->
+    <div id="tab-chart" class="tab-content active">
+        <div class="card">
+            <h3>📊 SHAP Bar Chart</h3>
+            <div class="subtitle">
+                Horizontal bar chart showing feature contributions to the risk score.
+                <br>Bars to the right increase risk; bars to the left reduce risk.
+            </div>
+
+            {% if shap.geo_factors %}
+                <div class="geo-factors">
+                    <strong>🌍 Geo / Policy factors:</strong> {{ shap.geo_factors | join(', ') }}
+                </div>
+            {% endif %}
+
+            <div class="summary-box">
+                <strong>Summary:</strong> <code>{{ shap.summary }}</code>
+            </div>
+
+            {% if chart_b64 %}
+                <div class="chart-wrapper">
+                    <img src="data:image/png;base64,{{ chart_b64 }}" alt="SHAP bar chart">
+                </div>
+            {% else %}
+                <div class="no-data">⚠️ SHAP chart not available. Ensure the ensemble model is loaded and `shap_explain.shap_bar_chart_base64()` works.</div>
+            {% endif %}
+
+            <div class="base-note">
+                Base value (E[f(x)]): <strong>{{ shap.base_value }}</strong> &middot; Method: <strong>{{ shap.method }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 2: CONTRIBUTION DETAILS -->
+    <!-- ============================================= -->
+    <div id="tab-details" class="tab-content">
+        <div class="card">
+            <h3>📋 Feature Contributions</h3>
+
+            {% if shap.geo_factors %}
+                <div class="geo-factors">
+                    <strong>🌍 Geo / Policy factors:</strong> {{ shap.geo_factors | join(', ') }}
+                </div>
+            {% endif %}
+
+            <div class="summary-box">
+                <strong>Summary:</strong> <code>{{ shap.summary }}</code>
+            </div>
+
+            {% if shap.contributions %}
+                <div class="table-wrapper">
+                    <table class="contrib-table">
+                        <thead>
+                            <tr>
+                                <th>Factor</th>
+                                <th style="text-align: right;">SHAP Value</th>
+                                <th style="text-align: right;">Risk Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in shap.contributions %}
+                            <tr>
+                                <td data-label="Factor">{{ c.label }}</td>
+                                <td data-label="SHAP Value" style="text-align: right;">{{ c.shap_value }}</td>
+                                <td data-label="Risk Share" style="text-align: right;">
+                                    <span class="pct-badge" style="background: {{ '#d81b60' if c.shap_value > 0 else '#43a047' }};">
+                                        {{ c.pct }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="base-note" style="margin-top: 12px;">
+                    Base value (E[f(x)]): <strong>{{ shap.base_value }}</strong> &middot; Method: <strong>{{ shap.method }}</strong>
+                </div>
+            {% else %}
+                <div class="no-data">No contribution data available.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ===== NO SHAP DATA ===== -->
+    <div class="card" style="text-align: center; padding: 40px;">
+        <div class="no-data">
+            <p style="font-size: 16px;">No SHAP data for this log.</p>
+            <p style="font-size: 13px; margin-top: 8px;">Ensure the ensemble model is trained and loaded.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ===== TAB JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Show selected tab content
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}

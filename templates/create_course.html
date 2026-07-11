@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Course{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        background: white;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-bar .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-bar .stat strong {
+        color: #0F172A;
+    }
+    .stats-bar .stat .num {
+        background: #F1F5F9;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    /* ===== FORM CARD ===== */
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .form-card .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+    .form-card .form-title i {
+        color: #22C55E;
+    }
+
+    /* ===== FORM GROUPS ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+    .form-group label .char-count {
+        font-weight: 400;
+        font-size: 13px;
+        color: #94A3B8;
+        float: right;
+    }
+    .form-group .input-wrapper {
+        position: relative;
+    }
+    .form-group .input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+    }
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+        background: #FAFBFC;
+        font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: #94A3B8;
+    }
+    .form-group input {
+        padding-left: 46px;
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.6;
+        padding-left: 18px;
+    }
+    .form-group .hint {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .form-group .hint i {
+        color: #3B82F6;
+        font-size: 13px;
+    }
+
+    /* ===== PREVIEW ===== */
+    .preview-box {
+        display: none;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #22C55E;
+    }
+    .preview-box.show {
+        display: block;
+    }
+    .preview-box .preview-code {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-bottom: 4px;
+    }
+    .preview-box .preview-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 4px;
+    }
+    .preview-box .preview-desc {
+        color: #475569;
+        line-height: 1.5;
+        font-size: 14px;
+    }
+    .preview-box .preview-meta {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 8px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-primary { background: #22C55E; }
+    .btn-primary:hover { background: #16A34A; }
+    .btn-secondary { background: #64748B; }
+    .btn-outline { background: #E2E8F0; color: #1E293B; }
+    .btn-outline:hover { background: #CBD5E1; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .form-card { padding: 20px; }
+        .btn-group { flex-direction: column; }
+        .btn { justify-content: center; }
+        .form-group input { padding-left: 42px; }
+        .preview-box { padding: 16px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-plus-circle"></i> Create New Course</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Courses</span>
+                &nbsp;·&nbsp; Add a course that students can enroll in
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-chalkboard-teacher"></i> {{ session.username }}
+        </div>
+    </div>
+
+    <!-- ===== STATS BAR ===== -->
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-book"></i> <strong>Total Courses:</strong> <span class="num">{{ courses_count|default(0) }}</span></span>
+        <span class="stat"><i class="fas fa-users"></i> <strong>Enrolled Students:</strong> <span class="num">—</span></span>
+        <span class="stat"><i class="fas fa-clock"></i> <strong>Created:</strong> <span class="num">{{ now.strftime('%B %d, %Y') }}</span></span>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-edit"></i> Course Details
+        </div>
+
+        <form method="POST" id="courseForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Course Code -->
+            <div class="form-group">
+                <label>
+                    Course Code <span class="required">*</span>
+                    <span class="char-count"><span id="codeCount">0</span> / 20</span>
+                </label>
+                <div class="input-wrapper">
+                    <i class="fas fa-tag"></i>
+                    <input type="text" name="course_code" id="courseCode" placeholder="e.g., CS101, MATH201, ENG301" required maxlength="20" oninput="updateCounts(); updatePreview();">
+                </div>
+                <div class="hint">
+                    <i class="fas fa-info-circle"></i> A unique identifier for the course (e.g., CS101, MATH201)
+                </div>
+            </div>
+
+            <!-- Course Name -->
+            <div class="form-group">
+                <label>
+                    Course Name <span class="required">*</span>
+                    <span class="char-count"><span id="nameCount">0</span> / 100</span>
+                </label>
+                <div class="input-wrapper">
+                    <i class="fas fa-heading"></i>
+                    <input type="text" name="course_name" id="courseName" placeholder="e.g., Introduction to Computer Science" required maxlength="100" oninput="updateCounts(); updatePreview();">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label>
+                    Description
+                    <span class="char-count"><span id="descCount">0</span> / 500</span>
+                </label>
+                <div class="input-wrapper">
+                    <i class="fas fa-align-left" style="top: 18px; transform: none;"></i>
+                    <textarea name="description" id="courseDesc" rows="4" placeholder="Brief description of the course content and objectives..." maxlength="500" oninput="updateCounts(); updatePreview();"></textarea>
+                </div>
+                <div class="hint">
+                    <i class="fas fa-info-circle"></i> Describe what students will learn in this course (optional)
+                </div>
+            </div>
+
+            <!-- Preview Toggle -->
+            <div style="margin-bottom: 16px;">
+                <button type="button" class="btn btn-outline" onclick="togglePreview()" style="padding: 8px 20px; font-size: 14px;">
+                    <i class="fas fa-eye"></i> Preview Course Card
+                </button>
+            </div>
+
+            <!-- Preview Box -->
+            <div class="preview-box" id="previewBox">
+                <div class="preview-code" id="previewCode">COURSE-101</div>
+                <div class="preview-title" id="previewTitle">Your Course Name</div>
+                <div class="preview-desc" id="previewDesc">Your course description will appear here...</div>
+                <div class="preview-meta">
+                    <span><i class="fas fa-user-tie"></i> Teacher: {{ session.username }}</span>
+                    <span><i class="fas fa-calendar-alt"></i> Created: {{ now.strftime('%B %d, %Y') }}</span>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle"></i> Create Course
+                </button>
+                <a href="{{ url_for('list_courses') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    // --- Update character counts ---
+    function updateCounts() {
+        const code = document.getElementById('courseCode');
+        const name = document.getElementById('courseName');
+        const desc = document.getElementById('courseDesc');
+        document.getElementById('codeCount').textContent = code.value.length;
+        document.getElementById('nameCount').textContent = name.value.length;
+        document.getElementById('descCount').textContent = desc.value.length;
+    }
+
+    // --- Update preview ---
+    function updatePreview() {
+        const code = document.getElementById('courseCode').value.trim() || 'COURSE-101';
+        const name = document.getElementById('courseName').value.trim() || 'Your Course Name';
+        const desc = document.getElementById('courseDesc').value.trim() || 'Your course description will appear here...';
+        document.getElementById('previewCode').textContent = code;
+        document.getElementById('previewTitle').textContent = name;
+        document.getElementById('previewDesc').textContent = desc;
+    }
+
+    // --- Toggle preview ---
+    function togglePreview() {
+        const box = document.getElementById('previewBox');
+        box.classList.toggle('show');
+        if (box.classList.contains('show')) {
+            updatePreview();
+        }
+    }
+
+    // --- Auto-update preview on input ---
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCounts();
+        document.getElementById('courseCode').addEventListener('input', updatePreview);
+        document.getElementById('courseName').addEventListener('input', updatePreview);
+        document.getElementById('courseDesc').addEventListener('input', updatePreview);
+    });
+
+    // --- Form validation ---
+    document.getElementById('courseForm').addEventListener('submit', function(e) {
+        const code = document.getElementById('courseCode').value.trim();
+        const name = document.getElementById('courseName').value.trim();
+        if (!code || !name) {
+            alert('Please fill in both Course Code and Course Name.');
+            e.preventDefault();
+            return;
+        }
+        if (code.length < 2) {
+            alert('Course Code must be at least 2 characters.');
+            e.preventDefault();
+            return;
+        }
+        if (name.length < 3) {
+            alert('Course Name must be at least 3 characters.');
+            e.preventDefault();
+            return;
+        }
+        // Check for spaces in course code (warn but allow)
+        if (code.includes(' ')) {
+            if (!confirm('Course Code contains spaces. Are you sure?')) {
+                e.preventDefault();
+                return;
+            }
+        }
+    });
+</script>
+{% endblock %}

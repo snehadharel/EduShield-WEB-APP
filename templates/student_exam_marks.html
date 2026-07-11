@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Your Marks - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== MARKS CARD ===== */
+    .marks-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    .marks-card .exam-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 4px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 12px;
+    }
+    .marks-card .course-name {
+        color: #2563EB;
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ===== DETAILS GRID ===== */
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 24px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
+    .details-grid .item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .details-grid .item:last-child {
+        border-bottom: none;
+    }
+    .details-grid .item .label {
+        font-weight: 500;
+        color: #64748B;
+        font-size: 14px;
+    }
+    .details-grid .item .value {
+        font-weight: 600;
+        color: #0F172A;
+        font-size: 14px;
+    }
+
+    /* ===== SCORE DISPLAY ===== */
+    .score-display {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin: 16px 0 8px 0;
+        padding: 16px 20px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        border: 1px solid #E2E8F0;
+    }
+    .score-display .score-number {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0F172A;
+        min-width: 80px;
+    }
+    .score-display .score-number span {
+        font-size: 18px;
+        font-weight: 400;
+        color: #64748B;
+    }
+    .score-display .progress-wrapper {
+        flex: 1;
+        min-width: 120px;
+    }
+    .score-display .progress-wrapper .progress {
+        height: 8px;
+        background: #E2E8F0;
+        border-radius: 40px;
+        overflow: hidden;
+    }
+    .score-display .progress-wrapper .progress .bar {
+        height: 100%;
+        border-radius: 40px;
+        transition: width 0.6s ease;
+    }
+    .score-display .progress-wrapper .percentage {
+        font-size: 14px;
+        font-weight: 600;
+        color: #475569;
+        margin-top: 4px;
+        text-align: right;
+    }
+    .score-display .grade-badge {
+        font-size: 28px;
+        font-weight: 800;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .grade-A { background: #DCFCE7; color: #16A34A; }
+    .grade-B { background: #DBEAFE; color: #1D4ED8; }
+    .grade-C { background: #FEF3C7; color: #D97706; }
+    .grade-D { background: #FEE2E2; color: #DC2626; }
+    .grade-F { background: #FEE2E2; color: #991B1B; }
+    .grade-NG { background: #F1F5F9; color: #94A3B8; }
+
+    .not-graded-msg {
+        display: inline-block;
+        color: #F59E0B;
+        background: #FEF3C7;
+        padding: 6px 16px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .back-link-bottom {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 20px;
+        color: #2563EB;
+        text-decoration: none;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+    .back-link-bottom:hover {
+        gap: 12px;
+        color: #1E40AF;
+    }
+
+    @media (max-width: 640px) {
+        .marks-card { padding: 20px; }
+        .details-grid { grid-template-columns: 1fr; gap: 6px; }
+        .score-display { flex-direction: column; align-items: stretch; text-align: center; }
+        .score-display .grade-badge { align-self: center; }
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-chart-bar"></i> Your Exam Marks</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Exams</span>
+                &nbsp;·&nbsp; {{ exam.course_name }}
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-calendar-alt"></i> {{ exam.exam_date }} at {{ exam.start_time }}
+        </div>
+    </div>
+
+    <!-- ===== MARKS CARD ===== -->
+    <div class="marks-card">
+        <div class="exam-title">{{ exam.title }}</div>
+        <div class="course-name"><i class="fas fa-book"></i> {{ exam.course_name }}</div>
+
+        <!-- Exam Details -->
+        <div class="details-grid">
+            <div class="item">
+                <span class="label">📅 Exam Date</span>
+                <span class="value">{{ exam.exam_date }}</span>
+            </div>
+            <div class="item">
+                <span class="label">⏰ Start Time</span>
+                <span class="value">{{ exam.start_time }}</span>
+            </div>
+            <div class="item">
+                <span class="label">⏱️ Duration</span>
+                <span class="value">{{ exam.duration_minutes }} min</span>
+            </div>
+            <div class="item">
+                <span class="label">🏆 Total Marks</span>
+                <span class="value">{{ exam.total_marks }}</span>
+            </div>
+        </div>
+
+        <!-- Score Display -->
+        {% if marks != 'Not graded yet' and marks is not string %}
+            {% set percentage = (marks / exam.total_marks * 100)|round(1) %}
+            {% if percentage >= 90 %}{% set grade = 'A' %}
+            {% elif percentage >= 80 %}{% set grade = 'B' %}
+            {% elif percentage >= 70 %}{% set grade = 'C' %}
+            {% elif percentage >= 60 %}{% set grade = 'D' %}
+            {% else %}{% set grade = 'F' %}{% endif %}
+
+            <div class="score-display">
+                <div class="score-number">
+                    {{ marks }} <span>/ {{ exam.total_marks }}</span>
+                </div>
+                <div class="progress-wrapper">
+                    <div class="progress">
+                        <div class="bar" style="width: {{ percentage }}%; background: {% if percentage >= 80 %}#22C55E{% elif percentage >= 60 %}#2563EB{% elif percentage >= 50 %}#F59E0B{% else %}#EF4444{% endif %};"></div>
+                    </div>
+                    <div class="percentage">{{ percentage }}%</div>
+                </div>
+                <div class="grade-badge grade-{{ grade }}">{{ grade }}</div>
+            </div>
+        {% else %}
+            <div class="score-display" style="justify-content: center;">
+                <span class="not-graded-msg">📝 Not graded yet</span>
+                <span style="color: #94A3B8; font-size: 14px; margin-left: 8px;">Check back later for your score.</span>
+            </div>
+        {% endif %}
+
+        <a href="{{ url_for('list_exams') }}" class="back-link-bottom">
+            ← Back to Exams
+        </a>
+    </div>
+</div>
+{% endblock %}

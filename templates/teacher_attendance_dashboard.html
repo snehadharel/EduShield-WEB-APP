@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .date {
+        font-size: 14px;
+        opacity: 0.9;
+        background: rgba(255,255,255,0.15);
+        padding: 6px 16px;
+        border-radius: 40px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+
+    .search-box {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .search-box input {
+        flex: 1;
+        padding: 12px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-box input:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .search-box .clear-btn {
+        padding: 12px 20px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .search-box .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    .course-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        transition: 0.3s;
+        position: relative;
+    }
+    .course-card:hover {
+        border-color: #8B5CF6;
+        box-shadow: 0 8px 25px -10px rgba(0,0,0,0.12);
+        transform: translateY(-3px);
+    }
+    .course-card .icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+    }
+    .course-card h3 {
+        color: #0F172A;
+        margin-bottom: 2px;
+        font-size: 18px;
+    }
+    .course-card .code {
+        color: #64748B;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .course-card .students {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 8px;
+    }
+    .course-card .students strong {
+        color: #475569;
+    }
+    .course-card .actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 40px;
+        text-decoration: none;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-purple { background: #8B5CF6; }
+    .btn-purple:hover { background: #7C3AED; transform: translateY(-2px); }
+    .btn-outline { background: #F1F5F9; color: #1E293B; }
+    .btn-outline:hover { background: #E2E8F0; transform: translateY(-2px); }
+
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94A3B8;
+        grid-column: 1 / -1;
+    }
+    .no-data .emoji { font-size: 48px; }
+    .no-data .sub { font-size: 14px; margin-top: 8px; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .page-header .date { align-self: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .course-grid { grid-template-columns: 1fr; }
+        .search-box { flex-direction: column; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-calendar-check"></i> Mark Attendance</h2>
+            <div style="margin-top: 6px; font-size: 14px; opacity: 0.85;">
+                <span class="back-link" onclick="window.history.back();">← Back</span>
+            </div>
+        </div>
+        <div>
+            <span class="date"><i class="far fa-calendar-alt"></i> {{ now.strftime('%A, %B %d, %Y') if now else 'Today' }}</span>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h4>📚 Total Courses</h4>
+            <div class="value">{{ courses|length }}</div>
+        </div>
+        <div class="stat-card">
+            <h4>📋 Pending Attendance</h4>
+            <div class="value" style="color: #F59E0B;">—</div>
+        </div>
+        <div class="stat-card">
+            <h4>✅ Today's Marked</h4>
+            <div class="value" style="color: #22C55E;">—</div>
+        </div>
+    </div>
+
+    <!-- ===== SEARCH ===== -->
+    <div class="search-box" id="searchBox">
+        <input type="text" id="courseSearch" placeholder="🔍 Search by course name or code..." onkeyup="filterCourses()">
+        <button class="clear-btn" onclick="document.getElementById('courseSearch').value=''; filterCourses();">Clear</button>
+    </div>
+
+    <!-- ===== COURSE GRID ===== -->
+    <div class="course-grid" id="courseGrid">
+        {% for course in courses %}
+        <div class="course-card" data-name="{{ course.course_name|lower }}" data-code="{{ course.course_code|lower }}">
+            <div class="icon">📖</div>
+            <h3>{{ course.course_name }}</h3>
+            <div class="code">{{ course.course_code }}</div>
+            <div class="students"><i class="fas fa-users"></i> <strong>—</strong> students enrolled</div>
+            <div class="actions">
+                <a href="{{ url_for('mark_attendance', course_id=course.id) }}" class="btn btn-purple">
+                    <i class="fas fa-pen"></i> Mark Attendance
+                </a>
+                <a href="{{ url_for('course_materials', course_id=course.id) }}" class="btn btn-outline">
+                    <i class="fas fa-folder-open"></i> Materials
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-data">
+            <div class="emoji">📭</div>
+            <p>You don't have any courses yet.</p>
+            <p class="sub">Create a course first to mark attendance.</p>
+            <a href="{{ url_for('create_course') }}" class="btn btn-purple" style="margin-top: 12px;">
+                <i class="fas fa-plus-circle"></i> Create Course
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ===== FILTER SCRIPT ===== -->
+<script>
+    function filterCourses() {
+        const query = document.getElementById('courseSearch').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.course-card');
+        let visibleCount = 0;
+        cards.forEach(card => {
+            const name = card.dataset.name || '';
+            const code = card.dataset.code || '';
+            if (name.includes(query) || code.includes(query)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        // Show "no results" message if nothing found
+        const noData = document.querySelector('.no-data');
+        if (visibleCount === 0 && cards.length > 0) {
+            if (!noData) {
+                const grid = document.getElementById('courseGrid');
+                const msg = document.createElement('div');
+                msg.className = 'no-data';
+                msg.innerHTML = `<p style="font-size:18px;">🔍 No courses match "<strong>${query}</strong>"</p>`;
+                msg.id = 'noResultsMsg';
+                grid.appendChild(msg);
+            } else {
+                noData.style.display = 'block';
+                noData.innerHTML = `<p style="font-size:18px;">🔍 No courses match "<strong>${query}</strong>"</p>`;
+            }
+        } else if (noData) {
+            noData.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

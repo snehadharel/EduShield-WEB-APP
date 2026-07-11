@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+    }
+    .page-header p {
+        color: #64748B;
+        font-size: 15px;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS ===== */
+    .profile-card {
+        background: white;
+        border-radius: 24px;
+        padding: 28px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .card-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 12px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    input, textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 14px;
+        transition: 0.2s;
+        font-family: inherit;
+    }
+    input:focus, textarea:focus {
+        outline: none;
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-secondary {
+        background: #2563EB;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 40px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-secondary:hover {
+        background: #1D4ED8;
+        transform: translateY(-1px);
+    }
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .info-label {
+        width: 140px;
+        font-weight: 600;
+        color: #1E293B;
+    }
+    .info-value {
+        color: #475569;
+    }
+    .documents-link {
+        background: #F8FAFC;
+        border-radius: 20px;
+        padding: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .empty-message {
+        color: #94A3B8;
+        text-align: center;
+        padding: 30px 0;
+        font-size: 14px;
+    }
+    @media (max-width: 640px) {
+        .profile-card { padding: 20px; }
+        .form-row { grid-template-columns: 1fr; gap: 0; }
+        .info-label { width: 100px; }
+        .tab-btn { font-size: 12px; padding: 10px 8px; }
+    }
+</style>
+
+<div class="profile-container">
+    <div class="page-header">
+        <h1>👤 My Profile</h1>
+        <p>Manage your personal information, documents, and account details.</p>
+    </div>
+
+    <!-- ===== TABS ===== -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="personal">📝 Personal Info</button>
+        <button class="tab-btn" data-tab="documents">📄 My Documents</button>
+        <button class="tab-btn" data-tab="account">🔐 Account Details</button>
+    </div>
+
+    <!-- ===== TAB 1: Personal Information ===== -->
+    <div id="tab-personal" class="tab-content active">
+        <div class="profile-card">
+            <div class="card-title">
+                <i class="fas fa-user-circle"></i> Personal Information
+            </div>
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="full_name" value="{{ profile.full_name if profile else '' }}" placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ profile.phone if profile else '' }}" placeholder="Phone number">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" rows="3" placeholder="Your address">{{ profile.address if profile else '' }}</textarea>
+                </div>
+                <button type="submit" class="btn-primary">Update Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== TAB 2: My Documents ===== -->
+    <div id="tab-documents" class="tab-content">
+        <div class="profile-card">
+            <div class="card-title">
+                <i class="fas fa-folder-open"></i> My Documents
+            </div>
+            <div class="documents-link">
+                <span>Upload and manage your personal documents (PDF, DOC, TXT, JPG, PNG)</span>
+                <a href="{{ url_for('profile_documents') }}" class="btn-secondary">Manage Documents →</a>
+            </div>
+            <div style="margin-top: 16px; color: #64748B; font-size: 13px;">
+                <i class="fas fa-info-circle"></i> Documents you upload are stored securely and can be accessed anytime from this page.
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB 3: Account Information ===== -->
+    <div id="tab-account" class="tab-content">
+        <div class="profile-card">
+            <div class="card-title">
+                <i class="fas fa-lock"></i> Account Information
+            </div>
+            <div class="info-row">
+                <div class="info-label">Username</div>
+                <div class="info-value">{{ user.username }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Email</div>
+                <div class="info-value">{{ user.email }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Role</div>
+                <div class="info-value">{{ user.role|capitalize }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Member since</div>
+                <div class="info-value">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Account Status</div>
+                <div class="info-value">
+                    {% if user.is_locked %}
+                        <span style="color:#DC2626; font-weight:600;">🔒 Locked</span>
+                    {% elif user.is_banned %}
+                        <span style="color:#DC2626; font-weight:600;">🚫 Banned</span>
+                    {% else %}
+                        <span style="color:#22C55E; font-weight:600;">✅ Active</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TAB JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Show selected tab content
+                const target = document.getElementById('tab-' + this.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Student Attendance – Admin View{% endblock %}
+
+{% block content %}
+<style>
+    .page-header { margin-bottom: 30px; }
+    .search-box { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-box input { flex: 1; padding: 10px 16px; border: 1.5px solid #E2E8F0; border-radius: 12px; font-size: 14px; min-width: 200px; }
+    .search-box button { padding: 10px 24px; background: #2563EB; color: white; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; }
+    .student-card { background: white; padding: 16px 20px; border-radius: 16px; border: 1px solid #EDF2F7; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    .student-card:hover { border-color: #2563EB; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .student-card .info strong { font-size: 16px; }
+    .student-card .info .email { color: #64748B; font-size: 14px; }
+</style>
+
+<div>
+    <div class="page-header">
+        <h1>📊 Student Attendance</h1>
+        <p>Select a student to view their attendance summary.</p>
+    </div>
+
+    <!-- Search -->
+    <form method="GET" class="search-box">
+        <input type="text" name="search" placeholder="Search by username or email..." value="{{ search or '' }}">
+        <button type="submit"><i class="fas fa-search"></i> Search</button>
+        {% if search %}
+            <a href="{{ url_for('view_attendance') }}" style="padding: 10px 20px; background: #E2E8F0; border-radius: 40px; color: #1E293B; text-decoration: none;">Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- Student List -->
+    {% if students %}
+        {% for student in students %}
+        <div class="student-card">
+            <div class="info">
+                <strong>{{ student.username }}</strong>
+                <div class="email">{{ student.email }}</div>
+            </div>
+            <a href="{{ url_for('view_attendance', student_id=student.id) }}" class="btn" style="background: #2563EB; color: white; padding: 6px 16px; border-radius: 40px; text-decoration: none;">
+                View Attendance →
+            </a>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="text-align: center; color: #94A3B8; padding: 40px;">No students found.</p>
+    {% endif %}
+</div>
+{% endblock %}

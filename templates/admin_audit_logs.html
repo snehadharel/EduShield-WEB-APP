@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Audit Logs{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        color: white;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header p {
+        opacity: 0.9;
+        font-size: 15px;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 24px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+        min-width: 80px;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-btn .count {
+        background: #E2E8F0;
+        padding: 1px 8px;
+        border-radius: 40px;
+        font-size: 11px;
+        margin-left: 4px;
+    }
+    .tab-btn.active .count {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+
+    /* ===== TABLE ===== */
+    .table-wrapper {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        overflow-x: auto;
+    }
+    .audit-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .audit-table th {
+        background: #2c3e50;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .audit-table td {
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+    }
+    .audit-table tr:hover {
+        background: #f8fafc;
+    }
+    .audit-table tr.hidden {
+        display: none;
+    }
+
+    /* ===== BADGES ===== */
+    .badge-action {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .badge-unlock { background: #dcfce7; color: #16a34a; }
+    .badge-block { background: #fee2e2; color: #dc2626; }
+    .badge-unblock { background: #fef3c7; color: #d97706; }
+    .badge-toggle { background: #eff6ff; color: #2563eb; }
+    .badge-network { background: #f3e8ff; color: #7c3aed; }
+
+    .no-data {
+        text-align: center;
+        padding: 40px 0;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .tab-btn { font-size: 12px; padding: 8px 10px; min-width: 60px; }
+        .audit-table, .audit-table thead, .audit-table tbody, .audit-table th, .audit-table td, .audit-table tr {
+            display: block;
+        }
+        .audit-table thead { display: none; }
+        .audit-table tr { margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; }
+        .audit-table td { display: flex; justify-content: space-between; padding: 6px 8px; border-bottom: none; }
+        .audit-table td:before { content: attr(data-label); font-weight: bold; width: 40%; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <h2><i class="fas fa-clipboard-list"></i> Admin Audit Trail</h2>
+        <p>Complete record of all administrative actions for security and compliance.</p>
+    </div>
+
+    <!-- ===== TABS ===== -->
+    {% if logs %}
+    <div class="tab-header" id="tabHeader">
+        <button class="tab-btn active" data-filter="all">
+            📋 All <span class="count">{{ logs|length }}</span>
+        </button>
+        <button class="tab-btn" data-filter="user">
+            👥 User Actions <span class="count">{{ logs|selectattr('action', 'in', ['unlock_user', 'block_user', 'unblock_user'])|list|length }}</span>
+        </button>
+        <button class="tab-btn" data-filter="security">
+            🤖 Security <span class="count">{{ logs|selectattr('action', 'equalto', 'toggle_ai_security')|list|length }}</span>
+        </button>
+        <button class="tab-btn" data-filter="network">
+            🌐 Network <span class="count">{{ logs|selectattr('action', 'in', ['add_trusted_network', 'delete_trusted_network'])|list|length }}</span>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- ===== TABLE ===== -->
+    <div class="table-wrapper">
+        {% if logs %}
+        <table class="audit-table" id="auditTable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Admin</th>
+                    <th>Action</th>
+                    <th>Target User</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr data-action="{{ log.action }}" data-filter-category="
+                    {%- if log.action in ['unlock_user', 'block_user', 'unblock_user'] %}user
+                    {%- elif log.action == 'toggle_ai_security' %}security
+                    {%- elif log.action in ['add_trusted_network', 'delete_trusted_network'] %}network
+                    {%- else %}other{% endif -%}
+                ">
+                    <td data-label="Time">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td data-label="Admin"><strong>{{ log.admin_username }}</strong> (ID: {{ log.admin_id }})</td>
+                    <td data-label="Action">
+                        {% if log.action == 'unlock_user' %}
+                            <span class="badge-action badge-unlock">🔓 Unlock</span>
+                        {% elif log.action == 'block_user' %}
+                            <span class="badge-action badge-block">🚫 Block</span>
+                        {% elif log.action == 'unblock_user' %}
+                            <span class="badge-action badge-unblock">✅ Unblock</span>
+                        {% elif log.action == 'toggle_ai_security' %}
+                            <span class="badge-action badge-toggle">🤖 AI Security</span>
+                        {% elif log.action == 'add_trusted_network' %}
+                            <span class="badge-action badge-network">➕ Add Network</span>
+                        {% elif log.action == 'delete_trusted_network' %}
+                            <span class="badge-action badge-network">🗑️ Delete Network</span>
+                        {% else %}
+                            <span class="badge-action" style="background:#e2e8f0;">{{ log.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Target User">
+                        {% if log.target_user_id %}
+                            {{ log.target_username or 'User ID ' + log.target_user_id|string }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td data-label="Details">{{ log.details or '—' }}</td>
+                    <td data-label="IP Address">{{ log.ip_address or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p style="margin-top: 16px; color: #64748b; font-size: 13px;">
+            <i class="fas fa-info-circle"></i> Showing latest 200 entries.
+            <span id="visibleCount">{{ logs|length }} visible</span>
+        </p>
+        {% else %}
+        <div class="no-data">No admin actions logged yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== TAB FILTERING JAVASCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const rows = document.querySelectorAll('#auditTable tbody tr');
+        const visibleCount = document.getElementById('visibleCount');
+
+        if (!rows.length || !visibleCount) return;
+
+        function filterRows(filter) {
+            let visible = 0;
+            rows.forEach(row => {
+                const category = row.dataset.filterCategory || 'other';
+                if (filter === 'all' || category === filter) {
+                    row.classList.remove('hidden');
+                    visible++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+            visibleCount.textContent = visible + ' visible';
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Filter rows
+                const filter = this.dataset.filter;
+                filterRows(filter);
+            });
+        });
+    });
+</script>
+{% endblock %}

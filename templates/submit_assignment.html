@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Assignment - {{ assignment.title }}{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.85;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        background: white;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-bar .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-bar .stat strong {
+        color: #0F172A;
+    }
+    .stats-bar .stat .num {
+        background: #F1F5F9;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+    }
+    .stats-bar .stat .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .status-pending { background: #FEF3C7; color: #D97706; }
+    .status-submitted { background: #DCFCE7; color: #16A34A; }
+
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .form-card .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 2px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+    .form-card .form-title i {
+        color: #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .form-group label .required {
+        color: #EF4444;
+    }
+    .form-group label .char-count {
+        font-weight: 400;
+        font-size: 13px;
+        color: #94A3B8;
+        float: right;
+    }
+    .form-group .input-wrapper {
+        position: relative;
+    }
+    .form-group .input-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+    }
+    .form-group textarea,
+    .form-group input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+        background: #FAFBFC;
+        font-family: inherit;
+    }
+    .form-group textarea:focus,
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #FFFFFF;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 160px;
+        line-height: 1.6;
+    }
+    .form-group input {
+        padding-left: 46px;
+    }
+    .form-group .hint {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: #F8FAFC;
+        border-radius: 8px;
+    }
+
+    .file-preview {
+        display: none;
+        padding: 12px 16px;
+        background: #F0FDF4;
+        border-radius: 12px;
+        border: 1px solid #22C55E;
+        margin-top: 8px;
+        font-size: 14px;
+        color: #166534;
+    }
+    .file-preview.show {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .file-preview .icon { font-size: 24px; }
+    .file-preview .info .name { font-weight: 600; word-break: break-all; }
+
+    .submission-preview {
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid #22C55E;
+    }
+    .submission-preview .label {
+        font-size: 13px;
+        color: #64748B;
+        font-weight: 500;
+    }
+    .submission-preview .text {
+        font-size: 14px;
+        color: #1E293B;
+        margin-top: 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .submission-preview .file-link {
+        margin-top: 8px;
+    }
+    .submission-preview .file-link a {
+        color: #2563EB;
+        text-decoration: none;
+    }
+    .submission-preview .file-link a:hover {
+        text-decoration: underline;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .btn-secondary { background: #64748B; }
+    .btn-success { background: #22C55E; }
+    .btn-danger { background: #EF4444; }
+    .btn-outline { background: #E2E8F0; color: #1E293B; }
+    .btn-outline:hover { background: #CBD5E1; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .form-card { padding: 20px; }
+        .btn-group { flex-direction: column; }
+        .btn { justify-content: center; }
+    }
+    @media (max-width: 480px) {
+        .form-card { padding: 16px; }
+        .form-group textarea { min-height: 120px; }
+        .page-header h2 { font-size: 20px; }
+    }
+</style>
+
+<div>
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-upload"></i> Submit Assignment</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Assignments</span>
+                &nbsp;·&nbsp; {{ assignment.course_name }}
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-star"></i> {{ assignment.total_marks }} marks
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-book"></i> <strong>Course:</strong> {{ assignment.course_name }}</span>
+        <span class="stat"><i class="fas fa-calendar-alt"></i> <strong>Due:</strong> {{ assignment.due_date.strftime('%B %d, %Y at %I:%M %p') if assignment.due_date else 'No due date' }}</span>
+        <span class="stat"><i class="fas fa-star"></i> <strong>Total Marks:</strong> {{ assignment.total_marks }}</span>
+        {% if submission %}
+            <span class="stat"><i class="fas fa-check-circle" style="color:#22C55E;"></i> <strong>Status:</strong> <span class="status-badge status-submitted">✅ Submitted on {{ submission.submitted_at.strftime('%b %d, %Y %I:%M %p') if submission.submitted_at else '—' }}</span></span>
+        {% else %}
+            <span class="stat"><i class="fas fa-clock" style="color:#F59E0B;"></i> <strong>Status:</strong> <span class="status-badge status-pending">⏳ Pending</span></span>
+        {% endif %}
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="form-title">
+            <i class="fas fa-file-alt"></i> {{ assignment.title }}
+        </div>
+
+        <!-- Instructions -->
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; border-left: 4px solid #667eea;">
+            <div style="font-size: 13px; color: #64748B; font-weight: 500; margin-bottom: 4px;">📋 Instructions</div>
+            <div style="font-size: 14px; color: #1E293B; line-height: 1.6;">{{ assignment.description or 'No specific instructions provided.' }}</div>
+        </div>
+
+        <!-- Existing Submission Preview -->
+        {% if submission %}
+        <div class="submission-preview">
+            <div class="label"><i class="fas fa-check-circle" style="color:#22C55E;"></i> Your Current Submission</div>
+            <div class="text">{{ submission.submission_text or 'No text submitted.' }}</div>
+            {% if submission.file_url %}
+                <div class="file-link"><i class="fas fa-link"></i> <a href="{{ submission.file_url }}" target="_blank">{{ submission.file_url }}</a></div>
+            {% endif %}
+            <div style="margin-top: 8px; font-size: 13px; color: #94A3B8;">
+                Submitted on {{ submission.submitted_at.strftime('%B %d, %Y at %I:%M %p') if submission.submitted_at else '—' }}
+            </div>
+            <p style="margin-top: 10px; font-size: 13px; color: #F59E0B;"><i class="fas fa-info-circle"></i> Updating will replace your previous submission.</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" id="submitForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Submission Text -->
+            <div class="form-group">
+                <label>
+                    Your Submission <span class="required">*</span>
+                    <span class="char-count"><span id="charCount">{{ submission.submission_text|length if submission else 0 }}</span> characters</span>
+                </label>
+                <div class="input-wrapper">
+                    <i class="fas fa-pencil-alt" style="top: 20px; transform: none;"></i>
+                    <textarea name="submission_text" id="submissionText" rows="8" placeholder="Write your answer here..." required>{{ submission.submission_text if submission else '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- File URL -->
+            <div class="form-group">
+                <label>File URL <span style="font-weight:400;color:#94A3B8;">(optional)</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-link"></i>
+                    <input type="url" name="file_url" id="fileUrl" placeholder="https://drive.google.com/file/d/... or any file URL" value="{{ submission.file_url if submission else '' }}">
+                </div>
+                <div class="hint">
+                    <i class="fas fa-info-circle"></i>
+                    Supported links: Google Drive, OneDrive, Dropbox, or any direct file URL.
+                </div>
+            </div>
+
+            <!-- File Preview -->
+            <div class="file-preview" id="filePreview">
+                <span class="icon">📄</span>
+                <div class="info">
+                    <div class="name" id="fileName">File attached</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    {% if submission %}Update Submission{% else %}Submit Assignment{% endif %}
+                </button>
+                <a href="{{ url_for('list_assignments') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('submissionText');
+        const charCount = document.getElementById('charCount');
+        const urlInput = document.getElementById('fileUrl');
+        const preview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const form = document.getElementById('submitForm');
+
+        // Character counter
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        }
+
+        // File URL preview
+        if (urlInput) {
+            urlInput.addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url && url.startsWith('http')) {
+                    preview.classList.add('show');
+                    let name = url.split('/').pop();
+                    if (name.includes('?')) name = name.split('?')[0];
+                    if (name.includes('#')) name = name.split('#')[0];
+                    fileName.textContent = name || 'File from URL';
+                } else {
+                    preview.classList.remove('show');
+                }
+            });
+            // Trigger initial preview if URL is pre-filled
+            if (urlInput.value.trim() && urlInput.value.trim().startsWith('http')) {
+                urlInput.dispatchEvent(new Event('input'));
+            }
+        }
+
+        // Form validation
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const text = textarea.value.trim();
+                if (!text) {
+                    alert('Please enter your submission text.');
+                    e.preventDefault();
+                    return;
+                }
+                {% if submission %}
+                if (!confirm('This will replace your previous submission. Continue?')) {
+                    e.preventDefault();
+                    return;
+                }
+                {% endif %}
+            });
+        }
+    });
+</script>
+{% endblock %}

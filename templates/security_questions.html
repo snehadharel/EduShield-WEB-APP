@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if verify_mode %}Verify Identity{% else %}Security Setup{% endif %} — EduShield</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-shell {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .auth-card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            overflow: hidden;
+            padding: 32px;
+            text-align: center;
+        }
+        .auth-card-header {
+            margin-bottom: 24px;
+        }
+        .auth-card-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 4px;
+        }
+        .auth-card-header p {
+            font-size: 12px;
+            color: #64748B;
+            margin-top: 4px;
+        }
+        .auth-step-badge {
+            display: inline-block;
+            background: #EFF6FF;
+            color: #2563EB;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .auth-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1E293B;
+            margin-bottom: 8px;
+        }
+        .auth-subtitle {
+            font-size: 14px;
+            color: #64748B;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .question-label {
+            display: block;
+            font-weight: 500;
+            color: #1E293B;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 16px;
+            font-size: 14px;
+            background: #F8FAFC;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.2);
+        }
+        input {
+            margin-top: 8px;
+        }
+        .btn-auth {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+        .auth-switch {
+            margin-top: 20px;
+        }
+        .auth-switch a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        .auth-card-footer {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #E2E8F0;
+            font-size: 13px;
+            color: #94A3B8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .auth-card-footer .badge {
+            background: #E2E8F0;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .flash {
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .flash.success { background: #DCFCE7; color: #16A34A; border-left: 4px solid #22C55E; }
+        .flash.error { background: #FEE2E2; color: #DC2626; border-left: 4px solid #EF4444; }
+        .flash.warning { background: #FEF3C7; color: #D97706; border-left: 4px solid #F59E0B; }
+        .flash.info { background: #EFF6FF; color: #1E40AF; border-left: 4px solid #3B82F6; }
+        @media (max-width: 480px) {
+            .auth-card { padding: 24px; }
+            .auth-title { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <h1>EduShield</h1>
+            <p>{% if verify_mode %}Identity verification{% else %}Security setup{% endif %}</p>
+        </div>
+
+        <div class="auth-card-body">
+            {% if not verify_mode %}<span class="auth-step-badge">Step 2 of 2</span>{% endif %}
+            <h2 class="auth-title">{% if verify_mode %}Answer your questions{% else %}Security questions{% endif %}</h2>
+            <p class="auth-subtitle">{% if verify_mode %}
+                Answer at least 2 of 3 correctly to recover your account.
+            {% else %}
+                Choose questions and answers to help recover your account later.
+            {% endif %}</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% if verify_mode %}
+            <form method="POST" action="{{ url_for('security_questions') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <span class="question-label">{{ questions[0] }}</span>
+                    <input type="text" name="answer_1" placeholder="Your answer" required autofocus>
+                </div>
+                <div class="form-group">
+                    <span class="question-label">{{ questions[1] }}</span>
+                    <input type="text" name="answer_2" placeholder="Your answer" required>
+                </div>
+                <div class="form-group">
+                    <span class="question-label">{{ questions[2] }}</span>
+                    <input type="text" name="answer_3" placeholder="Your answer" required>
+                </div>
+                <button type="submit" class="btn-auth">Verify answers</button>
+                <div class="auth-switch"><a href="{{ url_for('login') }}">Back to sign in</a></div>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('register') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="step" value="2">
+
+                <div class="form-group">
+                    <label for="sec_q1">Question 1</label>
+                    <select id="sec_q1" name="sec_q1" required>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                        <option value="What was your first pet's name?">What was your first pet's name?</option>
+                        <option value="What city were you born in?">What city were you born in?</option>
+                    </select>
+                    <input type="text" name="sec_a1" placeholder="Your answer" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sec_q2">Question 2</label>
+                    <select id="sec_q2" name="sec_q2" required>
+                        <option value="What was your first school?">What was your first school?</option>
+                        <option value="What is your favourite book?">What is your favourite book?</option>
+                        <option value="What is your dream job?">What is your dream job?</option>
+                    </select>
+                    <input type="text" name="sec_a2" placeholder="Your answer" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sec_q3">Question 3</label>
+                    <select id="sec_q3" name="sec_q3" required>
+                        <option value="What is your favourite movie?">What is your favourite movie?</option>
+                        <option value="What is your favourite colour?">What is your favourite colour?</option>
+                        <option value="What is your favourite food?">What is your favourite food?</option>
+                    </select>
+                    <input type="text" name="sec_a3" placeholder="Your answer" required>
+                </div>
+
+                <button type="submit" class="btn-auth">Complete registration</button>
+                <div class="auth-switch"><a href="{{ url_for('login') }}">Back to sign in</a></div>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="auth-card-footer">
+            Protected by <span class="badge">AI Intrusion Detection</span>
+        </div>
+    </div>
+</div>
+
+{% if not verify_mode %}
+<script>
+(function() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = "14px Arial";
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('EduShield', 2, 15);
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'device_fingerprint';
+    input.value = btoa(canvas.toDataURL().slice(0, 100) + navigator.userAgent);
+    document.forms[0].appendChild(input);
+})();
+</script>
+{% endif %}
+</body>
+</html>

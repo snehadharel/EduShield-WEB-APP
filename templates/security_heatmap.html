@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block title %}Security Risk Heatmap{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEATMAP STYLES ===== */
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header h1 i {
+        color: #e65100;
+    }
+    .page-header p {
+        color: #64748B;
+        font-size: 15px;
+    }
+    .page-header .nav-links {
+        margin-top: 12px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .page-header .nav-links a {
+        color: #2563EB;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    .page-header .nav-links a:hover {
+        text-decoration: underline;
+    }
+
+    /* ===== TABS ===== */
+    .tab-header {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 28px;
+        background: #F8FAFC;
+        border-radius: 16px;
+        padding: 4px;
+        border: 1px solid #E2E8F0;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-align: center;
+        min-width: 80px;
+    }
+    .tab-btn:hover {
+        background: #E2E8F0;
+        color: #1E293B;
+    }
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #2563EB;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.25s ease;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== MAP CONTAINER ===== */
+    .map-wrapper {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid #EDF2F7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .legend {
+        flex: 0 0 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 8px 0;
+    }
+    .legend-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 4px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .legend-color {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .map-container {
+        flex: 1;
+        min-width: 280px;
+        height: 520px;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    #riskMap {
+        width: 100%;
+        height: 100%;
+    }
+    .map-stats {
+        margin-top: auto;
+        color: #94A3B8;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* ===== STATISTICS TAB ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .stat-card h4 {
+        font-size: 13px;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 4px;
+    }
+    .stat-card.high-risk .stat-value { color: #DC2626; }
+    .stat-card.medium-risk .stat-value { color: #F59E0B; }
+    .stat-card.low-risk .stat-value { color: #16A34A; }
+
+    .country-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+    }
+    .country-tag {
+        background: #F1F5F9;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 14px;
+        color: #1E293B;
+    }
+    .country-tag .count {
+        font-weight: 600;
+        color: #2563EB;
+    }
+    .empty-message {
+        text-align: center;
+        padding: 40px;
+        color: #94A3B8;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .map-wrapper { flex-direction: column; }
+        .legend { flex: 1; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+        .legend-item { font-size: 13px; }
+        .map-container { height: 350px; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .tab-btn { font-size: 12px; padding: 10px 8px; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .map-container { height: 280px; }
+        .page-header h1 { font-size: 22px; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <h1><i class="fas fa-map-marked-alt"></i> Security Risk Heatmap</h1>
+        <p>Geographic view of login attempts color‑coded by risk score.</p>
+        <div class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">← Admin Dashboard</a>
+            <a href="{{ url_for('risk_explanations') }}">SHAP Explanations</a>
+            <a href="{{ url_for('ids_dashboard') }}">IDS Dashboard</a>
+        </div>
+    </div>
+
+    <!-- ===== TABS ===== -->
+    <div class="tab-header">
+        <button class="tab-btn active" data-tab="map">🌍 Heatmap</button>
+        <button class="tab-btn" data-tab="stats">📊 Statistics</button>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 1: HEATMAP -->
+    <!-- ============================================= -->
+    <div id="tab-map" class="tab-content active">
+        <div class="map-wrapper">
+            <div class="legend">
+                <div class="legend-title">Risk Legend</div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background:#43a047;"></span>
+                    Low (≤40%)
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background:#fb8c00;"></span>
+                    Medium (41–70%)
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background:#d81b60;"></span>
+                    High (&gt;70%)
+                </div>
+                <div class="map-stats" id="mapStats">Loading…</div>
+            </div>
+            <div class="map-container">
+                <div id="riskMap"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- TAB 2: STATISTICS -->
+    <!-- ============================================= -->
+    <div id="tab-stats" class="tab-content">
+        <div id="statsContent">
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card"><h4>Total Points</h4><div class="stat-value" id="statTotal">—</div><div class="stat-sub">geolocated logins</div></div>
+                <div class="stat-card high-risk"><h4>High Risk</h4><div class="stat-value" id="statHigh">—</div><div class="stat-sub">&gt;70%</div></div>
+                <div class="stat-card medium-risk"><h4>Medium Risk</h4><div class="stat-value" id="statMedium">—</div><div class="stat-sub">41–70%</div></div>
+                <div class="stat-card low-risk"><h4>Low Risk</h4><div class="stat-value" id="statLow">—</div><div class="stat-sub">≤40%</div></div>
+            </div>
+            <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #EDF2F7;">
+                <h3 style="font-size: 16px; font-weight: 700; margin-top: 0; margin-bottom: 16px; border-left: 4px solid #2563EB; padding-left: 12px;">🌍 Countries Represented</h3>
+                <div id="countryList" class="country-list">
+                    <div class="empty-message">Loading countries…</div>
+                </div>
+            </div>
+            <div style="margin-top: 16px; background: white; border-radius: 16px; padding: 16px; border: 1px solid #EDF2F7;">
+                <p style="font-size: 14px; color: #64748B; margin: 0;">
+                    <i class="fas fa-info-circle"></i>
+                    Data sourced from login logs with geolocation (latest 500 entries).
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== LEAFET MAP SCRIPTS ===== -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- ===== MAP & STATS SCRIPT ===== -->
+<script>
+    (function() {
+        // --- Fetch data once ---
+        let mapData = null;
+        let mapInitialized = false;
+
+        function initMap(points) {
+            if (mapInitialized) return;
+            const map = L.map('riskMap').setView([27.7172, 85.3240], 7);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            mapInitialized = true;
+
+            function riskColor(score) {
+                if (score > 70) return '#d81b60';
+                if (score > 40) return '#fb8c00';
+                return '#43a047';
+            }
+
+            const bounds = [];
+            points.forEach(p => {
+                const lat = parseFloat(p.geo_lat);
+                const lon = parseFloat(p.geo_lon);
+                if (isNaN(lat) || isNaN(lon)) return;
+                bounds.push([lat, lon]);
+                const risk = p.risk_score || 0;
+                const color = riskColor(risk);
+                const marker = L.circleMarker([lat, lon], {
+                    radius: 8,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                });
+                const time = p.login_time ? p.login_time.replace('T', ' ').slice(0, 19) : '—';
+                marker.bindPopup(
+                    '<b>' + (p.username || 'Unknown') + '</b> (' + (p.role || '—') + ')<br>' +
+                    'Risk: <b>' + risk + '%</b><br>' +
+                    'Action: ' + (p.action || '—') + '<br>' +
+                    'Country: ' + (p.geo_country || '—') + '<br>' +
+                    'Time: ' + time
+                );
+                marker.addTo(map);
+            });
+            if (bounds.length) {
+                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+            }
+        }
+
+        function updateStats(points) {
+            const total = points.length;
+            let high = 0, medium = 0, low = 0;
+            const countries = {};
+
+            points.forEach(p => {
+                const risk = p.risk_score || 0;
+                if (risk > 70) high++;
+                else if (risk > 40) medium++;
+                else low++;
+
+                const country = p.geo_country || 'Unknown';
+                countries[country] = (countries[country] || 0) + 1;
+            });
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statHigh').textContent = high;
+            document.getElementById('statMedium').textContent = medium;
+            document.getElementById('statLow').textContent = low;
+
+            // Country list
+            const countryContainer = document.getElementById('countryList');
+            const sorted = Object.entries(countries).sort((a, b) => b[1] - a[1]);
+            if (sorted.length === 0) {
+                countryContainer.innerHTML = '<div class="empty-message">No country data available.</div>';
+            } else {
+                let html = '';
+                sorted.forEach(([country, count]) => {
+                    html += `<span class="country-tag">${country} <span class="count">(${count})</span></span>`;
+                });
+                countryContainer.innerHTML = html;
+            }
+        }
+
+        function loadData() {
+            fetch('{{ url_for("security_map_data") }}')
+                .then(r => r.json())
+                .then(points => {
+                    mapData = points;
+                    document.getElementById('mapStats').textContent =
+                        points.length + ' geolocated login(s) shown (latest 500)';
+                    
+                    // If map tab is active, render map
+                    if (document.getElementById('tab-map').classList.contains('active')) {
+                        initMap(points);
+                    }
+                    // Always update stats (they are in the stats tab)
+                    updateStats(points);
+                })
+                .catch(() => {
+                    document.getElementById('mapStats').textContent = 'Failed to load map data.';
+                    document.getElementById('statsContent').innerHTML =
+                        '<div class="empty-message">Failed to load statistics.</div>';
+                });
+        }
+
+        // --- Tab switching: if map tab is activated and map not initialized, init it ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Switch active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    const target = document.getElementById('tab-' + this.dataset.tab);
+                    if (target) target.classList.add('active');
+
+                    // If switching to map tab and mapData exists, init map
+                    if (this.dataset.tab === 'map' && mapData && !mapInitialized) {
+                        initMap(mapData);
+                    }
+                });
+            });
+
+            // Load data on page load
+            loadData();
+        });
+    })();
+</script>
+{% endblock %}

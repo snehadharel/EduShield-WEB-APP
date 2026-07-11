@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Class Routine{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        background: white;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-bar .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-bar .stat strong {
+        color: #0F172A;
+    }
+    .stats-bar .stat .num {
+        background: #F1F5F9;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-success { background: #22C55E; }
+    .btn-secondary { background: #64748B; }
+
+    /* Day filter tabs */
+    .day-tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #E2E8F0;
+        padding-bottom: 8px;
+    }
+    .day-tab {
+        padding: 6px 16px;
+        border-radius: 40px;
+        background: #F1F5F9;
+        color: #475569;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+        border: none;
+    }
+    .day-tab:hover {
+        background: #E2E8F0;
+    }
+    .day-tab.active {
+        background: #2563EB;
+        color: white;
+    }
+
+    .routine-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .routine-card {
+        background: white;
+        border-radius: 16px;
+        padding: 18px 22px;
+        border: 1px solid #EDF2F7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        transition: 0.2s;
+    }
+    .routine-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transform: translateX(4px);
+    }
+    .routine-card .info {
+        flex: 2;
+        min-width: 160px;
+    }
+    .routine-card .info .day-time {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        color: #64748B;
+    }
+    .routine-card .info .day-time .day-badge {
+        background: #DBEAFE;
+        color: #1D4ED8;
+        padding: 2px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .routine-card .info h4 {
+        font-weight: 700;
+        color: #0F172A;
+        margin: 4px 0 2px 0;
+        font-size: 17px;
+    }
+    .routine-card .info .course-code {
+        font-size: 13px;
+        color: #94A3B8;
+    }
+    .routine-card .info .room {
+        font-size: 14px;
+        color: #475569;
+        margin-top: 4px;
+    }
+    .routine-card .actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+    }
+    .routine-card .actions .btn-sm {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-sm-danger { background: #FEE2E2; color: #DC2626; }
+    .btn-sm-danger:hover { background: #FECACA; }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94A3B8;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .sub { font-size: 14px; margin-top: 8px; }
+
+    .hidden { display: none; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .routine-card { flex-direction: column; align-items: stretch; }
+        .routine-card .actions { justify-content: flex-end; }
+        .day-tabs { justify-content: center; }
+        .header-actions { flex-direction: column; }
+        .header-actions .btn { justify-content: center; }
+    }
+</style>
+
+<div>
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-calendar-alt"></i> Class Routine</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Dashboard</span>
+                &nbsp;·&nbsp; Your weekly schedule
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+            <i class="fas fa-clock"></i> {{ routines|length }} entries
+        </div>
+    </div>
+
+    <!-- Stats -->
+    {% set days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+    {% set counts = {} %}
+    {% for day in days %}{% set _ = counts.update({day: 0}) %}{% endfor %}
+    {% for r in routines %}
+        {% if r.day_of_week in counts %}
+            {% set _ = counts.update({r.day_of_week: counts[r.day_of_week] + 1}) %}
+        {% endif %}
+    {% endfor %}
+
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-list"></i> <strong>Total:</strong> <span class="num">{{ routines|length }}</span></span>
+        {% for day in days %}
+            {% if counts[day] > 0 %}
+                <span class="stat"><i class="fas fa-circle" style="color:#667eea;"></i> <strong>{{ day[:3] }}:</strong> <span class="num">{{ counts[day] }}</span></span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Actions -->
+    <div class="header-actions">
+        {% if session.role == 'teacher' %}
+            <a href="{{ url_for('add_routine') }}" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> Add Routine Entry
+            </a>
+        {% endif %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Day Filter Tabs -->
+    <div class="day-tabs">
+        <button class="day-tab active" data-day="all">📅 All</button>
+        {% for day in days %}
+            <button class="day-tab" data-day="{{ day }}">{{ day[:3] }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Routine List -->
+    <div class="routine-grid" id="routineGrid">
+        {% if routines %}
+            {% for routine in routines %}
+            <div class="routine-card" data-day="{{ routine.day_of_week }}">
+                <div class="info">
+                    <div class="day-time">
+                        <span class="day-badge">{{ routine.day_of_week }}</span>
+                        <span>{{ routine.start_time }} – {{ routine.end_time }}</span>
+                    </div>
+                    <h4>{{ routine.course_name }}</h4>
+                    <div class="course-code">{{ routine.course_code }}</div>
+                    <div class="room"><i class="fas fa-door-open"></i> Room: {{ routine.room }}</div>
+                </div>
+                <div class="actions">
+                    {% if session.role == 'teacher' %}
+                        <form method="POST" action="{{ url_for('delete_routine', routine_id=routine.id) }}" style="display:inline;" onsubmit="return confirm('Delete this routine entry?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-sm btn-sm-danger"><i class="fas fa-trash-alt"></i> Delete</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📅</div>
+                <p style="font-size: 18px;">No routines found.</p>
+                <p class="sub">
+                    {% if session.role == 'teacher' %}
+                        Click <strong>"Add Routine Entry"</strong> to create your schedule.
+                    {% else %}
+                        Check back later or ask your teacher to add the class schedule.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== FILTER SCRIPT ===== -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.day-tab');
+        const cards = document.querySelectorAll('.routine-card');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const day = this.dataset.day;
+                cards.forEach(card => {
+                    if (day === 'all' || card.dataset.day === day) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

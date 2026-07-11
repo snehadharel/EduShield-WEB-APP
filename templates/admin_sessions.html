@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Active Sessions (Admin){% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        margin-bottom: 32px;
+    }
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header p {
+        color: #64748B;
+        font-size: 15px;
+    }
+    .search-box {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .search-box input {
+        flex: 1;
+        padding: 12px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        background: white;
+        min-width: 200px;
+    }
+    .search-box input:focus {
+        outline: none;
+        border-color: #2563EB;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .search-box button {
+        padding: 12px 24px;
+        background: #2563EB;
+        color: white;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .search-box button:hover {
+        background: #1D4ED8;
+        transform: translateY(-2px);
+    }
+    .search-box a {
+        padding: 12px 24px;
+        background: #E2E8F0;
+        color: #1E293B;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+    .search-box a:hover {
+        background: #CBD5E1;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        background: white;
+    }
+    th, td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    th {
+        background: #F8FAFC;
+        font-weight: 600;
+        color: #1E293B;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    tr.current-session {
+        background: #F0FDF4;
+    }
+    .current-badge {
+        background: #22C55E;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .btn-danger {
+        background: #EF4444;
+        color: white;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-danger:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    .btn-danger:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .empty-message {
+        padding: 40px;
+        text-align: center;
+        color: #94A3B8;
+    }
+    .device-icon {
+        margin-right: 6px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .status-active {
+        background: #DCFCE7;
+        color: #16A34A;
+    }
+    .status-locked {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    .status-banned {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    .geo-tag {
+        background: #E2E8F0;
+        padding: 2px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        color: #475569;
+    }
+    @media (max-width: 640px) {
+        .search-box { flex-direction: column; }
+        .search-box input { width: 100%; }
+        th, td { padding: 10px 8px; font-size: 12px; }
+        .btn-danger { padding: 4px 10px; font-size: 12px; }
+    }
+</style>
+
+<div>
+    <div class="page-header">
+        <h1><i class="fas fa-users"></i> Active Sessions (Admin)</h1>
+        <p>View all users with active sessions and force‑logout any user.</p>
+    </div>
+
+    <!-- Search Form -->
+    <form method="GET" action="{{ url_for('admin_sessions') }}" class="search-box">
+        <input type="text" name="search" placeholder="Search by username or email..." value="{{ search or '' }}">
+        <button type="submit"><i class="fas fa-search"></i> Search</button>
+        {% if search %}
+            <a href="{{ url_for('admin_sessions') }}"><i class="fas fa-times"></i> Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- Table -->
+    <div class="table-container">
+        {% if sessions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>IP Address</th>
+                    <th>Device</th>
+                    <th>Location</th>
+                    <th>Last Active</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in sessions %}
+                <tr class="{% if entry.is_current %}current-session{% endif %}">
+                    <td>
+                        <strong>{{ entry.user.username }}</strong>
+                        <br><small style="color: #64748B;">{{ entry.user.email }}</small>
+                        {% if entry.is_current %}
+                            <span class="current-badge"><i class="fas fa-check-circle"></i> You</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ entry.ip }}</td>
+                    <td>
+                        <i class="fas fa-{% if 'mobile' in entry.device|lower %}mobile-alt{% elif 'tablet' in entry.device|lower %}tablet-alt{% else %}laptop{% endif %} device-icon"></i>
+                        {{ entry.device[:30] if entry.device else 'Unknown' }}
+                    </td>
+                    <td>
+                        {% if entry.geo_country %}
+                            <span class="geo-tag"><i class="fas fa-map-pin"></i> {{ entry.geo_country }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.login_time %}
+                            {{ entry.login_time.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.user.is_locked %}
+                            <span class="status-badge status-locked">🔒 Locked</span>
+                        {% elif entry.user.is_banned %}
+                            <span class="status-badge status-banned">🚫 Banned</span>
+                        {% else %}
+                            <span class="status-badge status-active">✅ Active</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_logout_user', user_id=entry.user.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-danger" onclick="return confirm('Force logout {{ entry.user.username }} from all devices?')" {% if entry.is_current %}disabled{% endif %}>
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div class="empty-message">
+                {% if search %}
+                    No users found matching "{{ search }}".
+                {% else %}
+                    No active sessions found.
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <p style="margin-top: 16px; font-size: 13px; color: #94A3B8;">
+        <i class="fas fa-info-circle"></i> Showing all users with a valid session token. The "Logout" button will invalidate all sessions for that user.
+    </p>
+</div>
+{% endblock %}

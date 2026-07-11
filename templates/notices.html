@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block title %}Notices{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 12px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+    .stat-card.total .stat-value { color: #2563EB; }
+    .stat-card.student .stat-value { color: #22C55E; }
+    .stat-card.teacher .stat-value { color: #8B5CF6; }
+    .stat-card.all .stat-value { color: #F59E0B; }
+
+    /* ===== HEADER ACTIONS ===== */
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-success { background: #22C55E; }
+    .btn-secondary { background: #64748B; }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 12px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    .search-bar .clear-btn {
+        padding: 12px 20px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .search-bar .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    /* ===== NOTICE CARDS ===== */
+    .notices-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .notice-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        border: 1px solid #EDF2F7;
+        transition: 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .notice-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transform: translateX(4px);
+    }
+    .notice-card .content {
+        flex: 1;
+        min-width: 200px;
+    }
+    .notice-card .content h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 6px;
+    }
+    .notice-card .content .text {
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+    .notice-card .content .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 13px;
+        color: #94A3B8;
+        align-items: center;
+    }
+    .notice-card .content .meta .author {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #475569;
+        font-weight: 500;
+    }
+    .notice-card .content .meta .author .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .notice-card .content .meta .target-badge {
+        display: inline-block;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .target-all { background: #FEF3C7; color: #D97706; }
+    .target-student { background: #DCFCE7; color: #16A34A; }
+    .target-teacher { background: #DBEAFE; color: #1D4ED8; }
+
+    .notice-card .actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .notice-card .actions .btn-sm {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .notice-card .actions .btn-sm:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-sm-danger { background: #FEE2E2; color: #DC2626; }
+    .btn-sm-danger:hover { background: #FECACA; }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #94A3B8;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .sub { font-size: 14px; margin-top: 8px; }
+
+    .hidden { display: none; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .search-bar { flex-direction: column; }
+        .search-bar input { width: 100%; }
+        .notice-card { flex-direction: column; align-items: stretch; }
+        .notice-card .actions { justify-content: flex-end; }
+        .header-actions { flex-direction: column; }
+        .header-actions .btn { justify-content: center; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .notice-card .content .meta { flex-direction: column; gap: 8px; align-items: flex-start; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-bullhorn"></i> Notices</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Dashboard</span>
+                &nbsp;·&nbsp; Official announcements
+            </div>
+        </div>
+        {% if notices %}
+            <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+                <i class="fas fa-list"></i> {{ notices|length }} notices
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== STATS CARDS ===== -->
+    {% set total = notices|length %}
+    {% set student_target = notices|selectattr('target_role', 'in', ['student', 'all'])|list|length %}
+    {% set teacher_target = notices|selectattr('target_role', 'in', ['teacher', 'all'])|list|length %}
+    {% set all_target = notices|selectattr('target_role', 'equalto', 'all')|list|length %}
+
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <h4>Total</h4>
+            <div class="stat-value">{{ total }}</div>
+            <div class="stat-sub">notices</div>
+        </div>
+        <div class="stat-card student">
+            <h4>🎓 Students</h4>
+            <div class="stat-value">{{ student_target }}</div>
+            <div class="stat-sub">targeted</div>
+        </div>
+        <div class="stat-card teacher">
+            <h4>👨‍🏫 Teachers</h4>
+            <div class="stat-value">{{ teacher_target }}</div>
+            <div class="stat-sub">targeted</div>
+        </div>
+        <div class="stat-card all">
+            <h4>🌐 All</h4>
+            <div class="stat-value">{{ all_target }}</div>
+            <div class="stat-sub">everyone</div>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ACTIONS ===== -->
+    <div class="header-actions">
+        {% if session.role in ['teacher', 'admin'] %}
+            <a href="{{ url_for('post_notice') }}" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> Post New Notice
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- ===== SEARCH BAR ===== -->
+    <div class="search-bar">
+        <input type="text" id="noticeSearch" placeholder="🔍 Search notices by title, content, or author..." onkeyup="filterNotices()">
+        <button class="clear-btn" onclick="document.getElementById('noticeSearch').value=''; filterNotices();">Clear</button>
+    </div>
+
+    <!-- ===== NOTICES LIST ===== -->
+    <div class="notices-list" id="noticeGrid">
+        {% if notices %}
+            {% for notice in notices %}
+            <div class="notice-card" data-title="{{ notice.title|lower }}" data-content="{{ notice.content|lower }}" data-author="{{ notice.author|lower }}">
+                <div class="content">
+                    <h3>{{ notice.title }}</h3>
+                    <div class="text">{{ notice.content }}</div>
+                    <div class="meta">
+                        <span class="author">
+                            <span class="avatar">{{ notice.author[0].upper() if notice.author else 'U' }}</span>
+                            {{ notice.author or 'Unknown' }}
+                        </span>
+                        <span><i class="far fa-calendar-alt"></i> {{ notice.posted_at.strftime('%B %d, %Y at %I:%M %p') if notice.posted_at else 'Unknown' }}</span>
+                        <span class="target-badge 
+                            {% if notice.target_role == 'all' %}target-all
+                            {% elif notice.target_role == 'student' %}target-student
+                            {% elif notice.target_role == 'teacher' %}target-teacher
+                            {% else %}target-all{% endif %}">
+                            <i class="fas fa-users"></i> {{ notice.target_role|capitalize }}
+                        </span>
+                    </div>
+                </div>
+                {% if session.role in ['teacher', 'admin'] %}
+                <div class="actions">
+                    <form method="POST" action="{{ url_for('delete_notice', notice_id=notice.id) }}" style="display:inline;" onsubmit="return confirm('Delete this notice?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-sm btn-sm-danger">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📢</div>
+                <p style="font-size: 18px;">No notices available.</p>
+                <p class="sub">
+                    {% if session.role in ['teacher', 'admin'] %}
+                        Click <strong>"Post New Notice"</strong> to create one.
+                    {% else %}
+                        Check back later for announcements.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== FILTER SCRIPT ===== -->
+<script>
+    function filterNotices() {
+        const query = document.getElementById('noticeSearch').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.notice-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const title = card.dataset.title || '';
+            const content = card.dataset.content || '';
+            const author = card.dataset.author || '';
+            if (title.includes(query) || content.includes(query) || author.includes(query)) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        // Show/hide no results message
+        const grid = document.getElementById('noticeGrid');
+        const existingMsg = document.getElementById('noResultsMsg');
+        if (existingMsg) existingMsg.remove();
+
+        if (visibleCount === 0 && query) {
+            const msg = document.createElement('div');
+            msg.id = 'noResultsMsg';
+            msg.className = 'empty-state';
+            msg.style.gridColumn = '1 / -1';
+            msg.innerHTML = `
+                <div style="font-size: 42px; margin-bottom: 10px;">🔍</div>
+                <p style="font-size: 18px;">No notices match "<strong>${query}</strong>"</p>
+                <p class="sub">Try a different search term.</p>
+            `;
+            grid.appendChild(msg);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Security Questions{% endblock %}
+
+{% block content %}
+<div style="width: 100%; max-width: 600px; margin: 0 auto;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white;">
+        <h2>🔐 Security Verification</h2>
+        <p>Please answer at least 2 of your security questions to reset your password.</p>
+    </div>
+    <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% for i in range(3) %}
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Question {{ i+1 }}</label>
+                <p style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 8px;">{{ questions[i] }}</p>
+                <input type="text" name="answer_{{ i+1 }}" placeholder="Your answer" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px;">
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn" style="background: #43a047;">Verify Answers</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .btn {
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+</style>
+{% endblock %}

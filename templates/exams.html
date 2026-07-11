@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Exams{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.85;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        background: white;
+        padding: 14px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-bar .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-bar .stat strong {
+        color: #0F172A;
+    }
+    .stats-bar .stat .num {
+        background: #F1F5F9;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    /* ===== HEADER ACTIONS ===== */
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+    .btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-success { background: #22C55E; }
+    .btn-primary { background: #2563EB; }
+    .btn-purple { background: #8B5CF6; }
+    .btn-secondary { background: #64748B; }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 12px 18px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        font-size: 15px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    .search-bar .clear-btn {
+        padding: 12px 20px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .search-bar .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    /* ===== EXAM CARD (instead of table) ===== */
+    .exams-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .exam-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #EDF2F7;
+        transition: 0.3s;
+    }
+    .exam-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transform: translateX(4px);
+    }
+    .exam-card .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+    .exam-card .card-header h3 {
+        font-size: 19px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+    }
+    .exam-card .card-header .course-badge {
+        background: #EFF6FF;
+        color: #2563EB;
+        padding: 4px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .exam-card .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 12px 0;
+        border-top: 1px solid #F1F5F9;
+        border-bottom: 1px solid #F1F5F9;
+        margin: 12px 0 16px 0;
+    }
+    .exam-card .meta .item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .exam-card .meta .item i {
+        color: #2563EB;
+        width: 18px;
+    }
+    .exam-card .meta .item .type-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .type-online { background: #DBEAFE; color: #1D4ED8; }
+    .type-inperson { background: #F1F5F9; color: #475569; }
+
+    .exam-card .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+    .exam-card .actions .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .status-upcoming { background: #FEF3C7; color: #D97706; }
+    .status-inprogress { background: #DBEAFE; color: #1D4ED8; }
+    .status-completed { background: #DCFCE7; color: #16A34A; }
+    .status-closed { background: #FEE2E2; color: #DC2626; }
+    .status-notready { background: #F1F5F9; color: #64748B; }
+
+    .btn-sm {
+        display: inline-block;
+        text-decoration: none;
+        padding: 8px 20px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 500;
+        font-size: 14px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-sm:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-sm-primary { background: #2563EB; color: white; }
+    .btn-sm-success { background: #22C55E; color: white; }
+    .btn-sm-purple { background: #8B5CF6; color: white; }
+    .btn-sm-outline { background: #E2E8F0; color: #1E293B; }
+    .btn-sm-outline:hover { background: #CBD5E1; }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #94A3B8;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .sub { font-size: 14px; margin-top: 8px; }
+    .empty-state a { color: #2563EB; text-decoration: none; }
+    .empty-state a:hover { text-decoration: underline; }
+
+    .hidden { display: none; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-bar { flex-direction: column; align-items: center; gap: 8px; }
+        .search-bar { flex-direction: column; }
+        .search-bar input { width: 100%; }
+        .exam-card .card-header { flex-direction: column; align-items: flex-start; }
+        .header-actions { flex-direction: column; }
+        .header-actions .btn { justify-content: center; }
+        .exam-card .meta { flex-direction: column; gap: 10px; }
+        .exam-card .actions { flex-direction: column; align-items: stretch; }
+        .exam-card .actions .btn-sm { text-align: center; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-clipboard-list"></i> Exams</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Dashboard</span>
+                &nbsp;·&nbsp; {% if session.role == 'student' %}Manage your exams and online tests{% else %}Create and manage exams{% endif %}
+            </div>
+        </div>
+        {% if session.role == 'student' and exams %}
+            <div style="background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px;">
+                <i class="fas fa-check-circle"></i> {{ exams|selectattr('attempt_status', 'in', ['submitted', 'auto_submitted'])|list|length }} completed
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== STATS BAR ===== -->
+    <div class="stats-bar">
+        <span class="stat"><i class="fas fa-list"></i> <strong>Total:</strong> <span class="num">{{ exams|length }}</span></span>
+        {% if session.role == 'student' %}
+            <span class="stat"><i class="fas fa-clock" style="color:#F59E0B;"></i> <strong>Upcoming:</strong> <span class="num">{{ exams|selectattr('window_upcoming')|list|length }}</span></span>
+            <span class="stat"><i class="fas fa-check-circle" style="color:#22C55E;"></i> <strong>Completed:</strong> <span class="num">{{ exams|selectattr('attempt_status', 'in', ['submitted', 'auto_submitted'])|list|length }}</span></span>
+        {% elif session.role == 'teacher' %}
+            <span class="stat"><i class="fas fa-globe" style="color:#3B82F6;"></i> <strong>Online:</strong> <span class="num">{{ exams|selectattr('is_online')|list|length }}</span></span>
+        {% endif %}
+    </div>
+
+    <!-- ===== HEADER ACTIONS ===== -->
+    <div class="header-actions">
+        {% if session.role == 'teacher' %}
+            <a href="{{ url_for('create_exam') }}" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> Create Exam
+            </a>
+        {% elif session.role == 'student' %}
+            <a href="{{ url_for('my_exam_marks') }}" class="btn btn-primary">
+                <i class="fas fa-chart-line"></i> My Exam Marks
+            </a>
+        {% endif %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ===== SEARCH BAR ===== -->
+    <div class="search-bar">
+        <input type="text" id="examSearch" placeholder="🔍 Search exams by title or course..." onkeyup="filterExams()">
+        <button class="clear-btn" onclick="document.getElementById('examSearch').value=''; filterExams();">Clear</button>
+    </div>
+
+    <!-- ===== EXAMS LIST ===== -->
+    <div class="exams-list" id="examGrid">
+        {% if exams %}
+            {% for exam in exams %}
+            <div class="exam-card" data-title="{{ exam.title|lower }}" data-course="{{ exam.course_name|lower }}">
+                <div class="card-header">
+                    <h3>{{ exam.title }}</h3>
+                    <span class="course-badge"><i class="fas fa-book"></i> {{ exam.course_name }}</span>
+                </div>
+
+                <div class="meta">
+                    <span class="item"><i class="fas fa-calendar-alt"></i> {{ exam.exam_date }} at {{ exam.start_time }}</span>
+                    <span class="item"><i class="fas fa-clock"></i> {{ exam.duration_minutes }} min</span>
+                    <span class="item"><i class="fas fa-star"></i> {{ exam.total_marks }} marks</span>
+                    <span class="item">
+                        <i class="fas fa-laptop"></i>
+                        <span class="type-badge {% if exam.is_online %}type-online{% else %}type-inperson{% endif %}">
+                            {% if exam.is_online %}Online{% else %}In-person{% endif %}
+                        </span>
+                    </span>
+                </div>
+
+                <div class="actions">
+                    {% if session.role == 'student' %}
+                        {% if exam.can_take_online %}
+                            <span class="status-badge status-inprogress"><i class="fas fa-play-circle"></i> In Progress</span>
+                            <a href="{{ url_for('take_online_exam', exam_id=exam.id) }}" class="btn-sm btn-sm-success">
+                                <i class="fas fa-play"></i> Attend Exam
+                            </a>
+                        {% elif exam.is_online and exam.attempt_status in ['submitted', 'auto_submitted'] %}
+                            <span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed ({{ exam.attempt_score }} marks)</span>
+                        {% elif exam.is_online and exam.window_upcoming %}
+                            <span class="status-badge status-upcoming"><i class="fas fa-hourglass-half"></i> Opens {{ exam.exam_date }} {{ exam.start_time }}</span>
+                        {% elif exam.is_online and exam.window_closed and exam.attempt_status not in ['submitted', 'auto_submitted'] %}
+                            <span class="status-badge status-closed"><i class="fas fa-times-circle"></i> Window Closed</span>
+                        {% elif exam.is_online and not exam.q_count %}
+                            <span class="status-badge status-notready"><i class="fas fa-cog"></i> Not Ready</span>
+                        {% elif exam.has_paper %}
+                            <a href="/{{ exam.question_paper_url }}" target="_blank" class="btn-sm btn-sm-primary">
+                                <i class="fas fa-file-pdf"></i> View Paper
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('view_my_exam_marks', exam_id=exam.id) }}" class="btn-sm btn-sm-outline">
+                            <i class="fas fa-chart-bar"></i> My Marks
+                        </a>
+
+                    {% elif session.role == 'teacher' %}
+                        {% if exam.is_online %}
+                            <a href="{{ url_for('manage_exam_questions', exam_id=exam.id) }}" class="btn-sm btn-sm-primary">
+                                <i class="fas fa-question-circle"></i> MCQ Questions
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('upload_question_paper', exam_id=exam.id) }}" class="btn-sm btn-sm-purple">
+                            <i class="fas fa-upload"></i> Upload Paper
+                        </a>
+                        <a href="{{ url_for('exam_marks', exam_id=exam.id) }}" class="btn-sm btn-sm-outline">
+                            <i class="fas fa-pen"></i> Enter Marks
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <p style="font-size: 18px;">No exams found.</p>
+                <p class="sub">
+                    {% if session.role == 'teacher' %}
+                        Click <strong>"Create Exam"</strong> to get started.
+                    {% else %}
+                        No exams scheduled for your enrolled courses yet.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== FILTER SCRIPT ===== -->
+<script>
+    function filterExams() {
+        const query = document.getElementById('examSearch').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.exam-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const title = card.dataset.title || '';
+            const course = card.dataset.course || '';
+            if (title.includes(query) || course.includes(query)) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        // Show/hide no results message
+        const grid = document.getElementById('examGrid');
+        const existingMsg = document.getElementById('noResultsMsg');
+        if (existingMsg) existingMsg.remove();
+
+        if (visibleCount === 0 && query) {
+            const msg = document.createElement('div');
+            msg.id = 'noResultsMsg';
+            msg.className = 'empty-state';
+            msg.style.gridColumn = '1 / -1';
+            msg.innerHTML = `
+                <div style="font-size: 42px; margin-bottom: 10px;">🔍</div>
+                <p style="font-size: 18px;">No exams match "<strong>${query}</strong>"</p>
+                <p class="sub">Try a different search term.</p>
+            `;
+            grid.appendChild(msg);
+        }
+    }
+</script>
+{% endblock %}

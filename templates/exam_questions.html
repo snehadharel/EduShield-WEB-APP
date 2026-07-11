@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Exam Questions{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('list_exams') }}" style="color: #667eea;">&larr; Back to Exams</a>
+    </div>
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 24px; color: white; margin-bottom: 24px;">
+        <h2 style="margin: 0;">{{ exam.title }}</h2>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">{{ exam.course_name }} &middot; Online MCQ &middot; {{ questions|length }} questions ({{ total_q_marks }} marks)</p>
+    </div>
+
+    <div style="background: white; border-radius: 20px; padding: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); margin-bottom: 24px;">
+        <h3 style="margin-top: 0;">Add Question</h3>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add">
+            <div style="margin-bottom: 14px;">
+                <label>Question</label>
+                <textarea name="question_text" rows="3" required style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd;"></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div><label>Option A</label><input name="option_a" required style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></div>
+                <div><label>Option B</label><input name="option_b" required style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></div>
+                <div><label>Option C</label><input name="option_c" required style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></div>
+                <div><label>Option D</label><input name="option_d" required style="width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;"></div>
+            </div>
+            <div style="display: flex; gap: 16px; align-items: end;">
+                <div>
+                    <label>Correct Answer</label>
+                    <select name="correct_option" style="padding: 10px; border-radius: 10px;">
+                        <option value="A">A</option><option value="B">B</option>
+                        <option value="C">C</option><option value="D">D</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Marks</label>
+                    <input type="number" name="marks" value="1" min="1" style="width: 80px; padding: 10px; border-radius: 10px; border: 1px solid #ddd;">
+                </div>
+                <button type="submit" style="background: #43a047; color: white; border: none; padding: 12px 24px; border-radius: 40px; cursor: pointer;">Add Question</button>
+            </div>
+        </form>
+    </div>
+
+    {% if questions %}
+    <div style="background: white; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+        <h3>Existing Questions</h3>
+        {% for q in questions %}
+        <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <strong>Q{{ loop.index }}.</strong> {{ q.question_text }}
+                    <div style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+                        A) {{ q.option_a }} &nbsp; B) {{ q.option_b }}<br>
+                        C) {{ q.option_c }} &nbsp; D) {{ q.option_d }}<br>
+                        <span style="color: #059669;">Answer: {{ q.correct_option }}</span> &middot; {{ q.marks }} mark(s)
+                    </div>
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="question_id" value="{{ q.id }}">
+                    <button type="submit" style="background: #fee2e2; color: #991b1b; border: none; padding: 6px 12px; border-radius: 20px; cursor: pointer;">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

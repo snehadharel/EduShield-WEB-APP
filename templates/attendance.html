@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance - {{ course.course_name }}{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .course-meta {
+        font-size: 14px;
+        opacity: 0.9;
+        background: rgba(255,255,255,0.15);
+        padding: 6px 16px;
+        border-radius: 40px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+        margin-right: 16px;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS BANNER ===== */
+    .stats-banner {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        background: white;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+    }
+    .stats-banner .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+    }
+    .stats-banner .stat strong {
+        color: #0F172A;
+        font-weight: 700;
+    }
+    .stats-banner .stat .num {
+        background: #F1F5F9;
+        padding: 2px 10px;
+        border-radius: 40px;
+        font-weight: 600;
+    }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+    .search-bar input {
+        flex: 1;
+        padding: 10px 16px;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 12px;
+        font-size: 14px;
+        min-width: 200px;
+        transition: 0.2s;
+        background: white;
+    }
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    }
+    .search-bar .clear-btn {
+        padding: 10px 18px;
+        background: #E2E8F0;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        color: #1E293B;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 13px;
+    }
+    .search-bar .clear-btn:hover {
+        background: #CBD5E1;
+    }
+
+    /* ===== ATTENDANCE CARD ===== */
+    .attendance-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #EDF2F7;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .attendance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .attendance-table th {
+        background: #F8FAFC;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #1E293B;
+        border-bottom: 2px solid #E2E8F0;
+    }
+    .attendance-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #F1F5F9;
+        vertical-align: middle;
+    }
+    .attendance-table tr:hover {
+        background: #FAFBFC;
+    }
+    .attendance-table tr:last-child td {
+        border-bottom: none;
+    }
+    .attendance-table tr.hidden {
+        display: none;
+    }
+
+    .status-select {
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1.5px solid #E2E8F0;
+        font-size: 14px;
+        font-weight: 500;
+        background: white;
+        cursor: pointer;
+        transition: 0.2s;
+        min-width: 110px;
+    }
+    .status-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    .status-select option.present { background: #DCFCE7; color: #16A34A; }
+    .status-select option.late { background: #FEF3C7; color: #D97706; }
+    .status-select option.absent { background: #FEE2E2; color: #DC2626; }
+
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        align-items: center;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 15px;
+        text-decoration: none;
+        text-align: center;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    .btn-primary { background: #2563EB; }
+    .btn-success { background: #22C55E; }
+    .btn-warning { background: #F59E0B; }
+    .btn-secondary { background: #64748B; }
+
+    .summary-footer {
+        margin-top: 16px;
+        padding: 12px 16px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 14px;
+        color: #475569;
+        border: 1px solid #E2E8F0;
+    }
+    .summary-footer strong {
+        color: #0F172A;
+    }
+    .summary-footer .highlight-present { color: #16A34A; }
+    .summary-footer .highlight-late { color: #D97706; }
+    .summary-footer .highlight-absent { color: #DC2626; }
+
+    @media (max-width: 640px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .page-header .back-link { margin-right: 0; }
+        .stats-banner { flex-direction: column; gap: 8px; align-items: center; }
+        .attendance-table td { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; }
+        .attendance-table td:before { content: attr(data-label); font-weight: 600; }
+        .attendance-table th { display: none; }
+        .attendance-table tr { display: block; margin-bottom: 10px; border: 1px solid #E2E8F0; border-radius: 12px; padding: 4px 0; }
+        .status-select { min-width: 100px; }
+        .btn-group { flex-direction: column; align-items: stretch; }
+        .search-bar { flex-direction: column; }
+        .search-bar input { width: 100%; }
+        .summary-footer { flex-direction: column; align-items: center; text-align: center; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-clipboard-list"></i> Mark Attendance</h2>
+            <div style="margin-top: 6px; font-size: 14px; opacity: 0.85;">
+                <span class="back-link" onclick="window.history.back();">← Back</span>
+                <span class="course-meta">{{ course.course_name }} ({{ course.course_code }})</span>
+            </div>
+        </div>
+        <div class="course-meta">
+            <i class="far fa-calendar-alt"></i> {{ today.strftime('%A, %B %d, %Y') if today is not string else today }}
+        </div>
+    </div>
+
+    <!-- ===== STATS BANNER ===== -->
+    <div class="stats-banner">
+        <span class="stat"><i class="fas fa-users"></i> <strong>Students:</strong> <span class="num">{{ students|length }}</span></span>
+        <span class="stat"><i class="fas fa-check-circle" style="color:#22C55E;"></i> <strong>Present:</strong> <span class="num" id="presentCount">0</span></span>
+        <span class="stat"><i class="fas fa-clock" style="color:#F59E0B;"></i> <strong>Late:</strong> <span class="num" id="lateCount">0</span></span>
+        <span class="stat"><i class="fas fa-times-circle" style="color:#DC2626;"></i> <strong>Absent:</strong> <span class="num" id="absentCount">0</span></span>
+    </div>
+
+    <!-- ===== SEARCH BAR ===== -->
+    <div class="search-bar">
+        <input type="text" id="studentSearch" placeholder="🔍 Search students by name or username..." onkeyup="filterStudents()">
+        <button class="clear-btn" onclick="document.getElementById('studentSearch').value=''; filterStudents();">Clear</button>
+    </div>
+
+    <!-- ===== ATTENDANCE FORM ===== -->
+    <div class="attendance-card">
+        <form method="POST" id="attendanceForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="date" value="{{ today }}">
+
+            <div class="table-responsive">
+                <table class="attendance-table" id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr data-name="{{ (student.full_name or student.username)|lower }}" data-username="{{ student.username|lower }}">
+                            <td data-label="Student">
+                                <strong>{{ student.full_name or student.username }}</strong>
+                                {% if student.full_name and student.username != student.full_name %}
+                                    <br><small style="color: #94A3B8;">{{ student.username }}</small>
+                                {% endif %}
+                            </td>
+                            <td data-label="Status" style="text-align: center;">
+                                <select name="status_{{ student.id }}" class="status-select" onchange="updateStats()">
+                                    <option value="present" {% if existing_att[student.id]=='present' %}selected{% endif %} class="present">✅ Present</option>
+                                    <option value="late" {% if existing_att[student.id]=='late' %}selected{% endif %} class="late">⏰ Late</option>
+                                    <option value="absent" {% if existing_att[student.id]=='absent' or not existing_att[student.id] %}selected{% endif %} class="absent">❌ Absent</option>
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ===== BUTTONS ===== -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save Attendance</button>
+                <button type="button" class="btn btn-warning" onclick="markAll('present')"><i class="fas fa-check"></i> All Present</button>
+                <button type="button" class="btn btn-primary" onclick="markAll('late')"><i class="fas fa-clock"></i> All Late</button>
+                <button type="button" class="btn btn-secondary" onclick="markAll('absent')"><i class="fas fa-times"></i> All Absent</button>
+                <a href="{{ url_for('teacher_attendance_dashboard') }}" class="btn btn-secondary" style="background:#64748B;">← Back to Dashboard</a>
+            </div>
+
+            <!-- ===== SUMMARY FOOTER ===== -->
+            <div class="summary-footer">
+                <span><strong>Summary:</strong></span>
+                <span class="highlight-present">✅ Present: <span id="footerPresent">0</span></span>
+                <span class="highlight-late">⏰ Late: <span id="footerLate">0</span></span>
+                <span class="highlight-absent">❌ Absent: <span id="footerAbsent">0</span></span>
+                <span><strong>Total:</strong> <span id="footerTotal">{{ students|length }}</span></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    // --- Update stats and footer ---
+    function updateStats() {
+        const selects = document.querySelectorAll('.status-select');
+        let present = 0, late = 0, absent = 0;
+        selects.forEach(sel => {
+            if (sel.value === 'present') present++;
+            else if (sel.value === 'late') late++;
+            else if (sel.value === 'absent') absent++;
+        });
+        document.getElementById('presentCount').textContent = present;
+        document.getElementById('lateCount').textContent = late;
+        document.getElementById('absentCount').textContent = absent;
+        document.getElementById('footerPresent').textContent = present;
+        document.getElementById('footerLate').textContent = late;
+        document.getElementById('footerAbsent').textContent = absent;
+    }
+
+    // --- Mark all students with a specific status ---
+    function markAll(status) {
+        const selects = document.querySelectorAll('.status-select');
+        selects.forEach(sel => {
+            sel.value = status;
+        });
+        updateStats();
+    }
+
+    // --- Filter students by search ---
+    function filterStudents() {
+        const query = document.getElementById('studentSearch').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#attendanceTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.dataset.name || '';
+            const username = row.dataset.username || '';
+            if (name.includes(query) || username.includes(query)) {
+                row.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        // Update "Total" in footer to show visible count
+        document.getElementById('footerTotal').textContent = visibleCount;
+    }
+
+    // --- Initial update on page load ---
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStats();
+        // Ensure the "Total" in footer matches initial count
+        document.getElementById('footerTotal').textContent = document.querySelectorAll('#attendanceTable tbody tr').length;
+    });
+
+    // --- Optional: confirm before saving ---
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        // Uncomment below if you want a confirmation dialog
+        // if (!confirm('Save attendance for today?')) e.preventDefault();
+    });
+</script>
+{% endblock %}

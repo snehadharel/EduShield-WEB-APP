@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}My Grades{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 30px;
+        margin-bottom: 28px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .page-header .subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+    .page-header .back-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.8;
+        transition: 0.2s;
+    }
+    .page-header .back-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #EDF2F7;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-card h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+    .stat-card .stat-sub {
+        font-size: 13px;
+        color: #64748B;
+        margin-top: 2px;
+    }
+    .stat-card.gpa .stat-value { color: #8B5CF6; }
+    .stat-card.percentage .stat-value { color: #2563EB; }
+    .stat-card.courses .stat-value { color: #22C55E; }
+    .stat-card.completed .stat-value { color: #F59E0B; }
+
+    /* ===== GRADE CARD ===== */
+    .grade-item {
+        background: white;
+        border-radius: 16px;
+        padding: 18px 20px;
+        border: 1px solid #EDF2F7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        transition: 0.2s;
+        margin-bottom: 12px;
+    }
+    .grade-item:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .grade-item .info {
+        flex: 2;
+        min-width: 160px;
+    }
+    .grade-item .info h4 {
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 2px;
+        font-size: 16px;
+    }
+    .grade-item .info .code {
+        font-size: 13px;
+        color: #64748B;
+    }
+    .grade-item .marks {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        flex: 1;
+        min-width: 120px;
+        justify-content: flex-end;
+    }
+    .grade-item .marks .numbers {
+        font-size: 15px;
+        color: #475569;
+    }
+    .grade-item .marks .numbers strong {
+        color: #0F172A;
+    }
+    .grade-item .marks .progress {
+        width: 100px;
+        height: 6px;
+        background: #E2E8F0;
+        border-radius: 40px;
+        overflow: hidden;
+    }
+    .grade-item .marks .progress .bar {
+        height: 100%;
+        border-radius: 40px;
+        transition: width 0.5s ease;
+    }
+    .grade-item .letter {
+        font-size: 24px;
+        font-weight: 800;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .grade-A { background: #DCFCE7; color: #16A34A; }
+    .grade-B { background: #DBEAFE; color: #1D4ED8; }
+    .grade-C { background: #FEF3C7; color: #D97706; }
+    .grade-D { background: #FEE2E2; color: #DC2626; }
+    .grade-F { background: #FEE2E2; color: #991B1B; }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94A3B8;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .sub { font-size: 14px; margin-top: 8px; }
+
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: stretch; text-align: center; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .grade-item { flex-direction: column; align-items: stretch; }
+        .grade-item .marks { justify-content: space-between; }
+        .grade-item .letter { align-self: center; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .grade-item .marks .progress { width: 100%; }
+    }
+</style>
+
+<div>
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div>
+            <h2><i class="fas fa-chart-line"></i> My Grades</h2>
+            <div class="subtitle">
+                <span class="back-link" onclick="window.history.back();">← Back to Dashboard</span>
+                &nbsp;·&nbsp; Course‑wise performance from assignments and exams
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATS CARDS ===== -->
+    <div class="stats-grid">
+        <div class="stat-card gpa">
+            <h4>Overall GPA</h4>
+            <div class="stat-value">{{ overall_gpa }}</div>
+            <div class="stat-sub">out of 4.0</div>
+        </div>
+        <div class="stat-card percentage">
+            <h4>Overall %</h4>
+            <div class="stat-value">{{ overall_percentage }}%</div>
+            <div class="stat-sub">average</div>
+        </div>
+        <div class="stat-card courses">
+            <h4>Total Courses</h4>
+            <div class="stat-value">{{ grade_data|length }}</div>
+            <div class="stat-sub">enrolled</div>
+        </div>
+        <div class="stat-card completed">
+            <h4>Completed</h4>
+            <div class="stat-value">{{ grade_data|selectattr('possible', 'gt', 0)|list|length }}</div>
+            <div class="stat-sub">with grades</div>
+        </div>
+    </div>
+
+    <!-- ===== GRADE LIST ===== -->
+    {% if grade_data %}
+        {% for g in grade_data %}
+        <div class="grade-item">
+            <div class="info">
+                <h4>{{ g.course.course_name }}</h4>
+                <div class="code">{{ g.course.course_code }}</div>
+            </div>
+            <div class="marks">
+                <span class="numbers">
+                    <strong>{{ g.obtained }}</strong> / {{ g.possible }}
+                </span>
+                <div class="progress">
+                    <div class="bar" style="width: {{ g.percentage }}%; background: {% if g.percentage >= 80 %}#22C55E{% elif g.percentage >= 60 %}#2563EB{% elif g.percentage >= 50 %}#F59E0B{% else %}#EF4444{% endif %};"></div>
+                </div>
+                <span style="font-weight:600; font-size:15px; color:#475569; min-width:48px; text-align:right;">{{ g.percentage }}%</span>
+            </div>
+            <div class="letter grade-{{ g.letter }}">{{ g.letter }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="icon">📊</div>
+            <p style="font-size: 18px;">No grade data available.</p>
+            <p class="sub">Your grades will appear here once you have submitted assignments or taken exams.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

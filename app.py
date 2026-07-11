@@ -910,21 +910,34 @@ def send_admin_alert(subject, body):
         print(f"Admin alert failed: {e}")
 
 def send_user_alert(user_email, subject, body):
+    """Send email to user with proper timeout and error handling."""
     if not user_email:
         return False
+    
     smtp_user = os.getenv('SMTP_USER')
     if not smtp_user:
         print("SMTP_USER not configured – user alert not sent.")
         return False
+    
+    smtp_server = os.getenv('SMTP_SERVER')
+    smtp_port = os.getenv('SMTP_PORT')
+    smtp_pass = os.getenv('SMTP_PASS')
+    
+    if not smtp_server or not smtp_port or not smtp_pass:
+        print("SMTP settings incomplete – user alert not sent.")
+        return False
+    
     msg = EmailMessage()
     msg.set_content(body)
     msg['Subject'] = subject
     msg['From'] = smtp_user
     msg['To'] = user_email
+    
     try:
-        with smtplib.SMTP(os.getenv('SMTP_SERVER'), int(os.getenv('SMTP_PORT'))) as s:
+        # Add timeout to avoid hanging
+        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=10) as s:
             s.starttls()
-            s.login(smtp_user, os.getenv('SMTP_PASS'))
+            s.login(smtp_user, smtp_pass)
             s.send_message(msg)
             print(f"User alert sent to {user_email}: {subject}")
             return True

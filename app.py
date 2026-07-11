@@ -5145,6 +5145,9 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
+with app.app_context():
+    init_db()
+
 if __name__ == '__main__':
     with app.app_context():
         init_db()

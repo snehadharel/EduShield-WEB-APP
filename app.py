@@ -910,7 +910,7 @@ def send_admin_alert(subject, body):
         print(f"Admin alert failed: {e}")
 
 def send_user_alert(user_email, subject, body):
-    """Send email to user with proper timeout and error handling."""
+    """Send email with a 10-second timeout and graceful failure."""
     if not user_email:
         return False
     
@@ -934,7 +934,7 @@ def send_user_alert(user_email, subject, body):
     msg['To'] = user_email
     
     try:
-        # Add timeout to avoid hanging
+        # Use a timeout of 10 seconds to avoid hanging
         with smtplib.SMTP(smtp_server, int(smtp_port), timeout=10) as s:
             s.starttls()
             s.login(smtp_user, smtp_pass)
@@ -1831,7 +1831,7 @@ def finalize_registration(bypass_questions=False):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (username, email, password_hash, role, preferred_device,
               sec_q1, a1_hash, sec_q2, a2_hash, sec_q3, a3_hash,
-              is_approved, device_fingerprint))
+              is_approved, device_fingerprint,))
         user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
         db.execute("INSERT OR IGNORE INTO profiles (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
         db.commit()

@@ -891,90 +891,66 @@ def send_notification(user_id, message, link=None):
     db.commit()
 
 def send_admin_alert(subject, body):
-    """Send admin alert using SendGrid SMTP with timeout."""
-    smtp_user = os.getenv('SMTP_USER')
-    if not smtp_user:
-        print("SMTP_USER not configured – admin alert not sent.")
+    """Send admin alert using SendGrid HTTP API."""
+    api_key = os.getenv('SENDGRID_API_KEY')
+    if not api_key:
+        print("SENDGRID_API_KEY not configured.")
         return
     
-    smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = os.getenv('SMTP_PORT')
-    smtp_pass = os.getenv('SMTP_PASS')
-    
-    if not smtp_server or not smtp_port or not smtp_pass:
-        print("SMTP settings incomplete – admin alert not sent.")
-        return
-    
-    msg = EmailMessage()
-    msg.set_content(body)
-    msg['Subject'] = subject
-    msg['From'] = smtp_user
-    msg['To'] = os.getenv('ALERT_RECIPIENT', smtp_user)
+    from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
+    to_email = os.getenv('ALERT_RECIPIENT', from_email)
     
     try:
-        # Add timeout to prevent hanging
-        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=15) as s:
-            s.starttls()
-            s.login(smtp_user, smtp_pass)
-            s.send_message(msg)
+        sg = sendgrid.SendGridAPIClient(api_key=api_key)
+        message = Mail(
+            from_email=from_email,
+            to_emails=to_email,
+            subject=subject,
+            html_content=f"<p>{body.replace(chr(10), '<br>')}</p>"
+        )
+        response = sg.send(message)
+        if response.status_code in [202, 200]:
             print(f"✅ Admin alert sent: {subject}")
+        else:
+            print(f"❌ Admin alert failed: {response.status_code}")
     except Exception as e:
-        print(f"❌ Admin alert failed (continuing): {e}")
-        # Don't crash - just log the error
+        print(f"❌ Admin alert error: {e}")
+    
+
+import sendgrid
+from sendgrid.helpers.mail import Mail
 
 def send_user_alert(user_email, subject, body):
-    """Send user email using SendGrid SMTP with timeout."""
+    """Send email using SendGrid HTTP API (works on Render)."""
     if not user_email:
         return False
     
-    smtp_user = os.getenv('SMTP_USER')
-    if not smtp_user:
-        print("SMTP_USER not configured – user alert not sent.")
+    api_key = os.getenv('SENDGRID_API_KEY')
+    if not api_key:
+        print("SENDGRID_API_KEY not configured.")
         return False
     
-    smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = os.getenv('SMTP_PORT')
-    smtp_pass = os.getenv('SMTP_PASS')
-    
-    if not smtp_server or not smtp_port or not smtp_pass:
-        print("SMTP settings incomplete – user alert not sent.")
-        return False
-    
-    msg = EmailMessage()
-    msg.set_content(body)
-    msg['Subject'] = subject
-    msg['From'] = smtp_user
-    msg['To'] = user_email
+    from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
     
     try:
-        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=15) as s:
-            s.starttls()
-            s.login(smtp_user, smtp_pass)
-            s.send_message(msg)
-            print(f"✅ User alert sent to {user_email}: {subject}")
+        sg = sendgrid.SendGridAPIClient(api_key=api_key)
+        message = Mail(
+            from_email=from_email,
+            to_emails=user_email,
+            subject=subject,
+            html_content=f"<p>{body.replace(chr(10), '<br>')}</p>"
+        )
+        response = sg.send(message)
+        if response.status_code in [202, 200]:
+            print(f"✅ Email sent to {user_email}")
             return True
+        else:
+            print(f"❌ Email failed: {response.status_code} - {response.body}")
+            return False
     except Exception as e:
-        print(f"❌ User alert failed (continuing): {e}")
+        print(f"❌ Email error: {e}")
         return False
     
-    msg = EmailMessage()
-    msg.set_content(body)
-    msg['Subject'] = subject
-    msg['From'] = smtp_user
-    msg['To'] = user_email
-    
-    try:
-        # Use a timeout of 10 seconds to avoid hanging
-        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=10) as s:
-            s.starttls()
-            s.login(smtp_user, smtp_pass)
-            s.send_message(msg)
-            print(f"User alert sent to {user_email}: {subject}")
-            return True
-    except Exception as e:
-        print(f"User alert failed: {e}")
-        return False
-
 def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
     """Send an alert if the login is from a new device, IP, or country."""
     db = get_db()

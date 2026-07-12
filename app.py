@@ -4881,7 +4881,32 @@ def _grade_exam_attempt(attempt_id, exam_id):
     ''', (exam_id, attempt['student_id'], score))
     db.commit()
     return score
-
+@app.route('/test-sendgrid')
+def test_sendgrid():
+    import os
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail
+    
+    email = request.args.get('email', 'admin.academics@gmail.com')
+    
+    try:
+        sg = SendGridAPIClient(api_key=os.getenv('SENDGRID_API_KEY'))
+        message = Mail(
+            from_email='admin.academics@gmail.com',
+            to_emails=email,
+            subject='Test Email from EduShield',
+            html_content='<p>SendGrid is working!</p>'
+        )
+        response = sg.send(message)
+        return f"""
+        <h2>✅ Email Test Result</h2>
+        <p><strong>Status:</strong> {response.status_code}</p>
+        <p><strong>To:</strong> {email}</p>
+        <p>Check your inbox/spam!</p>
+        """
+    except Exception as e:
+        return f"❌ Error: {e}"
+    
 @app.route('/exams/<int:exam_id>/take', methods=['GET', 'POST'])
 @login_required
 def take_online_exam(exam_id):

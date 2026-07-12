@@ -1192,15 +1192,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# === TEMPORARY: Manual verification endpoint (REMOVE AFTER DEMO) ===
-@app.route('/verify-admin')
-def verify_admin():
-    db = get_db()
-    db.execute("UPDATE users SET is_verified = 1 WHERE username='admin'")
-    db.execute("UPDATE users SET is_verified = 1")
-    db.commit()
-    return "✅ Admin and all users verified! You can now log in."
-
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -1840,7 +1831,7 @@ def finalize_registration(bypass_questions=False):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (username, email, password_hash, role, preferred_device,
               sec_q1, a1_hash, sec_q2, a2_hash, sec_q3, a3_hash,
-              is_approved, device_fingerprint, 1))
+              is_approved, device_fingerprint,))
         user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
         db.execute("INSERT OR IGNORE INTO profiles (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
         db.commit()

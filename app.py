@@ -930,7 +930,7 @@ import smtplib
 from email.message import EmailMessage
 
 def send_user_alert(user_email, subject, body):
-    """Send email using SendGrid HTTP API (works on Render)."""
+    """Send email using SendGrid HTTP API - Plain Text Only."""
     if not user_email:
         print("❌ No email provided")
         return False
@@ -944,19 +944,16 @@ def send_user_alert(user_email, subject, body):
     
     try:
         import sendgrid
-        from sendgrid.helpers.mail import Mail
+        from sendgrid.helpers.mail import Mail, PlainTextContent, Email
         
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        # Convert newlines to HTML and clean the body
-        html_body = body.replace('\n', '<br>')
-        html_content = f"<p>{html_body}</p>"
-        
+        # Build the email manually with plain text only
         message = Mail(
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            html_content=html_content
+            plain_text_content=body  # Plain text only - no HTML
         )
         
         response = sg.send(message)

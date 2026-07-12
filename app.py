@@ -40,8 +40,6 @@ from reportlab.lib.units import inch
 from io import BytesIO
 import warnings
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-import sendgrid
-from sendgrid.helpers.mail import Mail
 
 # Try to import shap_explain (optional)
 try:
@@ -893,84 +891,60 @@ def send_notification(user_id, message, link=None):
     db.commit()
 
 def send_admin_alert(subject, body):
-    """Send admin alert using SendGrid HTTP API."""
-    api_key = os.getenv('SENDGRID_API_KEY', '').strip()
-    if not api_key:
-        print("SENDGRID_API_KEY not configured.")
+    smtp_user = os.getenv('SMTP_USER')
+    if not smtp_user:
+        print("SMTP_USER not configured – admin alert not sent.")
         return
-    
-    from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
-    to_email = os.getenv('ALERT_RECIPIENT', from_email)
-    
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['Subject'] = subject
+    msg['From'] = smtp_user
+    msg['To'] = os.getenv('ALERT_RECIPIENT')
     try:
-        import sendgrid
-        from sendgrid.helpers.mail import Mail
-        
-        sg = sendgrid.SendGridAPIClient(api_key=api_key)
-        
-        html_body = body.replace('\n', '<br>')
-        html_content = f"<p>{html_body}</p>"
-        
-        message = Mail(
-            from_email=from_email,
-            to_emails=to_email,
-            subject=subject,
-            html_content=html_content
-        )
-        
-        response = sg.send(message)
-        if response.status_code in [202, 200]:
-            print(f"✅ Admin alert sent: {subject}")
-        else:
-            print(f"❌ Admin alert failed: {response.status_code}")
+        with smtplib.SMTP(os.getenv('SMTP_SERVER'), int(os.getenv('SMTP_PORT'))) as s:
+            s.starttls()
+            s.login(smtp_user, os.getenv('SMTP_PASS'))
+            s.send_message(msg)
+            print(f"Admin alert sent: {subject}")
     except Exception as e:
-        print(f"❌ Admin alert error: {e}")
-
-import smtplib
-from email.message import EmailMessage
+        print(f"Admin alert failed: {e}")
 
 def send_user_alert(user_email, subject, body):
-    """Send email using SendGrid HTTP API - Plain Text Only."""
+    """Send email with a 10-second timeout and graceful failure."""
     if not user_email:
-        print("❌ No email provided")
         return False
     
-    api_key = os.getenv('SENDGRID_API_KEY', '').strip()
-    if not api_key:
-        print("❌ SENDGRID_API_KEY not configured")
+    smtp_user = os.getenv('SMTP_USER')
+    if not smtp_user:
+        print("SMTP_USER not configured – user alert not sent.")
         return False
     
-    from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
+    smtp_server = os.getenv('SMTP_SERVER')
+    smtp_port = os.getenv('SMTP_PORT')
+    smtp_pass = os.getenv('SMTP_PASS')
+    
+    if not smtp_server or not smtp_port or not smtp_pass:
+        print("SMTP settings incomplete – user alert not sent.")
+        return False
+    
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['Subject'] = subject
+    msg['From'] = smtp_user
+    msg['To'] = user_email
     
     try:
-        import sendgrid
-        from sendgrid.helpers.mail import Mail, PlainTextContent, Email
-        
-        sg = sendgrid.SendGridAPIClient(api_key=api_key)
-        
-        # Build the email manually with plain text only
-        message = Mail(
-            from_email=from_email,
-            to_emails=user_email,
-            subject=subject,
-            plain_text_content=body  # Plain text only - no HTML
-        )
-        
-        response = sg.send(message)
-        
-        if response.status_code in [202, 200]:
-            print(f"✅ Email sent to {user_email}")
+        # Use a timeout of 10 seconds to avoid hanging
+        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=10) as s:
+            s.starttls()
+            s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
+            print(f"User alert sent to {user_email}: {subject}")
             return True
-        else:
-            print(f"❌ Email failed: {response.status_code}")
-            print(f"❌ Response: {response.body}")
-            return False
     except Exception as e:
-        print(f"❌ Email error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"User alert failed: {e}")
         return False
-    
+
 def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
     """Send an alert if the login is from a new device, IP, or country."""
     db = get_db()
@@ -990,11 +964,16 @@ def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
         (user_id,)
     ).fetchall()
     
+    # If no recent logins, this is the first login – we consider it new
     if not recent:
         is_new = True
     else:
         recent_ips = [row['ip_address'] for row in recent]
         recent_countries = [row['geo_country'] for row in recent]
+        # Check if device fingerprint is new (and we have one)
+        fingerprint = session.get('device_fingerprint')  # we can store it in session during login
+        # Actually we don't store fingerprint in session; we need to get it from the login form
+        # We'll add device_fingerprint to session in complete_successful_login before this call
         device_fingerprint = session.get('device_fingerprint', None)
         is_new = (
             (device_fingerprint and device_fingerprint not in trusted_fingerprints) or
@@ -1003,29 +982,32 @@ def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
         )
     
     if not is_new:
-        return
+        return  # No need to alert
     
+    # --- Compose email ---
     user = db.execute("SELECT username, email FROM users WHERE id = ?", (user_id,)).fetchone()
     if not user:
         return
     
-    subject = "New login to your EduShield account"
+    subject = "🔐 New login to your EduShield account"
     body = f"""Dear {user['username']},
 
 We noticed a new login to your EduShield account from a device or location we haven't seen before.
 
-Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-IP Address: {ip_address}
-Location: {geo['country']}
-Device: {user_agent}
+📅 Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+🌐 IP Address: {ip_address}
+📍 Location: {geo['country']}
+📱 Device: {user_agent}
 
 If this was you, you can ignore this email. We recommend that you:
-- Check your active sessions in the Security Center
-- If you don't recognise this login, logout all other devices
+- Check your active sessions in the Security Center: {url_for('security_center', _external=True)}
+- If you don't recognise this login, click the link below to logout all other devices:
+  {url_for('logout_other_sessions', _external=True)}
 
 Stay secure,
 EduShield Team
-    """
+"""
+    # Send the alert
     send_user_alert(user['email'], subject, body)
 
 def generate_otp():
@@ -1801,61 +1783,94 @@ def register():
         flash('Invalid registration step.', 'error')
         return redirect(url_for('register'))
     
-def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
-    """Send an alert if the login is from a new device, IP, or country."""
+def finalize_registration(bypass_questions=False):
+    full_name = session.get('reg_full_name')
+    email = session.get('reg_email')
+    role = session.get('reg_role')
+    preferred_device = session.get('reg_device', 'laptop')
+    password_hash = session.get('reg_password_hash')
+    device_fingerprint = session.get('reg_fingerprint', '')
+    username = session.get('reg_username')
+
+    if not all([full_name, email, role, password_hash, username]):
+        flash('Registration session expired. Please start over.', 'error')
+        return redirect(url_for('register'))
+
+    sec_q1 = sec_a1 = sec_q2 = sec_a2 = sec_q3 = sec_a3 = None
+    if role == 'student' and not bypass_questions:
+        sec_q1 = request.form.get('sec_q1', '').strip()
+        sec_a1 = request.form.get('sec_a1', '').strip().lower()
+        sec_q2 = request.form.get('sec_q2', '').strip()
+        sec_a2 = request.form.get('sec_a2', '').strip().lower()
+        sec_q3 = request.form.get('sec_q3', '').strip()
+        sec_a3 = request.form.get('sec_a3', '').strip().lower()
+        if not all([sec_q1, sec_a1, sec_q2, sec_a2, sec_q3, sec_a3]):
+            flash('All security questions are required.', 'error')
+            return redirect(url_for('register'))
+
+    # Check username uniqueness
     db = get_db()
-    
-    trusted_devices = db.execute(
-        "SELECT device_fingerprint FROM trusted_devices WHERE user_id = ? AND is_trusted = 1",
-        (user_id,)
-    ).fetchall()
-    trusted_fingerprints = [row['device_fingerprint'] for row in trusted_devices]
-    
-    recent = db.execute(
-        "SELECT ip_address, geo_country FROM login_logs "
-        "WHERE user_id = ? AND status = 'success' "
-        "ORDER BY login_time DESC LIMIT 5",
-        (user_id,)
-    ).fetchall()
-    
-    if not recent:
-        is_new = True
-    else:
-        recent_ips = [row['ip_address'] for row in recent]
-        recent_countries = [row['geo_country'] for row in recent]
-        device_fingerprint = session.get('device_fingerprint', None)
-        is_new = (
-            (device_fingerprint and device_fingerprint not in trusted_fingerprints) or
-            (ip_address not in recent_ips) or
-            (geo['country'] not in recent_countries)
-        )
-    
-    if not is_new:
-        return
-    
-    user = db.execute("SELECT username, email FROM users WHERE id = ?", (user_id,)).fetchone()
-    if not user:
-        return
-    
-    subject = "New login to your EduShield account"
-    # Plain text body (no emojis)
-    body = f"""Dear {user['username']},
+    existing = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+    if existing:
+        flash('Username already taken. Please choose another.', 'error')
+        return redirect(url_for('register'))
 
-We noticed a new login to your EduShield account from a device or location we haven't seen before.
+    # Hash answers
+    a1_hash = bcrypt.hashpw(sec_a1.encode('utf-8'), bcrypt.gensalt()) if sec_a1 else None
+    a2_hash = bcrypt.hashpw(sec_a2.encode('utf-8'), bcrypt.gensalt()) if sec_a2 else None
+    a3_hash = bcrypt.hashpw(sec_a3.encode('utf-8'), bcrypt.gensalt()) if sec_a3 else None
 
-Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-IP Address: {ip_address}
-Location: {geo['country']}
-Device: {user_agent}
+    is_approved = 1 if role == 'student' else 0
 
-If this was you, you can ignore this email. We recommend that you:
-- Check your active sessions in the Security Center
-- If you don't recognise this login, logout all other devices
+    try:
+        db.execute('''
+            INSERT INTO users
+            (username, email, password_hash, role, preferred_device,
+             security_q1, security_a1, security_q2, security_a2, security_q3, security_a3,
+             is_approved, device_fingerprint)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (username, email, password_hash, role, preferred_device,
+              sec_q1, a1_hash, sec_q2, a2_hash, sec_q3, a3_hash,
+              is_approved, device_fingerprint,))
+        user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        db.execute("INSERT OR IGNORE INTO profiles (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
+        db.commit()
+        log_activity(user_id, username, 'account_registered', f"Registered as {role}")
+
+        # --- SEND VERIFICATION EMAIL ---
+        token = serializer.dumps(email, salt='email-verify-salt')
+        verify_link = url_for('verify_email', token=token, _external=True)
+        subject = "Verify your email – EduShield"
+        body = f"""Dear {full_name or username},
+
+Thank you for registering on EduShield.
+
+Please verify your email address by clicking the link below (valid for 24 hours):
+
+{verify_link}
+
+If you did not register on EduShield, please ignore this email.
 
 Stay secure,
 EduShield Team
 """
-    send_user_alert(user['email'], subject, body)
+        send_user_alert(email, subject, body)
+
+        # Clear session data
+        for key in ['reg_full_name', 'reg_username', 'reg_email', 'reg_role', 'reg_password_hash', 'reg_device', 'reg_fingerprint']:
+            session.pop(key, None)
+
+        if role == 'teacher':
+            send_admin_alert("New Teacher Registration Pending Approval",
+                             f"Username: {username}\nEmail: {email}\nFull Name: {full_name}")
+            flash('Registration successful! Your teacher account requires admin approval. Please also verify your email before you can log in.', 'info')
+        else:
+            flash('Registration successful! A verification link has been sent to your email. Please verify your account before logging in.', 'success')
+        return redirect(url_for('login'))
+
+    except sqlite3.IntegrityError:
+        flash('Username or email already exists.', 'error')
+        return redirect(url_for('register'))
     
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")
@@ -2323,23 +2338,9 @@ def forgot_password():
         return redirect(url_for('login'))
     token = serializer.dumps(user['email'], salt='password-reset-salt')
     reset_link = url_for('reset_password', token=token, _external=True)
-    
-    # Plain text body (no special characters that might cause issues)
-    body = f"""Dear {user['username']},
-
-You requested a password reset for your EduShield account.
-
-Click the link below to reset your password (valid for 1 hour):
-
-{reset_link}
-
-If you did not request this, please ignore this email.
-
-Stay secure,
-EduShield Team
-"""
-    send_user_alert(user['email'], "Password Reset Request", body)
-    flash('If that email exists in our system, we have sent a password reset link.', 'info')
+    send_user_alert(user['email'], "Password Reset Request", 
+                    f"Dear {user['username']},\n\nClick the link below to reset your password (valid for 1 hour):\n{reset_link}\n\nIf you did not request this, ignore this email.")
+    flash('Password reset link sent to your email. Please check your inbox.', 'success')
     return redirect(url_for('login'))
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -5150,33 +5151,6 @@ def admin_logout_user(user_id):
     
     flash(f"✅ User '{user['username']}' has been logged out from all devices.", 'success')
     return redirect(url_for('admin_sessions'))
-
-@app.route('/test-sendgrid')
-def test_sendgrid():
-    import os
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
-    
-    email = request.args.get('email', 'admin.academics@gmail.com')
-    
-    try:
-        sg = SendGridAPIClient(api_key=os.getenv('SENDGRID_API_KEY'))
-        message = Mail(
-            from_email='admin.academics@gmail.com',
-            to_emails=email,
-            subject='Test Email from EduShield',
-            html_content='<p>SendGrid is working!</p>'
-        )
-        response = sg.send(message)
-        return f"""
-        <h2>✅ Email Test Result</h2>
-        <p><strong>Status Code:</strong> {response.status_code}</p>
-        <p><strong>To:</strong> {email}</p>
-        <p>Check your inbox/spam folder!</p>
-        <a href='/'>Back to Home</a>
-        """
-    except Exception as e:
-        return f"❌ Error: {e}"
     
 @app.route('/logout')
 def logout():

@@ -941,7 +941,7 @@ def send_user_alert(user_email, subject, body):
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            html_content=f"<p>{body.replace('\n', '<br>')}</p>"
+            html_content=f"<p>{body.replace(chr(10), '<br>')}</p>"
         )
         
         # Send the email

@@ -922,49 +922,47 @@ def send_admin_alert(subject, body):
 
 def send_user_alert(user_email, subject, body):
     """Send email using SendGrid HTTP API (works on Render)."""
-    print(f"🔍 [DEBUG] send_user_alert called")
-    print(f"🔍 [DEBUG] To: {user_email}")
-    print(f"🔍 [DEBUG] Subject: {subject}")
-    print(f"🔍 [DEBUG] Body preview: {body[:200]}...")
-    
     if not user_email:
-        print("❌ [DEBUG] No email provided")
         return False
     
     api_key = os.getenv('SENDGRID_API_KEY')
     if not api_key:
-        print("❌ [DEBUG] SENDGRID_API_KEY not configured")
+        print("SENDGRID_API_KEY not configured.")
         return False
     
-    print(f"🔍 [DEBUG] API Key found: {api_key[:10]}...")
-    
     from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
-    print(f"🔍 [DEBUG] From email: {from_email}")
     
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        # Convert plain text to HTML
-        html_body = body.replace('\n', '<br>')
+        # Clean the body - handle special characters
+        import html
+        clean_body = html.escape(body)
+        html_body = clean_body.replace('\n', '<br>')
+        
+        # Wrap in proper HTML with meta charset
+        full_html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<p>{html_body}</p>
+</body>
+</html>"""
         
         message = Mail(
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            html_content=f"<p>{html_body}</p>"
+            html_content=full_html
         )
-        
-        print(f"🔍 [DEBUG] Sending email...")
         response = sg.send(message)
-        
-        print(f"🔍 [DEBUG] Response status: {response.status_code}")
-        
         if response.status_code in [202, 200]:
             print(f"✅ Email sent to {user_email}")
             return True
         else:
-            print(f"❌ Email failed: {response.status_code}")
-            print(f"❌ Response body: {response.body}")
+            print(f"❌ Email failed: {response.status_code} - {response.body}")
             return False
     except Exception as e:
         print(f"❌ Email error: {e}")

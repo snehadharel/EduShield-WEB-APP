@@ -891,7 +891,7 @@ def send_notification(user_id, message, link=None):
         VALUES (?, ?, ?)
     ''', (user_id, message, link))
     db.commit()
-    
+
 def send_admin_alert(subject, body):
     """Send admin alert using SendGrid HTTP API - Plain Text."""
     api_key = os.getenv('SENDGRID_API_KEY', '').strip()
@@ -936,12 +936,12 @@ def send_user_alert(user_email, subject, body):
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        # Use plain text content (NOT HTML)
+        # Create the email with plain text content
         message = Mail(
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            plain_text_content=body  # Plain text only
+            plain_text_content=body  # This is correct
         )
         
         response = sg.send(message)

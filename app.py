@@ -910,9 +910,11 @@ def send_admin_alert(subject, body):
         print(f"Admin alert failed: {e}")
 
 def send_user_alert(user_email, subject, body):
-    """Send email with a 10-second timeout and graceful failure."""
-    if not user_email:
-        return False
+    """Email sending DISABLED for demo - no emails will be sent."""
+    print(f"📧 [EMAIL DISABLED] Would send to: {user_email}")
+    print(f"   Subject: {subject}")
+    print(f"   Body preview: {body[:100]}...")
+    return False  # Always return False - no email sent
     
     smtp_user = os.getenv('SMTP_USER')
     if not smtp_user:
@@ -1854,7 +1856,7 @@ If you did not register on EduShield, please ignore this email.
 Stay secure,
 EduShield Team
 """
-        send_user_alert(email, subject, body)
+        #send_user_alert(email, subject, body)
 
         # Clear session data
         for key in ['reg_full_name', 'reg_username', 'reg_email', 'reg_role', 'reg_password_hash', 'reg_device', 'reg_fingerprint']:

@@ -14,6 +14,7 @@ import ipaddress
 import time
 from datetime import datetime, timedelta
 from functools import wraps
+from django import db
 from flask import Flask, render_template, request, redirect, url_for, session, g, flash, abort, jsonify, Response
 from dotenv import load_dotenv
 from flask_limiter import Limiter
@@ -1835,22 +1836,24 @@ def finalize_registration(bypass_questions=False):
         db.execute('''
             INSERT INTO users
             (username, email, password_hash, role, preferred_device,
-             security_q1, security_a1, security_q2, security_a2, security_q3, security_a3,
-             is_approved, device_fingerprint)
+            security_q1, security_a1, security_q2, security_a2, security_q3, security_a3,
+            is_approved, device_fingerprint)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (username, email, password_hash, role, preferred_device,
-              sec_q1, a1_hash, sec_q2, a2_hash, sec_q3, a3_hash,
-              is_approved, device_fingerprint, 1))
-        user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-        db.execute("INSERT OR IGNORE INTO profiles (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
-        db.commit()
-        log_activity(user_id, username, 'account_registered', f"Registered as {role}")
+            sec_q1, a1_hash, sec_q2, a2_hash, sec_q3, a3_hash,
+            is_approved, device_fingerprint))   # <--- REMOVED THE EXTRA 1
+
+    user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    db.execute("INSERT OR IGNORE INTO profiles (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
+    db.commit()
+    log_activity(user_id, username, 'account_registered', f"Registered as {role}")
+
 
         # --- SEND VERIFICATION EMAIL ---
-        token = serializer.dumps(email, salt='email-verify-salt')
-        verify_link = url_for('verify_email', token=token, _external=True)
-        subject = "Verify your email – EduShield"
-        body = f"""Dear {full_name or username},
+token = serializer.dumps(email, salt='email-verify-salt')
+verify_link = url_for('verify_email', token=token, _external=True)
+subject = "Verify your email – EduShield"
+body = f"""Dear {full_name or username},
 
 Thank you for registering on EduShield.
 

@@ -894,7 +894,7 @@ def send_notification(user_id, message, link=None):
 
 def send_admin_alert(subject, body):
     """Send admin alert using SendGrid HTTP API."""
-    api_key = os.getenv('SENDGRID_API_KEY')
+    api_key = os.getenv('SENDGRID_API_KEY', '').strip()
     if not api_key:
         print("SENDGRID_API_KEY not configured.")
         return
@@ -904,12 +904,17 @@ def send_admin_alert(subject, body):
     
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
+        
+        html_body = body.replace('\n', '<br>')
+        html_content = f"<p>{html_body}</p>"
+        
         message = Mail(
             from_email=from_email,
             to_emails=to_email,
             subject=subject,
-            html_content=f"<p>{body.replace(chr(10), '<br>')}</p>"
+            html_content=html_content
         )
+        
         response = sg.send(message)
         if response.status_code in [202, 200]:
             print(f"✅ Admin alert sent: {subject}")
@@ -917,8 +922,6 @@ def send_admin_alert(subject, body):
             print(f"❌ Admin alert failed: {response.status_code}")
     except Exception as e:
         print(f"❌ Admin alert error: {e}")
-    
-
 
 def send_user_alert(user_email, subject, body):
     """Send email using SendGrid HTTP API (works on Render)."""
@@ -936,15 +939,17 @@ def send_user_alert(user_email, subject, body):
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        # Create the email content with proper formatting
+        # Convert newlines to HTML line breaks
+        html_body = body.replace('\n', '<br>')
+        html_content = f"<p>{html_body}</p>"
+        
         message = Mail(
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            html_content=f"<p>{body.replace(chr(10), '<br>')}</p>"
+            html_content=html_content
         )
         
-        # Send the email
         response = sg.send(message)
         
         if response.status_code in [202, 200]:
@@ -979,16 +984,11 @@ def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
         (user_id,)
     ).fetchall()
     
-    # If no recent logins, this is the first login – we consider it new
     if not recent:
         is_new = True
     else:
         recent_ips = [row['ip_address'] for row in recent]
         recent_countries = [row['geo_country'] for row in recent]
-        # Check if device fingerprint is new (and we have one)
-        fingerprint = session.get('device_fingerprint')  # we can store it in session during login
-        # Actually we don't store fingerprint in session; we need to get it from the login form
-        # We'll add device_fingerprint to session in complete_successful_login before this call
         device_fingerprint = session.get('device_fingerprint', None)
         is_new = (
             (device_fingerprint and device_fingerprint not in trusted_fingerprints) or
@@ -997,32 +997,29 @@ def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
         )
     
     if not is_new:
-        return  # No need to alert
+        return
     
-    # --- Compose email ---
     user = db.execute("SELECT username, email FROM users WHERE id = ?", (user_id,)).fetchone()
     if not user:
         return
     
-    subject = "🔐 New login to your EduShield account"
+    subject = "New login to your EduShield account"
     body = f"""Dear {user['username']},
 
 We noticed a new login to your EduShield account from a device or location we haven't seen before.
 
-📅 Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-🌐 IP Address: {ip_address}
-📍 Location: {geo['country']}
-📱 Device: {user_agent}
+Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+IP Address: {ip_address}
+Location: {geo['country']}
+Device: {user_agent}
 
 If this was you, you can ignore this email. We recommend that you:
-- Check your active sessions in the Security Center: {url_for('security_center', _external=True)}
-- If you don't recognise this login, click the link below to logout all other devices:
-  {url_for('logout_other_sessions', _external=True)}
+- Check your active sessions in the Security Center
+- If you don't recognise this login, logout all other devices
 
 Stay secure,
 EduShield Team
-"""
-    # Send the alert
+    """
     send_user_alert(user['email'], subject, body)
 
 def generate_otp():
@@ -1798,94 +1795,61 @@ def register():
         flash('Invalid registration step.', 'error')
         return redirect(url_for('register'))
     
-def finalize_registration(bypass_questions=False):
-    full_name = session.get('reg_full_name')
-    email = session.get('reg_email')
-    role = session.get('reg_role')
-    preferred_device = session.get('reg_device', 'laptop')
-    password_hash = session.get('reg_password_hash')
-    device_fingerprint = session.get('reg_fingerprint', '')
-    username = session.get('reg_username')
-
-    if not all([full_name, email, role, password_hash, username]):
-        flash('Registration session expired. Please start over.', 'error')
-        return redirect(url_for('register'))
-
-    sec_q1 = sec_a1 = sec_q2 = sec_a2 = sec_q3 = sec_a3 = None
-    if role == 'student' and not bypass_questions:
-        sec_q1 = request.form.get('sec_q1', '').strip()
-        sec_a1 = request.form.get('sec_a1', '').strip().lower()
-        sec_q2 = request.form.get('sec_q2', '').strip()
-        sec_a2 = request.form.get('sec_a2', '').strip().lower()
-        sec_q3 = request.form.get('sec_q3', '').strip()
-        sec_a3 = request.form.get('sec_a3', '').strip().lower()
-        if not all([sec_q1, sec_a1, sec_q2, sec_a2, sec_q3, sec_a3]):
-            flash('All security questions are required.', 'error')
-            return redirect(url_for('register'))
-
-    # Check username uniqueness
+def check_and_alert_new_login(user_id, ip_address, user_agent, geo):
+    """Send an alert if the login is from a new device, IP, or country."""
     db = get_db()
-    existing = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
-    if existing:
-        flash('Username already taken. Please choose another.', 'error')
-        return redirect(url_for('register'))
+    
+    trusted_devices = db.execute(
+        "SELECT device_fingerprint FROM trusted_devices WHERE user_id = ? AND is_trusted = 1",
+        (user_id,)
+    ).fetchall()
+    trusted_fingerprints = [row['device_fingerprint'] for row in trusted_devices]
+    
+    recent = db.execute(
+        "SELECT ip_address, geo_country FROM login_logs "
+        "WHERE user_id = ? AND status = 'success' "
+        "ORDER BY login_time DESC LIMIT 5",
+        (user_id,)
+    ).fetchall()
+    
+    if not recent:
+        is_new = True
+    else:
+        recent_ips = [row['ip_address'] for row in recent]
+        recent_countries = [row['geo_country'] for row in recent]
+        device_fingerprint = session.get('device_fingerprint', None)
+        is_new = (
+            (device_fingerprint and device_fingerprint not in trusted_fingerprints) or
+            (ip_address not in recent_ips) or
+            (geo['country'] not in recent_countries)
+        )
+    
+    if not is_new:
+        return
+    
+    user = db.execute("SELECT username, email FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        return
+    
+    subject = "New login to your EduShield account"
+    # Plain text body (no emojis)
+    body = f"""Dear {user['username']},
 
-    # Hash answers
-    a1_hash = bcrypt.hashpw(sec_a1.encode('utf-8'), bcrypt.gensalt()) if sec_a1 else None
-    a2_hash = bcrypt.hashpw(sec_a2.encode('utf-8'), bcrypt.gensalt()) if sec_a2 else None
-    a3_hash = bcrypt.hashpw(sec_a3.encode('utf-8'), bcrypt.gensalt()) if sec_a3 else None
+We noticed a new login to your EduShield account from a device or location we haven't seen before.
 
-    is_approved = 1 if role == 'student' else 0
+Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+IP Address: {ip_address}
+Location: {geo['country']}
+Device: {user_agent}
 
-    try:
-        db.execute('''
-            INSERT INTO users
-            (username, email, password_hash, role, preferred_device,
-             security_q1, security_a1, security_q2, security_a2, security_q3, security_a3,
-             is_approved, device_fingerprint)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (username, email, password_hash, role, preferred_device,
-              sec_q1, a1_hash, sec_q2, a2_hash, sec_q3, a3_hash,
-              is_approved, device_fingerprint,))
-        user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-        db.execute("INSERT OR IGNORE INTO profiles (user_id, full_name) VALUES (?, ?)", (user_id, full_name))
-        db.commit()
-        log_activity(user_id, username, 'account_registered', f"Registered as {role}")
-
-        # --- SEND VERIFICATION EMAIL ---
-        token = serializer.dumps(email, salt='email-verify-salt')
-        verify_link = url_for('verify_email', token=token, _external=True)
-        subject = "Verify your email – EduShield"
-        body = f"""Dear {full_name or username},
-
-Thank you for registering on EduShield.
-
-Please verify your email address by clicking the link below (valid for 24 hours):
-
-{verify_link}
-
-If you did not register on EduShield, please ignore this email.
+If this was you, you can ignore this email. We recommend that you:
+- Check your active sessions in the Security Center
+- If you don't recognise this login, logout all other devices
 
 Stay secure,
 EduShield Team
 """
-        send_user_alert(email, subject, body)
-
-        # Clear session data
-        for key in ['reg_full_name', 'reg_username', 'reg_email', 'reg_role', 'reg_password_hash', 'reg_device', 'reg_fingerprint']:
-            session.pop(key, None)
-
-        if role == 'teacher':
-            send_admin_alert("New Teacher Registration Pending Approval",
-                             f"Username: {username}\nEmail: {email}\nFull Name: {full_name}")
-            flash('Registration successful! Your teacher account requires admin approval. Please also verify your email before you can log in.', 'info')
-        else:
-            flash('Registration successful! A verification link has been sent to your email. Please verify your account before logging in.', 'success')
-        return redirect(url_for('login'))
-
-    except sqlite3.IntegrityError:
-        flash('Username or email already exists.', 'error')
-        return redirect(url_for('register'))
+    send_user_alert(user['email'], subject, body)
     
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")
@@ -2353,9 +2317,23 @@ def forgot_password():
         return redirect(url_for('login'))
     token = serializer.dumps(user['email'], salt='password-reset-salt')
     reset_link = url_for('reset_password', token=token, _external=True)
-    send_user_alert(user['email'], "Password Reset Request", 
-                    f"Dear {user['username']},\n\nClick the link below to reset your password (valid for 1 hour):\n{reset_link}\n\nIf you did not request this, ignore this email.")
-    flash('Password reset link sent to your email. Please check your inbox.', 'success')
+    
+    # Plain text body (no special characters that might cause issues)
+    body = f"""Dear {user['username']},
+
+You requested a password reset for your EduShield account.
+
+Click the link below to reset your password (valid for 1 hour):
+
+{reset_link}
+
+If you did not request this, please ignore this email.
+
+Stay secure,
+EduShield Team
+"""
+    send_user_alert(user['email'], "Password Reset Request", body)
+    flash('If that email exists in our system, we have sent a password reset link.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])

@@ -891,30 +891,41 @@ def send_notification(user_id, message, link=None):
     db.commit()
 
 def send_admin_alert(subject, body):
+    """Send admin alert using SendGrid SMTP with timeout."""
     smtp_user = os.getenv('SMTP_USER')
     if not smtp_user:
         print("SMTP_USER not configured – admin alert not sent.")
         return
+    
+    smtp_server = os.getenv('SMTP_SERVER')
+    smtp_port = os.getenv('SMTP_PORT')
+    smtp_pass = os.getenv('SMTP_PASS')
+    
+    if not smtp_server or not smtp_port or not smtp_pass:
+        print("SMTP settings incomplete – admin alert not sent.")
+        return
+    
     msg = EmailMessage()
     msg.set_content(body)
     msg['Subject'] = subject
     msg['From'] = smtp_user
-    msg['To'] = os.getenv('ALERT_RECIPIENT')
+    msg['To'] = os.getenv('ALERT_RECIPIENT', smtp_user)
+    
     try:
-        with smtplib.SMTP(os.getenv('SMTP_SERVER'), int(os.getenv('SMTP_PORT'))) as s:
+        # Add timeout to prevent hanging
+        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=15) as s:
             s.starttls()
-            s.login(smtp_user, os.getenv('SMTP_PASS'))
+            s.login(smtp_user, smtp_pass)
             s.send_message(msg)
-            print(f"Admin alert sent: {subject}")
+            print(f"✅ Admin alert sent: {subject}")
     except Exception as e:
-        print(f"Admin alert failed: {e}")
+        print(f"❌ Admin alert failed (continuing): {e}")
+        # Don't crash - just log the error
 
 def send_user_alert(user_email, subject, body):
-    """Email sending DISABLED for demo - no emails will be sent."""
-    print(f"📧 [EMAIL DISABLED] Would send to: {user_email}")
-    print(f"   Subject: {subject}")
-    print(f"   Body preview: {body[:100]}...")
-    return False  # Always return False - no email sent
+    """Send user email using SendGrid SMTP with timeout."""
+    if not user_email:
+        return False
     
     smtp_user = os.getenv('SMTP_USER')
     if not smtp_user:
@@ -927,6 +938,23 @@ def send_user_alert(user_email, subject, body):
     
     if not smtp_server or not smtp_port or not smtp_pass:
         print("SMTP settings incomplete – user alert not sent.")
+        return False
+    
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['Subject'] = subject
+    msg['From'] = smtp_user
+    msg['To'] = user_email
+    
+    try:
+        with smtplib.SMTP(smtp_server, int(smtp_port), timeout=15) as s:
+            s.starttls()
+            s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
+            print(f"✅ User alert sent to {user_email}: {subject}")
+            return True
+    except Exception as e:
+        print(f"❌ User alert failed (continuing): {e}")
         return False
     
     msg = EmailMessage()
@@ -1856,7 +1884,7 @@ If you did not register on EduShield, please ignore this email.
 Stay secure,
 EduShield Team
 """
-        #send_user_alert(email, subject, body)
+        send_user_alert(email, subject, body)
 
         # Clear session data
         for key in ['reg_full_name', 'reg_username', 'reg_email', 'reg_role', 'reg_password_hash', 'reg_device', 'reg_fingerprint']:

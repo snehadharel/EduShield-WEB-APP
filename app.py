@@ -40,6 +40,8 @@ from reportlab.lib.units import inch
 from io import BytesIO
 import warnings
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+import sendgrid
+from sendgrid.helpers.mail import Mail
 
 # Try to import shap_explain (optional)
 try:
@@ -917,8 +919,6 @@ def send_admin_alert(subject, body):
         print(f"❌ Admin alert error: {e}")
     
 
-import sendgrid
-from sendgrid.helpers.mail import Mail
 
 def send_user_alert(user_email, subject, body):
     """Send email using SendGrid HTTP API (works on Render)."""

@@ -891,9 +891,9 @@ def send_notification(user_id, message, link=None):
         VALUES (?, ?, ?)
     ''', (user_id, message, link))
     db.commit()
-
+    
 def send_admin_alert(subject, body):
-    """Send admin alert using SendGrid HTTP API."""
+    """Send admin alert using SendGrid HTTP API - Plain Text."""
     api_key = os.getenv('SENDGRID_API_KEY', '').strip()
     if not api_key:
         print("SENDGRID_API_KEY not configured.")
@@ -905,14 +905,11 @@ def send_admin_alert(subject, body):
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        html_body = body.replace('\n', '<br>')
-        html_content = f"<p>{html_body}</p>"
-        
         message = Mail(
             from_email=from_email,
             to_emails=to_email,
             subject=subject,
-            html_content=html_content
+            plain_text_content=body  # Plain text
         )
         
         response = sg.send(message)
@@ -924,7 +921,7 @@ def send_admin_alert(subject, body):
         print(f"❌ Admin alert error: {e}")
 
 def send_user_alert(user_email, subject, body):
-    """Send email using SendGrid HTTP API (works on Render)."""
+    """Send email using SendGrid HTTP API - Plain Text Version."""
     if not user_email:
         print("❌ No email provided")
         return False
@@ -939,15 +936,12 @@ def send_user_alert(user_email, subject, body):
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        # Convert newlines to HTML line breaks
-        html_body = body.replace('\n', '<br>')
-        html_content = f"<p>{html_body}</p>"
-        
+        # Use plain text content (NOT HTML)
         message = Mail(
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            html_content=html_content
+            plain_text_content=body  # Plain text only
         )
         
         response = sg.send(message)

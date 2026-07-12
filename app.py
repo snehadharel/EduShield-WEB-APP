@@ -893,28 +893,36 @@ def send_notification(user_id, message, link=None):
     db.commit()
 
 def send_admin_alert(subject, body):
-    """Send admin alert using SendGrid SMTP."""
-    smtp_server = os.getenv('SMTP_SERVER', 'smtp.sendgrid.net')
-    smtp_port = int(os.getenv('SMTP_PORT', 587))
-    smtp_user = os.getenv('SMTP_USER', 'apikey')
-    smtp_pass = os.getenv('SENDGRID_API_KEY', '')
-    
-    if not smtp_pass:
+    """Send admin alert using SendGrid HTTP API."""
+    api_key = os.getenv('SENDGRID_API_KEY', '').strip()
+    if not api_key:
         print("SENDGRID_API_KEY not configured.")
         return
     
-    msg = EmailMessage()
-    msg.set_content(body)
-    msg['Subject'] = subject
-    msg['From'] = 'admin.academics@gmail.com'
-    msg['To'] = os.getenv('ALERT_RECIPIENT', 'admin.academics@gmail.com')
+    from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
+    to_email = os.getenv('ALERT_RECIPIENT', from_email)
     
     try:
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as s:
-            s.starttls()
-            s.login(smtp_user, smtp_pass)
-            s.send_message(msg)
+        import sendgrid
+        from sendgrid.helpers.mail import Mail
+        
+        sg = sendgrid.SendGridAPIClient(api_key=api_key)
+        
+        html_body = body.replace('\n', '<br>')
+        html_content = f"<p>{html_body}</p>"
+        
+        message = Mail(
+            from_email=from_email,
+            to_emails=to_email,
+            subject=subject,
+            html_content=html_content
+        )
+        
+        response = sg.send(message)
+        if response.status_code in [202, 200]:
             print(f"✅ Admin alert sent: {subject}")
+        else:
+            print(f"❌ Admin alert failed: {response.status_code}")
     except Exception as e:
         print(f"❌ Admin alert error: {e}")
 
@@ -922,33 +930,44 @@ import smtplib
 from email.message import EmailMessage
 
 def send_user_alert(user_email, subject, body):
-    """Send email using SendGrid SMTP - Most Reliable."""
+    """Send email using SendGrid HTTP API (works on Render)."""
     if not user_email:
         print("❌ No email provided")
         return False
     
-    smtp_server = os.getenv('SMTP_SERVER', 'smtp.sendgrid.net')
-    smtp_port = int(os.getenv('SMTP_PORT', 587))
-    smtp_user = os.getenv('SMTP_USER', 'apikey')
-    smtp_pass = os.getenv('SENDGRID_API_KEY', '')
-    
-    if not smtp_pass:
+    api_key = os.getenv('SENDGRID_API_KEY', '').strip()
+    if not api_key:
         print("❌ SENDGRID_API_KEY not configured")
         return False
     
-    msg = EmailMessage()
-    msg.set_content(body)
-    msg['Subject'] = subject
-    msg['From'] = 'admin.academics@gmail.com'
-    msg['To'] = user_email
+    from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
     
     try:
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as s:
-            s.starttls()
-            s.login(smtp_user, smtp_pass)
-            s.send_message(msg)
+        import sendgrid
+        from sendgrid.helpers.mail import Mail
+        
+        sg = sendgrid.SendGridAPIClient(api_key=api_key)
+        
+        # Convert newlines to HTML and clean the body
+        html_body = body.replace('\n', '<br>')
+        html_content = f"<p>{html_body}</p>"
+        
+        message = Mail(
+            from_email=from_email,
+            to_emails=user_email,
+            subject=subject,
+            html_content=html_content
+        )
+        
+        response = sg.send(message)
+        
+        if response.status_code in [202, 200]:
             print(f"✅ Email sent to {user_email}")
             return True
+        else:
+            print(f"❌ Email failed: {response.status_code}")
+            print(f"❌ Response: {response.body}")
+            return False
     except Exception as e:
         print(f"❌ Email error: {e}")
         import traceback

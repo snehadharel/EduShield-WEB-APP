@@ -923,11 +923,12 @@ def send_admin_alert(subject, body):
 def send_user_alert(user_email, subject, body):
     """Send email using SendGrid HTTP API (works on Render)."""
     if not user_email:
+        print("❌ No email provided")
         return False
     
-    api_key = os.getenv('SENDGRID_API_KEY')
+    api_key = os.getenv('SENDGRID_API_KEY', '').strip()
     if not api_key:
-        print("SENDGRID_API_KEY not configured.")
+        print("❌ SENDGRID_API_KEY not configured")
         return False
     
     from_email = os.getenv('SMTP_USER', 'admin.academics@gmail.com')
@@ -935,34 +936,23 @@ def send_user_alert(user_email, subject, body):
     try:
         sg = sendgrid.SendGridAPIClient(api_key=api_key)
         
-        # Clean the body - handle special characters
-        import html
-        clean_body = html.escape(body)
-        html_body = clean_body.replace('\n', '<br>')
-        
-        # Wrap in proper HTML with meta charset
-        full_html = f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-</head>
-<body>
-<p>{html_body}</p>
-</body>
-</html>"""
-        
+        # Create the email content with proper formatting
         message = Mail(
             from_email=from_email,
             to_emails=user_email,
             subject=subject,
-            html_content=full_html
+            html_content=f"<p>{body.replace('\n', '<br>')}</p>"
         )
+        
+        # Send the email
         response = sg.send(message)
+        
         if response.status_code in [202, 200]:
             print(f"✅ Email sent to {user_email}")
             return True
         else:
-            print(f"❌ Email failed: {response.status_code} - {response.body}")
+            print(f"❌ Email failed: {response.status_code}")
+            print(f"❌ Response: {response.body}")
             return False
     except Exception as e:
         print(f"❌ Email error: {e}")

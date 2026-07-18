@@ -1,10 +1,17 @@
 {
-  "success": false,
-  "message": "Not enough login data (0 records). Need at least 10 records to train.",
-  "samples": 0,
-  "anomaly_ratio": 0.0,
-  "rf_f1": null,
-  "iso_f1": null,
-  "trained_at": "2026-07-11T20:37:28.100387",
-  "features": []
+  "success": true,
+  "message": "Model trained and saved successfully.",
+  "samples": 2135,
+  "anomaly_ratio": 0.0525,
+  "rf_f1": 1.0,
+  "iso_f1": 0.0339,
+  "trained_at": "2026-07-15T15:01:31.437860",
+  "features": [
+    "hour",
+    "ip_changed",
+    "device_changed",
+    "old_risk_score",
+    "role_enc",
+    "isp_enc"
+  ]
 }

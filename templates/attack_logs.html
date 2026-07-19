@@ -13,11 +13,16 @@
     .page-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 20px;
-        padding: 32px 36px;
+        padding: 28px 36px;
         margin-bottom: 32px;
         color: white;
         position: relative;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
     }
 
     .page-header::before {
@@ -47,7 +52,7 @@
         z-index: 1;
     }
 
-    .page-header h2 {
+    .page-header-content h2 {
         font-size: 28px;
         font-weight: 700;
         margin: 0 0 4px 0;
@@ -56,14 +61,87 @@
         gap: 14px;
     }
 
-    .page-header h2 i {
+    .page-header-content h2 i {
         font-size: 28px;
     }
 
-    .page-header p {
+    .page-header-content p {
         font-size: 15px;
         opacity: 0.85;
-        margin: 6px 0 0 0;
+        margin: 4px 0 0 0;
+    }
+
+    /* ===== HEADER RIGHT ===== */
+    .header-right {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 8px 16px;
+        border-radius: 12px;
+        backdrop-filter: blur(4px);
+    }
+
+    .header-right .header-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.85);
+        flex-wrap: wrap;
+    }
+
+    .header-right .header-info .dot {
+        opacity: 0.4;
+    }
+
+    .header-right .header-info .status-active {
+        color: #4ADE80;
+        font-weight: 600;
+    }
+
+    .header-right .header-info i {
+        font-size: 14px;
+        opacity: 0.7;
+    }
+
+    .header-right .btn-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 12px;
+        border: none;
+        cursor: pointer;
+        transition: 0.25s ease;
+        text-decoration: none;
+        font-family: inherit;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+    }
+
+    .btn-header:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .btn-header-primary {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    .btn-header-primary:hover {
+        background: rgba(255, 255, 255, 0.35);
     }
 
     /* ===== TABS ===== */
@@ -424,78 +502,6 @@
         display: inline-block;
     }
 
-    /* ===== FOOTER ===== */
-    .attack-footer {
-        margin-top: 32px;
-        padding: 16px 24px;
-        background: white;
-        border-radius: 16px;
-        border: 1px solid #EDF2F7;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .attack-footer .footer-info {
-        font-size: 13px;
-        color: #94A3B8;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-
-    .attack-footer .footer-info i {
-        color: #667eea;
-    }
-
-    .attack-footer .footer-info .dot {
-        color: #CBD5E1;
-    }
-
-    /* ===== BUTTONS ===== */
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 20px;
-        border-radius: 40px;
-        font-weight: 600;
-        font-size: 13px;
-        border: none;
-        cursor: pointer;
-        transition: 0.25s ease;
-        text-decoration: none;
-        font-family: inherit;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .btn-outline {
-        background: transparent;
-        color: #64748B;
-        border: 2px solid #E2E8F0;
-    }
-
-    .btn-outline:hover {
-        border-color: #667eea;
-        color: #667eea;
-        background: rgba(102, 126, 234, 0.05);
-    }
-
     .empty-state {
         text-align: center;
         padding: 40px 20px;
@@ -528,6 +534,17 @@
         .charts-grid {
             grid-template-columns: 1fr;
         }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-right {
+            width: 100%;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
     }
 
     @media (max-width: 768px) {
@@ -536,15 +553,36 @@
         }
 
         .page-header {
-            padding: 24px 20px;
+            padding: 20px 18px;
         }
 
-        .page-header h2 {
+        .page-header-content h2 {
             font-size: 22px;
         }
 
-        .page-header h2 i {
+        .page-header-content h2 i {
             font-size: 22px;
+        }
+
+        .page-header-content p {
+            font-size: 14px;
+        }
+
+        .header-right {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 10px 14px;
+        }
+
+        .header-right .header-info {
+            font-size: 12px;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .header-right .btn-group {
+            justify-content: center;
         }
 
         .stats-bar {
@@ -602,17 +640,6 @@
             font-size: 11px;
         }
 
-        .attack-footer {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .attack-footer .footer-info {
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-start;
-        }
-
         .bar-chart {
             height: 140px;
             gap: 10px;
@@ -624,7 +651,7 @@
     }
 
     @media (max-width: 480px) {
-        .page-header h2 {
+        .page-header-content h2 {
             font-size: 19px;
         }
 
@@ -671,6 +698,17 @@
             font-size: 9px;
             max-width: 40px;
         }
+
+        .header-right .header-info {
+            font-size: 11px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-header {
+            font-size: 11px;
+            padding: 5px 12px;
+        }
     }
 </style>
 
@@ -683,6 +721,23 @@
                 Attack Logs
             </h2>
             <p>All detected XSS / SQL Injection attempts are automatically logged by the Intrusion Detection System</p>
+        </div>
+        <div class="header-right">
+            <div class="header-info">
+                <span><i class="fas fa-clock"></i> Last updated: {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else 'N/A' }}</span>
+                <span class="dot">·</span>
+                <span><i class="fas fa-shield-alt"></i> IDS Status: <span class="status-active">● Active</span></span>
+                <span class="dot">·</span>
+                <span><i class="fas fa-database"></i> Total events: {{ total_attacks|default(0) }}</span>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-header">
+                    <i class="fas fa-arrow-left"></i> Back to Admin
+                </a>
+                <a href="{{ url_for('attack_logs') }}" class="btn-header btn-header-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </a>
+            </div>
         </div>
     </div>
 
@@ -878,25 +933,6 @@
             </div>
         </div>
     </div>
-
-    <!-- ===== FOOTER ===== -->
-    <div class="attack-footer">
-        <div class="footer-info">
-            <span><i class="fas fa-clock"></i> Last updated: {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else 'N/A' }}</span>
-            <span class="dot">·</span>
-            <span><i class="fas fa-shield-alt"></i> IDS Status: <strong style="color:#22C55E;">Active</strong></span>
-            <span class="dot">·</span>
-            <span><i class="fas fa-database"></i> Total events: {{ total_attacks|default(0) }}</span>
-        </div>
-        <div>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm">
-                <i class="fas fa-arrow-left"></i> Back to Admin
-            </a>
-            <a href="{{ url_for('attack_logs') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </a>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -907,11 +943,9 @@
 
         tabBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                // Remove active from all tabs
                 tabBtns.forEach(b => b.classList.remove('active'));
                 tabContents.forEach(c => c.classList.remove('active'));
 
-                // Activate current tab
                 this.classList.add('active');
                 const tabId = this.dataset.tab;
                 const targetContent = document.getElementById('tab-' + tabId);

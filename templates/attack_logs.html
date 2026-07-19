@@ -1,413 +1,933 @@
 {% extends "base.html" %}
 
-{% block title %}Attack Logs (XSS/SQLi){% endblock %}
+{% block title %}Attack Logs - EduShield{% endblock %}
 
 {% block content %}
 <style>
+    .attack-container {
+        max-width: 100%;
+        padding: 20px 30px;
+    }
+
     /* ===== HEADER ===== */
     .page-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 25px;
+        padding: 32px 36px;
+        margin-bottom: 32px;
         color: white;
+        position: relative;
+        overflow: hidden;
     }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 1;
+    }
+
     .page-header h2 {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 700;
-        margin-bottom: 8px;
+        margin: 0 0 4px 0;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
     }
+
+    .page-header h2 i {
+        font-size: 28px;
+    }
+
     .page-header p {
-        opacity: 0.9;
         font-size: 15px;
+        opacity: 0.85;
+        margin: 6px 0 0 0;
     }
 
     /* ===== TABS ===== */
-    .tab-header {
+    .tabs-container {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        padding: 6px;
+        margin-bottom: 28px;
         display: flex;
         gap: 4px;
-        margin-bottom: 24px;
-        background: #F8FAFC;
-        border-radius: 16px;
-        padding: 4px;
-        border: 1px solid #E2E8F0;
-        flex-wrap: wrap;
+        overflow-x: auto;
     }
-    .tab-btn {
-        flex: 1;
-        padding: 10px 16px;
+
+    .tabs-container .tab-btn {
+        padding: 12px 28px;
         border: none;
-        background: transparent;
+        background: none;
+        border-radius: 12px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 15px;
         color: #64748B;
         cursor: pointer;
-        border-radius: 12px;
-        transition: 0.2s;
-        text-align: center;
-        min-width: 80px;
+        transition: 0.25s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .tab-btn:hover {
-        background: #E2E8F0;
-        color: #1E293B;
+
+    .tabs-container .tab-btn:hover {
+        background: #F8FAFC;
+        color: #0F172A;
     }
-    .tab-btn.active {
-        background: #FFFFFF;
-        color: #2563EB;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+    .tabs-container .tab-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
     }
+
+    .tabs-container .tab-btn .badge {
+        background: #F1F5F9;
+        padding: 0px 10px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748B;
+    }
+
+    .tabs-container .tab-btn.active .badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    /* ===== TAB CONTENT ===== */
     .tab-content {
         display: none;
-        animation: fadeIn 0.25s ease;
+        animation: fadeIn 0.3s ease;
     }
+
     .tab-content.active {
         display: block;
     }
+
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
+        from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ===== STATS CARDS ===== */
-    .stats-grid {
+    /* ===== STATS BAR ===== */
+    .stats-bar {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 16px;
-        margin-bottom: 24px;
+        margin-bottom: 32px;
     }
-    .stat-card {
+
+    .stat-item {
         background: white;
-        padding: 16px;
+        padding: 20px 24px;
         border-radius: 16px;
         border: 1px solid #EDF2F7;
         text-align: center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        transition: 0.2s;
     }
-    .stat-card h3 {
-        font-size: 12px;
-        text-transform: uppercase;
+
+    .stat-item:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.08);
+    }
+
+    .stat-item .stat-number {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0F172A;
+    }
+
+    .stat-item .stat-label {
+        font-size: 14px;
         color: #64748B;
-        letter-spacing: 0.5px;
-        margin-bottom: 4px;
+        margin-top: 4px;
     }
-    .stat-value {
+
+    .stat-item.danger .stat-number { color: #EF4444; }
+    .stat-item.warning .stat-number { color: #F59E0B; }
+    .stat-item.info .stat-number { color: #3B82F6; }
+    .stat-item.success .stat-number { color: #22C55E; }
+    .stat-item.purple .stat-number { color: #8B5CF6; }
+
+    /* ===== CHARTS GRID ===== */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-header h3 i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .card-header .card-actions {
+        display: flex;
+        gap: 8px;
+        font-size: 13px;
+        color: #94A3B8;
+    }
+
+    .card-body {
+        padding: 20px 24px;
+    }
+
+    /* ===== DONUT CHART (CSS) ===== */
+    .donut-chart-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+        padding: 10px 0;
+        flex-wrap: wrap;
+    }
+
+    .donut-wrapper {
+        position: relative;
+        width: 160px;
+        height: 160px;
+    }
+
+    .donut-wrapper svg {
+        transform: rotate(-90deg);
+    }
+
+    .donut-wrapper .donut-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .donut-wrapper .donut-center .number {
         font-size: 28px;
         font-weight: 800;
         color: #0F172A;
     }
-    .stat-value.sql { color: #e74c3c; }
-    .stat-value.xss { color: #f39c12; }
-    .stat-value.blocked { color: #27ae60; }
-    .stat-value.logged { color: #6c757d; }
 
-    /* ===== FILTER BUTTONS (inside Logs tab) ===== */
-    .filter-bar {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
-    }
-    .filter-btn {
-        padding: 6px 16px;
-        border: 1px solid #E2E8F0;
-        border-radius: 40px;
-        background: white;
+    .donut-wrapper .donut-center .label {
+        font-size: 11px;
+        color: #94A3B8;
         font-weight: 500;
-        font-size: 13px;
-        color: #64748B;
-        cursor: pointer;
-        transition: 0.2s;
+        display: block;
     }
-    .filter-btn:hover {
-        background: #F1F5F9;
+
+    .donut-legend {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .donut-legend .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
         color: #1E293B;
     }
-    .filter-btn.active {
-        background: #2563EB;
-        color: white;
-        border-color: #2563EB;
+
+    .donut-legend .legend-item .color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .donut-legend .legend-item .count {
+        font-weight: 600;
+        color: #0F172A;
+        margin-left: auto;
+    }
+
+    /* ===== BAR CHART ===== */
+    .bar-chart-container {
+        padding: 10px 0;
+    }
+
+    .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+        height: 180px;
+        padding-top: 10px;
+    }
+
+    .bar-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        height: 100%;
+        justify-content: flex-end;
+    }
+
+    .bar-item .bar {
+        width: 100%;
+        max-width: 50px;
+        border-radius: 6px 6px 0 0;
+        transition: 0.3s;
+        min-height: 6px;
+        position: relative;
+    }
+
+    .bar-item .bar:hover {
+        opacity: 0.8;
+        transform: scaleY(1.03);
+        transform-origin: bottom;
+    }
+
+    .bar-item .bar-value {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748B;
+        text-align: center;
+    }
+
+    .bar-item .bar-label {
+        font-size: 11px;
+        color: #94A3B8;
+        font-weight: 500;
+        text-align: center;
+        word-break: break-word;
+        max-width: 60px;
     }
 
     /* ===== TABLE ===== */
-    .logs-card {
-        background: white;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    .table-wrapper {
         overflow-x: auto;
     }
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        font-size: 13px;
-        min-width: 800px;
-    }
-    th, td {
-        padding: 12px 16px;
-        text-align: left;
-        border-bottom: 1px solid #E2E8F0;
-        vertical-align: middle;
-        word-break: break-word;
-    }
-    th {
-        background: #2c3e50;
-        color: white;
-        font-weight: 600;
-        white-space: nowrap;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-    th:first-child { border-top-left-radius: 12px; }
-    th:last-child { border-top-right-radius: 12px; }
-    tr:hover {
-        background: #F8FAFC;
-    }
-    tr:last-child td { border-bottom: none; }
-    tr.hidden {
-        display: none;
-    }
 
-    .badge-sqli {
-        background: #e74c3c;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 40px;
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    .badge-xss {
-        background: #f39c12;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 40px;
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    .badge-blocked {
-        background: #27ae60;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 40px;
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    .badge-logged {
-        background: #6c757d;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 40px;
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    .payload-code {
-        background: #f8f9fa;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        word-break: break-all;
-        max-width: 200px;
-        display: inline-block;
-    }
-    .no-data {
-        text-align: center;
-        padding: 40px 20px;
-        color: #94A3B8;
+    .table {
+        width: 100%;
+        border-collapse: collapse;
         font-size: 14px;
     }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 768px) {
-        .page-header { padding: 20px; }
-        .logs-card { padding: 12px; }
-        table { font-size: 12px; min-width: 700px; }
-        th, td { padding: 8px 10px; }
-        .payload-code { max-width: 120px; font-size: 11px; }
-        .stats-grid { grid-template-columns: 1fr 1fr; }
-        .tab-btn { font-size: 12px; padding: 8px 10px; min-width: 60px; }
+    .table th {
+        text-align: left;
+        padding: 10px 12px;
+        background: #F8FAFC;
+        font-weight: 600;
+        color: #1E293B;
+        border-bottom: 2px solid #E2E8F0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
+
+    .table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #F1F5F9;
+        color: #0F172A;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+
+    .table tr:hover td {
+        background: #FAFBFC;
+    }
+
+    .table .badge {
+        display: inline-block;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .table .badge.sql {
+        background: #FEF2F2;
+        color: #EF4444;
+    }
+
+    .table .badge.xss {
+        background: #FFFBEB;
+        color: #F59E0B;
+    }
+
+    .table .badge.blocked {
+        background: #F0FDF4;
+        color: #22C55E;
+    }
+
+    .table .badge.logged {
+        background: #EFF6FF;
+        color: #3B82F6;
+    }
+
+    .table .payload {
+        font-family: monospace;
+        font-size: 12px;
+        background: #F8FAFC;
+        padding: 2px 8px;
+        border-radius: 4px;
+        word-break: break-all;
+        max-width: 250px;
+        display: inline-block;
+    }
+
+    /* ===== FOOTER ===== */
+    .attack-footer {
+        margin-top: 32px;
+        padding: 16px 24px;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .attack-footer .footer-info {
+        font-size: 13px;
+        color: #94A3B8;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .attack-footer .footer-info i {
+        color: #667eea;
+    }
+
+    .attack-footer .footer-info .dot {
+        color: #CBD5E1;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 13px;
+        border: none;
+        cursor: pointer;
+        transition: 0.25s ease;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #64748B;
+        border: 2px solid #E2E8F0;
+    }
+
+    .btn-outline:hover {
+        border-color: #667eea;
+        color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94A3B8;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        opacity: 0.3;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .empty-state p {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .empty-state .sub {
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+        .attack-container {
+            padding: 16px 20px;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .attack-container {
+            padding: 12px 16px;
+        }
+
+        .page-header {
+            padding: 24px 20px;
+        }
+
+        .page-header h2 {
+            font-size: 22px;
+        }
+
+        .page-header h2 i {
+            font-size: 22px;
+        }
+
+        .stats-bar {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            padding: 14px 16px;
+        }
+
+        .stat-item .stat-number {
+            font-size: 26px;
+        }
+
+        .tabs-container {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tabs-container .tab-btn {
+            padding: 10px 18px;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .card-header {
+            padding: 16px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .card-body {
+            padding: 16px 18px;
+        }
+
+        .donut-chart-container {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .table {
+            font-size: 12px;
+            min-width: 500px;
+        }
+
+        .table th,
+        .table td {
+            padding: 8px 10px;
+        }
+
+        .table .payload {
+            max-width: 120px;
+            font-size: 11px;
+        }
+
+        .attack-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .attack-footer .footer-info {
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .bar-chart {
+            height: 140px;
+            gap: 10px;
+        }
+
+        .bar-item .bar {
+            max-width: 35px;
+        }
+    }
+
     @media (max-width: 480px) {
-        .stats-grid { grid-template-columns: 1fr; }
-        table { font-size: 11px; min-width: 600px; }
-        th, td { padding: 6px 8px; }
-        .filter-bar { justify-content: center; }
+        .page-header h2 {
+            font-size: 19px;
+        }
+
+        .stats-bar {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            padding: 12px 14px;
+        }
+
+        .stat-item .stat-number {
+            font-size: 22px;
+        }
+
+        .stat-item .stat-label {
+            font-size: 12px;
+        }
+
+        .card-body {
+            padding: 12px 14px;
+        }
+
+        .donut-wrapper {
+            width: 130px;
+            height: 130px;
+        }
+
+        .donut-wrapper .donut-center .number {
+            font-size: 22px;
+        }
+
+        .bar-chart {
+            height: 120px;
+            gap: 8px;
+        }
+
+        .bar-item .bar {
+            max-width: 28px;
+        }
+
+        .bar-item .bar-label {
+            font-size: 9px;
+            max-width: 40px;
+        }
     }
 </style>
 
-<div>
+<div class="attack-container">
     <!-- ===== HEADER ===== -->
     <div class="page-header">
-        <h2><i class="fas fa-bug"></i> Detected XSS / SQL Injection Attempts</h2>
-        <p>All suspicious payloads are automatically logged by the Intrusion Detection System.</p>
+        <div class="page-header-content">
+            <h2>
+                <i class="fas fa-bug"></i>
+                Attack Logs
+            </h2>
+            <p>All detected XSS / SQL Injection attempts are automatically logged by the Intrusion Detection System</p>
+        </div>
     </div>
 
     <!-- ===== TABS ===== -->
-    <div class="tab-header">
-        <button class="tab-btn active" data-tab="overview">📊 Overview</button>
-        <button class="tab-btn" data-tab="logs">🔍 Attack Logs</button>
+    <div class="tabs-container" id="attackTabs">
+        <button class="tab-btn active" data-tab="overview">
+            <i class="fas fa-chart-pie"></i> Overview
+        </button>
+        <button class="tab-btn" data-tab="logs">
+            <i class="fas fa-list"></i> Attack Logs
+            <span class="badge">{{ logs|length if logs else 0 }}</span>
+        </button>
     </div>
 
-    <!-- ============================================= -->
-    <!-- TAB 1: OVERVIEW -->
-    <!-- ============================================= -->
-    <div id="tab-overview" class="tab-content active">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Attacks</h3>
-                <div class="stat-value">{{ logs|length if logs else 0 }}</div>
+    <!-- ===== TAB: OVERVIEW ===== -->
+    <div class="tab-content active" id="tab-overview">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item danger">
+                <div class="stat-number">{{ total_attacks|default(0) }}</div>
+                <div class="stat-label">Total Attacks</div>
             </div>
-            <div class="stat-card">
-                <h3>SQL Injection</h3>
-                <div class="stat-value sql">{{ logs|selectattr('pattern_type', 'equalto', 'SQLi')|list|length if logs else 0 }}</div>
+            <div class="stat-item warning">
+                <div class="stat-number">{{ sql_count|default(0) }}</div>
+                <div class="stat-label">SQL Injection</div>
             </div>
-            <div class="stat-card">
-                <h3>XSS</h3>
-                <div class="stat-value xss">{{ logs|selectattr('pattern_type', 'equalto', 'XSS')|list|length if logs else 0 }}</div>
+            <div class="stat-item info">
+                <div class="stat-number">{{ xss_count|default(0) }}</div>
+                <div class="stat-label">XSS</div>
             </div>
-            <div class="stat-card">
-                <h3>Blocked</h3>
-                <div class="stat-value blocked">{{ logs|selectattr('blocked', 'equalto', 1)|list|length if logs else 0 }}</div>
+            <div class="stat-item success">
+                <div class="stat-number">{{ blocked_count|default(0) }}</div>
+                <div class="stat-label">Blocked</div>
             </div>
-            <div class="stat-card">
-                <h3>Logged Only</h3>
-                <div class="stat-value logged">{{ logs|selectattr('blocked', 'equalto', 0)|list|length if logs else 0 }}</div>
+            <div class="stat-item purple">
+                <div class="stat-number">{{ logs|length if logs else 0 }}</div>
+                <div class="stat-label">Logged</div>
             </div>
         </div>
 
-        <!-- Quick test info -->
-        {% if not logs %}
-        <div class="logs-card" style="text-align: center; padding: 30px;">
-            <p style="color: #94A3B8; font-size: 14px;">
-                No attacks logged yet. Try injecting <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> or <code>' OR '1'='1</code> in a form field to test.
-            </p>
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+            <!-- Donut Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Attack Distribution</h3>
+                    <span class="card-actions">by type</span>
+                </div>
+                <div class="card-body">
+                    <div class="donut-chart-container">
+                        <div class="donut-wrapper">
+                            <svg viewBox="0 0 120 120" width="160" height="160">
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="#F1F5F9" stroke-width="12"/>
+                                {% set total = (sql_count|default(0)) + (xss_count|default(0)) %}
+                                {% if total > 0 %}
+                                    {% set sql_percent = (sql_count|default(0) / total * 100) if total > 0 else 0 %}
+                                    {% set xss_percent = (xss_count|default(0) / total * 100) if total > 0 else 0 %}
+                                    {% set sql_dash = (sql_percent / 100 * 339.292) %}
+                                    {% set xss_dash = (xss_percent / 100 * 339.292) %}
+                                    <circle cx="60" cy="60" r="54" fill="none" stroke="#EF4444" stroke-width="12"
+                                            stroke-dasharray="{{ sql_dash }} {{ 339.292 - sql_dash }}"
+                                            stroke-dashoffset="0" stroke-linecap="round"/>
+                                    <circle cx="60" cy="60" r="54" fill="none" stroke="#F59E0B" stroke-width="12"
+                                            stroke-dasharray="{{ xss_dash }} {{ 339.292 - xss_dash }}"
+                                            stroke-dashoffset="{{ -sql_dash }}" stroke-linecap="round"/>
+                                {% endif %}
+                            </svg>
+                            <div class="donut-center">
+                                <span class="number">{{ total_attacks|default(0) }}</span>
+                                <span class="label">Total</span>
+                            </div>
+                        </div>
+                        <div class="donut-legend">
+                            <div class="legend-item">
+                                <span class="color-dot" style="background:#EF4444;"></span>
+                                SQL Injection
+                                <span class="count">{{ sql_count|default(0) }}</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="color-dot" style="background:#F59E0B;"></span>
+                                XSS
+                                <span class="count">{{ xss_count|default(0) }}</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="color-dot" style="background:#22C55E;"></span>
+                                Blocked
+                                <span class="count">{{ blocked_count|default(0) }}</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="color-dot" style="background:#8B5CF6;"></span>
+                                Logged Only
+                                <span class="count">{{ logs|length if logs else 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bar Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar"></i> Attack Timeline</h3>
+                    <span class="card-actions">last 7 days</span>
+                </div>
+                <div class="card-body">
+                    <div class="bar-chart-container">
+                        <div class="bar-chart">
+                            {% if daily_attacks %}
+                                {% set max_val = daily_attacks|map(attribute='count')|max|default(1) %}
+                                {% for day in daily_attacks %}
+                                <div class="bar-item">
+                                    <span class="bar-value">{{ day.count }}</span>
+                                    <div class="bar" style="height: {{ (day.count / max_val * 100)|round|int if max_val > 0 else 0 }}%; background: {{ '#EF4444' if day.type == 'sql' else '#F59E0B' if day.type == 'xss' else '#3B82F6' }};"></div>
+                                    <span class="bar-label">{{ day.label }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="text-align:center; width:100%; color:#94A3B8; padding:20px;">
+                                    <i class="fas fa-chart-line" style="font-size:24px; opacity:0.3; display:block; margin-bottom:8px;"></i>
+                                    No attack data available for timeline
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% endif %}
     </div>
 
-    <!-- ============================================= -->
-    <!-- TAB 2: ATTACK LOGS -->
-    <!-- ============================================= -->
-    <div id="tab-logs" class="tab-content">
-        <div class="logs-card">
-            <!-- Filter Bar -->
-            <div class="filter-bar">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="SQLi">SQLi</button>
-                <button class="filter-btn" data-filter="XSS">XSS</button>
+    <!-- ===== TAB: ATTACK LOGS ===== -->
+    <div class="tab-content" id="tab-logs">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Attack Logs</h3>
+                <span class="card-actions">{{ logs|length if logs else 0 }} entries</span>
             </div>
+            <div class="card-body">
+                {% if logs and logs|length > 0 %}
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>IP Address</th>
+                                <th>Type</th>
+                                <th>Endpoint</th>
+                                <th>Payload</th>
+                                <th>Status</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs[:50] %}
+                            <tr>
+                                <td>{{ log.event_time_local.strftime('%Y-%m-%d %H:%M:%S') if log.event_time_local else '-' }}</td>
+                                <td>{{ log.username or 'Unknown' }}</td>
+                                <td>{{ log.ip_address or '-' }}</td>
+                                <td>
+                                    <span class="badge {% if log.pattern_type == 'SQLi' %}sql{% elif log.pattern_type == 'XSS' %}xss{% endif %}">
+                                        {{ log.pattern_type or 'Unknown' }}
+                                    </span>
+                                </td>
+                                <td>{{ log.endpoint or '-' }}</td>
+                                <td><span class="payload">{{ log.param_value or '-' }}</span></td>
+                                <td>
+                                    <span class="badge {% if log.blocked %}blocked{% else %}logged{% endif %}">
+                                        {% if log.blocked %}Blocked{% else %}Logged{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background: {% if log.severity >= 3 %}#FEF2F2; color:#EF4444;{% elif log.severity >= 2 %}#FFFBEB; color:#F59E0B;{% else %}#F0FDF4; color:#22C55E;{% endif %}">
+                                        {{ log.severity or 1 }}/3
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if logs|length > 50 %}
+                    <div style="text-align:center; padding:12px; color:#94A3B8; font-size:13px;">
+                        Showing last 50 entries out of {{ logs|length }} total
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle" style="color:#22C55E; opacity:0.5;"></i>
+                    <p>No attacks detected</p>
+                    <p class="sub">Your system is secure. All suspicious activity will appear here.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-            {% if logs %}
-            <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
-                <table id="attackTable">
-                    <thead>
-                        <tr>
-                            <th>Time (Nepal)</th>
-                            <th>User</th>
-                            <th>IP Address</th>
-                            <th>Endpoint</th>
-                            <th>Parameter</th>
-                            <th>Type</th>
-                            <th>Payload (truncated)</th>
-                            <th>Blocked</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in logs %}
-                        <tr data-type="{{ log.pattern_type }}">
-                            <td>
-                                {% if log.event_time_local %}
-                                    {{ log.event_time_local.strftime('%Y-%m-%d %H:%M:%S') }}
-                                {% elif log.event_time %}
-                                    {{ log.event_time.strftime('%Y-%m-%d %H:%M:%S') }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td><strong>{{ log.username or 'Anonymous' }}</strong></td>
-                            <td>{{ log.ip_address or '-' }}</td>
-                            <td>{{ log.endpoint or '-' }}</td>
-                            <td>{{ log.param_key or '-' }}</td>
-                            <td>
-                                {% if log.pattern_type == 'SQLi' %}
-                                    <span class="badge-sqli">⚠️ SQLi</span>
-                                {% else %}
-                                    <span class="badge-xss">🔸 XSS</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="payload-code" title="{{ log.param_value or '' }}">
-                                    {{ (log.param_value or '')[:80] }}{% if (log.param_value|default('')|length) > 80 %}…{% endif %}
-                                </span>
-                            </td>
-                            <td>
-                                {% if log.blocked %}
-                                    <span class="badge-blocked">✅ Blocked</span>
-                                {% else %}
-                                    <span class="badge-logged">📝 Logged only</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="no-data">
-                <p>No attacks have been logged yet.</p>
-                <p style="font-size: 13px; margin-top: 8px;">Try injecting <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> in a form field to test.</p>
-            </div>
-            {% endif %}
+    <!-- ===== FOOTER ===== -->
+    <div class="attack-footer">
+        <div class="footer-info">
+            <span><i class="fas fa-clock"></i> Last updated: {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else 'N/A' }}</span>
+            <span class="dot">·</span>
+            <span><i class="fas fa-shield-alt"></i> IDS Status: <strong style="color:#22C55E;">Active</strong></span>
+            <span class="dot">·</span>
+            <span><i class="fas fa-database"></i> Total events: {{ total_attacks|default(0) }}</span>
+        </div>
+        <div>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+            <a href="{{ url_for('attack_logs') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </a>
         </div>
     </div>
 </div>
 
-<!-- ===== TAB AND FILTER JAVASCRIPT ===== -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Main tab switching ---
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                tabs.forEach(t => t.classList.remove('active'));
+        // ===== TAB NAVIGATION =====
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active from all tabs
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                // Activate current tab
                 this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                const target = document.getElementById('tab-' + this.dataset.tab);
-                if (target) target.classList.add('active');
+                const tabId = this.dataset.tab;
+                const targetContent = document.getElementById('tab-' + tabId);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
             });
         });
 
-        // --- Filter buttons inside Attack Logs tab ---
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const rows = document.querySelectorAll('#attackTable tbody tr');
-        if (filterBtns.length && rows.length) {
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    const filter = this.dataset.filter;
-                    rows.forEach(row => {
-                        const type = row.dataset.type || '';
-                        if (filter === 'all' || type === filter) {
-                            row.classList.remove('hidden');
-                        } else {
-                            row.classList.add('hidden');
-                        }
-                    });
-                });
-            });
+        // ===== URL HASH NAVIGATION =====
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+            const targetBtn = document.querySelector(`.tab-btn[data-tab="${hash}"]`);
+            if (targetBtn) {
+                targetBtn.click();
+            }
         }
     });
 </script>

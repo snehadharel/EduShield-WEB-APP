@@ -3759,16 +3759,28 @@ def regenerate_totp_codes():
 def test_search(value, substring):
     """Return True if substring is in value (case‑sensitive)."""
     return substring in (value or '')
-
 @app.route('/settings')
 @login_required
 def settings():
     db = get_db()
     user = db.execute("""
-        SELECT email, password_changed_at, totp_enabled, totp_secret
+        SELECT id, username, email, role, password_changed_at, totp_enabled, totp_secret
         FROM users WHERE id = ?
     """, (session['user_id'],)).fetchone()
-    return render_template('settings.html', user=user)
+    
+    # Get profile data
+    profile = db.execute("SELECT * FROM profiles WHERE user_id = ?", (session['user_id'],)).fetchone()
+    
+    # If no profile exists, create a default one as a dictionary
+    if not profile:
+        profile = {
+            'full_name': session.get('username', ''),
+            'phone': '',
+            'address': '',
+            'user_id': session['user_id']
+        }
+    
+    return render_template('settings.html', user=user, profile=profile)
 
 @app.route('/attendance')
 @login_required

@@ -1,57 +1,819 @@
 {% extends "base.html" %}
 
-{% block title %}Create Assignment{% endblock %}
+{% block title %}Create Assignment - EduShield{% endblock %}
 
 {% block content %}
-<div style="width: 100%; max-width: 700px; margin: 0 auto;">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white;">
-        <h2>📝 Create Assignment</h2>
-        <p>Add a new assignment for your course.</p>
+<style>
+    .assignment-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 32px 36px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        text-align: left;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header h2 i {
+        font-size: 28px;
+    }
+
+    .page-header .header-links {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 14px;
+        opacity: 0.9;
+        margin-top: 4px;
+    }
+
+    .page-header .header-links .back-link {
+        color: white;
+        text-decoration: none;
+        opacity: 0.85;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 4px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+    }
+
+    .page-header .header-links .back-link:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateX(-3px);
+    }
+
+    .page-header .header-links .separator {
+        opacity: 0.4;
+    }
+
+    /* ===== MAIN CARD ===== */
+    .assignment-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #EDF2F7;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ===== FORM ===== */
+    .form-section {
+        padding: 36px 40px;
+    }
+
+    .form-section .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #F1F5F9;
+    }
+
+    .form-section .section-title i {
+        color: #667eea;
+        font-size: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+
+    .form-group label .char-counter {
+        float: right;
+        font-size: 13px;
+        color: #94A3B8;
+        font-weight: 400;
+    }
+
+    .form-group label .char-counter .current {
+        color: #0F172A;
+        font-weight: 600;
+    }
+
+    .form-group label .char-counter.warning .current {
+        color: #F59E0B;
+    }
+
+    .form-group label .char-counter.danger .current {
+        color: #EF4444;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+        transition: 0.2s;
+        pointer-events: none;
+    }
+
+    .input-wrapper input,
+    .input-wrapper textarea,
+    .input-wrapper select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #E2E8F0;
+        border-radius: 14px;
+        font-size: 15px;
+        transition: 0.25s ease;
+        background: #FAFBFC;
+        color: #0F172A;
+        font-family: inherit;
+    }
+
+    .input-wrapper input:focus,
+    .input-wrapper textarea:focus,
+    .input-wrapper select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.08);
+    }
+
+    .input-wrapper input::placeholder,
+    .input-wrapper textarea::placeholder {
+        color: #94A3B8;
+    }
+
+    .input-wrapper input {
+        padding-left: 46px;
+    }
+
+    .input-wrapper textarea {
+        resize: vertical;
+        min-height: 100px;
+        padding: 14px 16px;
+        line-height: 1.7;
+    }
+
+    .input-wrapper select {
+        appearance: none;
+        padding-right: 40px;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+    }
+
+    .input-wrapper select option {
+        padding: 8px;
+    }
+
+    .input-wrapper select:focus + .input-icon,
+    .input-wrapper input:focus + .input-icon,
+    .input-wrapper textarea:focus + .input-icon {
+        color: #667eea;
+    }
+
+    .form-hint {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 10px;
+        padding: 10px 14px;
+        background: #F8FAFC;
+        border-radius: 10px;
+        border: 1px solid #F1F5F9;
+        line-height: 1.5;
+    }
+
+    .form-hint i {
+        color: #3B82F6;
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    /* ===== COURSE SELECTOR ===== */
+    .course-selector {
+        background: #F8FAFC;
+        border-radius: 14px;
+        padding: 16px 20px;
+        border: 2px solid #E2E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        transition: 0.25s ease;
+    }
+
+    .course-selector:hover {
+        border-color: #667eea;
+    }
+
+    .course-selector .course-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .course-selector .course-info .icon {
+        width: 44px;
+        height: 44px;
+        background: #EFF6FF;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .course-selector .course-info .details .name {
+        font-weight: 600;
+        color: #0F172A;
+        font-size: 16px;
+    }
+
+    .course-selector .course-info .details .code {
+        font-size: 13px;
+        color: #94A3B8;
+    }
+
+    .course-selector .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 4px 14px;
+        border-radius: 40px;
+        background: #F1F5F9;
+        color: #64748B;
+    }
+
+    .course-selector .status-badge.selected {
+        background: #F0FDF4;
+        color: #22C55E;
+    }
+
+    /* ===== BUTTONS ===== */
+    .form-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 2px solid #F1F5F9;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 32px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 15px;
+        border: none;
+        cursor: pointer;
+        transition: 0.25s ease;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: #F1F5F9;
+        color: #1E293B;
+    }
+
+    .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+
+    /* ===== FLASH MESSAGES ===== */
+    .flash-messages {
+        margin-bottom: 24px;
+    }
+
+    .flash {
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-size: 14px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideDown 0.3s ease;
+    }
+
+    .flash i {
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .flash.error {
+        background: #FEF2F2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+    }
+
+    .flash.success {
+        background: #F0FDF4;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+
+    .flash.info {
+        background: #EFF6FF;
+        color: #1E40AF;
+        border: 1px solid #BFDBFE;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .assignment-container {
+            padding: 12px;
+        }
+
+        .page-header {
+            padding: 24px 20px;
+        }
+
+        .page-header h2 {
+            font-size: 22px;
+        }
+
+        .page-header h2 i {
+            font-size: 22px;
+        }
+
+        .form-section {
+            padding: 24px 20px;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper textarea,
+        .input-wrapper select {
+            font-size: 14px;
+            padding: 12px 14px;
+        }
+
+        .input-wrapper input {
+            padding-left: 42px;
+        }
+
+        .course-selector {
+            padding: 14px 16px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .course-selector .course-info .icon {
+            width: 38px;
+            height: 38px;
+            font-size: 17px;
+        }
+
+        .page-header .header-links {
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h2 {
+            font-size: 19px;
+        }
+
+        .form-section {
+            padding: 18px 14px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+        }
+
+        .form-group label .char-counter {
+            font-size: 12px;
+        }
+
+        .course-selector .course-info .details .name {
+            font-size: 14px;
+        }
+
+        .course-selector .course-info .details .code {
+            font-size: 12px;
+        }
+
+        .course-selector .status-badge {
+            font-size: 12px;
+            padding: 2px 12px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+    }
+</style>
+
+<div class="assignment-container">
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <h2>
+                <i class="fas fa-tasks"></i>
+                Create Assignment
+            </h2>
+            <div class="header-links">
+                <a href="{{ url_for('list_assignments') }}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Assignments
+                </a>
+                <span class="separator">·</span>
+                <span>Add a new assignment for your course</span>
+            </div>
+        </div>
     </div>
-    <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Course</label>
-                <select name="course_id" required class="form-control" style="width: 100%; padding: 12px; border-radius: 12px;">
-                    {% for course in courses %}
-                    <option value="{{ course.id }}">{{ course.course_name }}</option>
-                    {% endfor %}
-                </select>
+
+    <!-- ===== FLASH MESSAGES ===== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
             </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Title</label>
-                <input type="text" name="title" required style="width: 100%; padding: 12px; border-radius: 12px;">
+        {% endif %}
+    {% endwith %}
+
+    <!-- ===== MAIN CARD ===== -->
+    <div class="assignment-card">
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-edit"></i>
+                Assignment Details
             </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Description</label>
-                <textarea name="description" rows="4" style="width: 100%; padding: 12px; border-radius: 12px;"></textarea>
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Due Date</label>
-                <input type="datetime-local" name="due_date" required style="width: 100%; padding: 12px; border-radius: 12px;">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Total Marks</label>
-                <input type="number" name="total_marks" value="100" required style="width: 100%; padding: 12px; border-radius: 12px;">
-            </div>
-            <button type="submit" class="btn" style="background: #43a047;">Create Assignment</button>
-        </form>
+
+            <form method="POST" id="assignmentForm" action="{{ url_for('create_assignment') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- Course Selection -->
+                <div class="form-group">
+                    <label>
+                        Select Course <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-book input-icon"></i>
+                        <select name="course_id" id="courseSelect" required>
+                            <option value="">Choose a course...</option>
+                            {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.course_name }} ({{ course.course_code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if not courses %}
+                        <div class="form-hint" style="background: #FEF2F2; border-color: #FECACA;">
+                            <i class="fas fa-exclamation-circle" style="color:#EF4444;"></i>
+                            <span style="color:#991B1B;">You don't have any courses yet. <a href="{{ url_for('create_course') }}" style="color:#667eea; font-weight:600;">Create a course first</a></span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Selected Course Preview -->
+                <div class="form-group">
+                    <label>Selected Course</label>
+                    <div class="course-selector" id="coursePreview">
+                        <div class="course-info">
+                            <div class="icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="details">
+                                <div class="name" id="courseName">No course selected</div>
+                                <div class="code" id="courseCode">Choose a course from the dropdown above</div>
+                            </div>
+                        </div>
+                        <span class="status-badge" id="courseStatus">
+                            <i class="fas fa-circle" style="font-size:8px;"></i> Pending
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <div class="form-group">
+                    <label>
+                        Title <span class="required">*</span>
+                        <span class="char-counter" id="titleCounter">
+                            <span class="current">0</span> / 100
+                        </span>
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-heading input-icon"></i>
+                        <input 
+                            type="text" 
+                            name="title" 
+                            id="assignmentTitle"
+                            placeholder="e.g., Chapter 1 - Introduction to Programming" 
+                            required 
+                            maxlength="100"
+                            autofocus
+                            oninput="updateCounter('titleCounter', 'assignmentTitle', 100)"
+                        >
+                    </div>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Use a clear and descriptive title that students can easily recognize.
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label>
+                        Description <span class="required">*</span>
+                        <span class="char-counter" id="descCounter">
+                            <span class="current">0</span> / 500
+                        </span>
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-align-left input-icon" style="top: 18px; transform: none;"></i>
+                        <textarea 
+                            name="description" 
+                            id="assignmentDesc"
+                            rows="4"
+                            placeholder="Describe the assignment, instructions, and any resources needed..." 
+                            required 
+                            maxlength="500"
+                            oninput="updateCounter('descCounter', 'assignmentDesc', 500)"
+                        ></textarea>
+                    </div>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Include clear instructions, submission requirements, and any reference materials.
+                    </div>
+                </div>
+
+                <!-- Due Date & Marks Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-calendar-alt input-icon"></i>
+                            <input 
+                                type="datetime-local" 
+                                name="due_date" 
+                                id="dueDate"
+                                required
+                                min="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+                            >
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-clock"></i>
+                            Students must submit before this time.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Total Marks <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-star input-icon"></i>
+                            <input 
+                                type="number" 
+                                name="total_marks" 
+                                id="totalMarks"
+                                placeholder="100" 
+                                required 
+                                min="1"
+                                max="1000"
+                                value="100"
+                            >
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i>
+                            Maximum marks for this assignment (1-1000).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-plus-circle"></i> Create Assignment
+                    </button>
+                    <a href="{{ url_for('list_assignments') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<style>
-    .btn {
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 40px;
-        color: white;
-        border: none;
-        cursor: pointer;
+<script>
+    // ===== COURSE SELECTOR PREVIEW =====
+    document.getElementById('courseSelect').addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const nameEl = document.getElementById('courseName');
+        const codeEl = document.getElementById('courseCode');
+        const statusEl = document.getElementById('courseStatus');
+        const preview = document.getElementById('coursePreview');
+
+        if (this.value) {
+            const parts = selected.text.split('(');
+            const name = parts[0].trim();
+            const code = parts[1] ? parts[1].replace(')', '').trim() : '';
+            nameEl.textContent = name;
+            codeEl.textContent = code || 'Course selected';
+            statusEl.className = 'status-badge selected';
+            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Selected';
+            preview.style.borderColor = '#22C55E';
+            preview.style.background = '#F0FDF4';
+        } else {
+            nameEl.textContent = 'No course selected';
+            codeEl.textContent = 'Choose a course from the dropdown above';
+            statusEl.className = 'status-badge';
+            statusEl.innerHTML = '<i class="fas fa-circle" style="font-size:8px;"></i> Pending';
+            preview.style.borderColor = '#E2E8F0';
+            preview.style.background = '#F8FAFC';
+        }
+    });
+
+    // ===== CHARACTER COUNTER =====
+    function updateCounter(counterId, inputId, maxLength) {
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(counterId);
+        const current = input.value.length;
+        const span = counter.querySelector('.current');
+        span.textContent = current;
+
+        counter.classList.remove('warning', 'danger');
+        if (current > maxLength * 0.85) {
+            counter.classList.add('warning');
+        }
+        if (current > maxLength * 0.95) {
+            counter.classList.remove('warning');
+            counter.classList.add('danger');
+        }
     }
-    .btn:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.05);
-    }
-</style>
+
+    // ===== SET MIN DATE =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const minDateTime = now.toISOString().slice(0, 16);
+        document.getElementById('dueDate').min = minDateTime;
+    });
+
+    // ===== FORM VALIDATION =====
+    document.getElementById('assignmentForm').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+    });
+
+    // ===== AUTO-DISMISS FLASH MESSAGES =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashMessages = document.querySelector('.flash-messages');
+        if (flashMessages) {
+            setTimeout(() => {
+                flashMessages.style.opacity = '0';
+                flashMessages.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    flashMessages.style.display = 'none';
+                }, 500);
+            }, 5000);
+        }
+    });
+</script>
 {% endblock %}

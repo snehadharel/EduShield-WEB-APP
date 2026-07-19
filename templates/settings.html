@@ -1,391 +1,1016 @@
 {% extends "base.html" %}
 
-{% block title %}Settings{% endblock %}
+{% block title %}Settings - EduShield{% endblock %}
 
 {% block content %}
 <style>
-    /* ===== TABS ===== */
-    .tab-header {
+    .settings-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 32px 36px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header h2 i {
+        font-size: 28px;
+    }
+
+    .page-header p {
+        font-size: 15px;
+        opacity: 0.85;
+        margin: 6px 0 0 0;
+    }
+
+    /* ===== HORIZONTAL NAV ===== */
+    .settings-nav-horizontal {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        padding: 6px;
+        margin-bottom: 28px;
         display: flex;
         gap: 4px;
-        margin-bottom: 28px;
-        background: #F8FAFC;
-        border-radius: 16px;
-        padding: 4px;
-        border: 1px solid #E2E8F0;
-        flex-wrap: wrap;
+        overflow-x: auto;
+        flex-wrap: nowrap;
     }
-    .tab-btn {
-        flex: 1;
-        padding: 12px 16px;
-        border: none;
-        background: transparent;
-        font-weight: 600;
-        font-size: 14px;
-        color: #64748B;
-        cursor: pointer;
+
+    .settings-nav-horizontal .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
         border-radius: 12px;
+        color: #64748B;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
         transition: 0.2s;
-        text-align: center;
-        min-width: 80px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
-    .tab-btn:hover {
-        background: #E2E8F0;
-        color: #1E293B;
+
+    .settings-nav-horizontal .nav-item:hover {
+        background: #F8FAFC;
+        color: #0F172A;
     }
-    .tab-btn.active {
-        background: #FFFFFF;
-        color: #2563EB;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+    .settings-nav-horizontal .nav-item.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
     }
-    .tab-content {
+
+    .settings-nav-horizontal .nav-item i {
+        font-size: 16px;
+    }
+
+    .settings-nav-horizontal .nav-item .badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 1px 10px;
+        border-radius: 40px;
+        font-size: 10px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 0.3px;
+    }
+
+    .settings-nav-horizontal .nav-item.active .badge {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .settings-nav-horizontal .nav-item:not(.active) .badge {
+        background: #22C55E;
+        color: white;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .settings-content {
+        min-height: 400px;
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        overflow: hidden;
         display: none;
-        animation: fadeIn 0.25s ease;
+        animation: fadeIn 0.3s ease;
     }
-    .tab-content.active {
+
+    .settings-card.active {
         display: block;
     }
+
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
+        from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ===== OTHER STYLES ===== */
-    .settings-container { max-width: 900px; margin: 0 auto; padding: 0 10px; }
-    .page-header { margin-bottom: 40px; }
-    .page-header h1 { font-size: 36px; font-weight: 700; color: #0F172A; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; }
-    .page-header h1 i { color: #2563EB; }
-    .page-header p { color: #64748B; font-size: 18px; }
-    .settings-card { background: white; border-radius: 32px; padding: 52px 48px; border: 1px solid #EDF2F7; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
-    .card-title { font-size: 26px; font-weight: 700; color: #0F172A; margin-bottom: 36px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #F1F5F9; padding-bottom: 20px; }
-    .card-title i { color: #2563EB; font-size: 28px; }
-
-    .form-group { margin-bottom: 36px; }
-    .form-group label { display: block; font-weight: 600; color: #1E293B; margin-bottom: 12px; font-size: 18px; }
-    .form-group label .required { color: #EF4444; margin-left: 2px; }
-
-    /* Password wrap with toggle */
-    .password-wrap {
-        position: relative;
+    .card-header {
+        padding: 24px 28px;
+        border-bottom: 1px solid #F1F5F9;
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
     }
-    .password-wrap input {
-        width: 100%;
-        padding: 22px 28px !important;
-        padding-right: 70px !important;
-        border: 2px solid #E2E8F0 !important;
-        border-radius: 20px !important;
-        font-size: 20px !important;
-        transition: 0.25s;
-        background: #FAFBFC;
-        font-family: inherit;
-        letter-spacing: 0.3px;
+
+    .card-header h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .password-wrap input:focus {
-        outline: none;
-        border-color: #667eea !important;
-        background: #FFFFFF;
-        box-shadow: 0 0 0 5px rgba(102,126,234,0.15) !important;
+
+    .card-header h3 i {
+        color: #667eea;
+        font-size: 20px;
     }
-    .password-wrap input::placeholder {
+
+    .card-header .card-subtitle {
+        font-size: 13px;
         color: #94A3B8;
-        font-size: 17px;
         font-weight: 400;
     }
-    .password-toggle {
+
+    .card-body {
+        padding: 28px;
+    }
+
+    /* ===== INFO GRID ===== */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .info-item {
+        padding: 16px;
+        background: #F8FAFC;
+        border-radius: 14px;
+        border: 1px solid #F1F5F9;
+    }
+
+    .info-item .label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #94A3B8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .info-item .value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0F172A;
+    }
+
+    .info-item .value .role-badge {
+        display: inline-block;
+        background: #EFF6FF;
+        color: #667eea;
+        padding: 2px 12px;
+        border-radius: 40px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .info-item .value .email-verified {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #22C55E;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .info-item .value .email-verified i {
+        font-size: 14px;
+    }
+
+    /* ===== FORM ===== */
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper .input-icon {
         position: absolute;
-        right: 16px;
-        background: none;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+        transition: 0.2s;
+        pointer-events: none;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 14px 16px 14px 46px;
+        border: 2px solid #E2E8F0;
+        border-radius: 14px;
+        font-size: 15px;
+        transition: 0.25s ease;
+        background: #FAFBFC;
+        color: #0F172A;
+        font-family: inherit;
+    }
+
+    .input-wrapper input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.08);
+    }
+
+    .input-wrapper input::placeholder {
+        color: #94A3B8;
+    }
+
+    .input-wrapper input:disabled {
+        background: #F1F5F9;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .form-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 10px;
+        padding: 8px 14px;
+        background: #F8FAFC;
+        border-radius: 10px;
+        border: 1px solid #F1F5F9;
+    }
+
+    .form-hint i {
+        color: #3B82F6;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 32px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 15px;
         border: none;
         cursor: pointer;
+        transition: 0.25s ease;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35);
+    }
+
+    .btn-success {
+        background: #22C55E;
+        color: white;
+    }
+
+    .btn-success:hover {
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.35);
+    }
+
+    .btn-danger {
+        background: #EF4444;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #64748B;
+        border: 2px solid #E2E8F0;
+    }
+
+    .btn-outline:hover {
+        border-color: #667eea;
+        color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .btn-sm {
+        padding: 8px 20px;
+        font-size: 13px;
+    }
+
+    /* ===== TOGGLE SWITCH ===== */
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        background: #F8FAFC;
+        border-radius: 14px;
+        border: 1px solid #F1F5F9;
+        margin-bottom: 12px;
+    }
+
+    .toggle-wrapper:last-child {
+        margin-bottom: 0;
+    }
+
+    .toggle-info {
+        flex: 1;
+    }
+
+    .toggle-info .toggle-title {
+        font-weight: 600;
+        color: #0F172A;
+        font-size: 14px;
+    }
+
+    .toggle-info .toggle-desc {
+        font-size: 13px;
         color: #94A3B8;
-        padding: 8px;
+        margin-top: 2px;
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 28px;
+        flex-shrink: 0;
+        margin-left: 16px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-switch .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #CBD5E1;
+        transition: 0.3s;
+        border-radius: 34px;
+    }
+
+    .toggle-switch .slider::before {
+        content: '';
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .toggle-switch input:checked + .slider {
+        background: #667eea;
+    }
+
+    .toggle-switch input:checked + .slider::before {
+        transform: translateX(20px);
+    }
+
+    /* ===== SECURITY SECTION ===== */
+    .security-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+
+    .security-item:last-child {
+        border-bottom: none;
+    }
+
+    .security-item .left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .security-item .left .icon {
+        width: 40px;
+        height: 40px;
+        background: #EFF6FF;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: 0.2s;
-    }
-    .password-toggle:hover {
-        color: #475569;
-    }
-    .password-toggle svg {
-        width: 24px;
-        height: 24px;
+        color: #667eea;
+        font-size: 18px;
+        flex-shrink: 0;
     }
 
-    .password-hint { font-size: 15px; color: #64748B; margin-top: 12px; display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #F8FAFC; border-radius: 14px; }
-    .password-hint i { color: #3B82F6; font-size: 16px; }
-    .strength-bar { display: flex; gap: 10px; margin-top: 14px; }
-    .strength-bar .segment { flex: 1; height: 8px; background: #E2E8F0; border-radius: 6px; transition: 0.3s; }
-    .strength-label { font-size: 15px; font-weight: 600; margin-top: 8px; display: none; }
-    .strength-label.visible { display: block; }
+    .security-item .left .info .title {
+        font-weight: 600;
+        color: #0F172A;
+        font-size: 14px;
+    }
 
-    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 20px 40px !important; border-radius: 50px !important; font-weight: 700; font-size: 20px !important; cursor: pointer; transition: 0.25s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; letter-spacing: 0.5px; }
-    .btn-primary:hover { transform: translateY(-3px); filter: brightness(1.06); box-shadow: 0 16px 32px -12px rgba(102,126,234,0.5); }
-    .btn-primary i { font-size: 22px; }
+    .security-item .left .info .desc {
+        font-size: 13px;
+        color: #94A3B8;
+    }
 
-    .btn-secondary { background: #64748B; color: white; border: none; padding: 14px 28px; border-radius: 40px; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-secondary:hover { transform: translateY(-2px); filter: brightness(1.05); }
-    .btn-danger { background: #EF4444; color: white; border: none; padding: 14px 28px; border-radius: 40px; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-danger:hover { transform: translateY(-2px); filter: brightness(1.05); }
-    .btn-success { background: #22C55E; color: white; border: none; padding: 14px 28px; border-radius: 40px; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-success:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    /* ===== FLASH MESSAGES ===== */
+    .flash-messages {
+        margin-bottom: 24px;
+    }
 
-    .flex-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 12px; }
-    .status-badge { display: inline-block; padding: 6px 16px; border-radius: 40px; font-weight: 600; font-size: 14px; }
-    .badge-enabled { background: #DCFCE7; color: #16A34A; }
-    .badge-disabled { background: #FEE2E2; color: #DC2626; }
-    .info-box { background: #F8FAFC; border-radius: 16px; padding: 16px 20px; border-left: 4px solid #667eea; margin-bottom: 24px; }
-    .info-box p { margin: 0; font-size: 15px; color: #475569; }
+    .flash {
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-size: 14px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideDown 0.3s ease;
+    }
 
-    .backup-codes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .backup-codes .code { background: white; padding: 4px 12px; border-radius: 8px; font-family: monospace; border: 1px solid #E2E8F0; }
+    .flash i {
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
 
+    .flash.error {
+        background: #FEF2F2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+    }
+
+    .flash.success {
+        background: #F0FDF4;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+
+    .flash.info {
+        background: #EFF6FF;
+        color: #1E40AF;
+        border: 1px solid #BFDBFE;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
-        .settings-card { padding: 32px 24px; }
-        .page-header h1 { font-size: 28px; }
-        .page-header p { font-size: 15px; }
-        .password-wrap input { padding: 18px 22px !important; padding-right: 60px !important; font-size: 18px !important; }
-        .btn-primary { padding: 16px 28px !important; font-size: 18px !important; }
-        .flex-row { flex-direction: column; align-items: stretch; }
-        .tab-btn { font-size: 12px; padding: 10px 8px; }
+        .settings-container {
+            padding: 12px;
+        }
+
+        .page-header {
+            padding: 24px 20px;
+        }
+
+        .page-header h2 {
+            font-size: 22px;
+        }
+
+        .page-header h2 i {
+            font-size: 22px;
+        }
+
+        .settings-nav-horizontal {
+            padding: 4px;
+            gap: 2px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .settings-nav-horizontal .nav-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            gap: 8px;
+        }
+
+        .settings-nav-horizontal .nav-item .badge {
+            font-size: 9px;
+            padding: 0 8px;
+        }
+
+        .card-header {
+            padding: 18px 20px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .security-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .toggle-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            margin-left: 0;
+        }
     }
+
     @media (max-width: 480px) {
-        .settings-card { padding: 24px 16px; }
-        .password-wrap input { padding: 16px 18px !important; padding-right: 50px !important; font-size: 17px !important; }
-        .btn-primary { padding: 14px 20px !important; font-size: 16px !important; }
+        .page-header h2 {
+            font-size: 19px;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .settings-nav-horizontal .nav-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            gap: 6px;
+        }
+
+        .settings-nav-horizontal .nav-item i {
+            font-size: 14px;
+        }
     }
 </style>
 
 <div class="settings-container">
+    <!-- ===== HEADER ===== -->
     <div class="page-header">
-        <h1><i class="fas fa-cog"></i> Settings</h1>
-        <p>Manage your account, security, and preferences</p>
+        <div class="page-header-content">
+            <h2>
+                <i class="fas fa-cog"></i>
+                Settings
+            </h2>
+            <p>Manage your account, security, and preferences</p>
+        </div>
     </div>
 
-    <div class="settings-card">
-        <!-- Tabs -->
-        <div class="tab-header">
-            <button class="tab-btn active" data-tab="general">⚙️ General</button>
-            <button class="tab-btn" data-tab="security">🔐 Security</button>
-            <button class="tab-btn" data-tab="totp">🔑 Two‑Factor</button>
-            <button class="tab-btn" data-tab="email">📧 Email</button>
-        </div>
-
-        <!-- ======== TAB 1: General ======== -->
-        <div id="tab-general" class="tab-content active">
-            <div class="card-title"><i class="fas fa-info-circle"></i> Account Info</div>
-
-            <div class="info-box">
-                <p><strong>Username:</strong> {{ session.username }}</p>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Role:</strong> {{ session.role|capitalize }}</p>
-                <p>
-                    <strong>Last Password Change:</strong>
-                    {% if user.password_changed_at %}
-                        {{ user.password_changed_at.strftime('%B %d, %Y at %I:%M %p') }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </p>
+    <!-- ===== FLASH MESSAGES ===== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
             </div>
-            <p style="color: #64748B; font-size: 14px;">For security reasons, update your password regularly.</p>
-        </div>
+        {% endif %}
+    {% endwith %}
 
-        <!-- ======== TAB 2: Security (Password) ======== -->
-        <div id="tab-security" class="tab-content">
-            <div class="card-title"><i class="fas fa-key"></i> Change Password</div>
-            <form method="POST" action="{{ url_for('change_password') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <!-- Current Password -->
-                <div class="form-group">
-                    <label>Current Password <span class="required">*</span></label>
-                    <div class="password-wrap">
-                        <input type="password" name="old_password" id="oldPassword" placeholder="Enter your current password" required autocomplete="current-password">
-                        <button type="button" class="password-toggle" aria-label="Show password" onclick="togglePasswordVisibility('oldPassword', this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- New Password -->
-                <div class="form-group">
-                    <label>New Password <span class="required">*</span></label>
-                    <div class="password-wrap">
-                        <input type="password" name="new_password" id="newPassword" placeholder="Enter a strong password" required autocomplete="new-password">
-                        <button type="button" class="password-toggle" aria-label="Show password" onclick="togglePasswordVisibility('newPassword', this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
-                    </div>
-                    <div class="password-hint"><i class="fas fa-info-circle"></i> At least 8 chars with uppercase, lowercase, a number, and a special character.</div>
-                    <div class="strength-bar">
-                        <span class="segment"></span><span class="segment"></span><span class="segment"></span><span class="segment"></span>
-                    </div>
-                    <div class="strength-label" id="strengthLabel"></div>
-                </div>
-
-                <!-- Confirm New Password -->
-                <div class="form-group">
-                    <label>Confirm New Password <span class="required">*</span></label>
-                    <div class="password-wrap">
-                        <input type="password" name="confirm_password" id="confirmPassword" placeholder="Re-enter your new password" required autocomplete="new-password">
-                        <button type="button" class="password-toggle" aria-label="Show password" onclick="togglePasswordVisibility('confirmPassword', this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Change Password</button>
-            </form>
-        </div>
-
-        <!-- ======== TAB 3: Two‑Factor Authentication ======== -->
-        <div id="tab-totp" class="tab-content">
-            <div class="card-title"><i class="fas fa-shield-alt"></i> Two‑Factor Authentication</div>
-
-            <div class="info-box" style="border-left-color: {% if user.totp_enabled %}#22C55E{% else %}#EF4444{% endif %};">
-                <p>
-                    <strong>Status:</strong>
-                    <span class="status-badge {% if user.totp_enabled %}badge-enabled{% else %}badge-disabled{% endif %}">
-                        {% if user.totp_enabled %}✅ Enabled{% else %}❌ Disabled{% endif %}
-                    </span>
-                </p>
-                {% if user.totp_enabled %}
-                    <p style="margin-top: 8px;">Your account is protected with TOTP. Use your authenticator app to generate codes.</p>
-                {% else %}
-                    <p style="margin-top: 8px;">Enable TOTP to add an extra layer of security to your account.</p>
-                {% endif %}
-            </div>
-
-            <div class="flex-row">
-                {% if user.totp_enabled %}
-                    <form method="POST" action="{{ url_for('toggle_totp') }}" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn-danger" onclick="return confirm('Disabling TOTP will remove your authenticator setup. Continue?')">
-                            <i class="fas fa-times"></i> Disable TOTP
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ url_for('regenerate_totp_codes') }}" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn-secondary"><i class="fas fa-sync-alt"></i> Regenerate Backup Codes</button>
-                    </form>
-                {% else %}
-                    <form method="POST" action="{{ url_for('toggle_totp') }}" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn-success"><i class="fas fa-plus-circle"></i> Enable TOTP</button>
-                    </form>
-                {% endif %}
-            </div>
-
-            <!-- Display backup codes if newly generated -->
-            {% if user.totp_enabled and session.get('new_backup_codes') %}
-                <div style="margin-top: 24px; background: #FEF3C7; border-radius: 12px; padding: 16px; border-left: 4px solid #F59E0B;">
-                    <p style="font-weight: 600; color: #92400E;">New backup codes generated. Save them now!</p>
-                    <div class="backup-codes">
-                        {% for code in session.pop('new_backup_codes', []) %}
-                            <span class="code">{{ code }}</span>
-                        {% endfor %}
-                    </div>
-                    <p style="font-size: 14px; color: #92400E; margin-top: 8px;">These codes are shown only once. Store them securely.</p>
-                </div>
+    <!-- ===== HORIZONTAL NAVIGATION ===== -->
+    <div class="settings-nav-horizontal" id="settingsNav">
+        <button class="nav-item active" data-tab="general">
+            <i class="fas fa-user-circle"></i>
+            General
+        </button>
+        <button class="nav-item" data-tab="security">
+            <i class="fas fa-shield-alt"></i>
+            Security
+        </button>
+        <button class="nav-item" data-tab="twofactor">
+            <i class="fas fa-mobile-alt"></i>
+            Two-Factor
+            {% if user and user.totp_enabled %}
+                <span class="badge">ON</span>
             {% endif %}
+        </button>
+        <button class="nav-item" data-tab="email">
+            <i class="fas fa-envelope"></i>
+            Email
+        </button>
+        <button class="nav-item" data-tab="account">
+            <i class="fas fa-info-circle"></i>
+            Account Info
+        </button>
+    </div>
+
+    <!-- ===== SETTINGS CONTENT ===== -->
+    <div class="settings-content">
+        <!-- ===== GENERAL TAB ===== -->
+        <div class="settings-card active" id="tab-general">
+            <div class="card-header">
+                <h3><i class="fas fa-user-circle"></i> General Settings</h3>
+                <span class="card-subtitle">Update your basic information</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" name="full_name" value="{{ profile.full_name if profile and profile.full_name else '' }}" placeholder="Enter your full name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone input-icon"></i>
+                            <input type="tel" name="phone" value="{{ profile.phone if profile and profile.phone else '' }}" placeholder="e.g., 98XXXXXXXX">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-home input-icon"></i>
+                            <input type="text" name="address" value="{{ profile.address if profile and profile.address else '' }}" placeholder="Your address">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <!-- ======== TAB 4: Email ======== -->
-        <div id="tab-email" class="tab-content">
-            <div class="card-title"><i class="fas fa-envelope"></i> Change Email Address</div>
-            <form method="POST" action="{{ url_for('change_email') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="form-group">
-                    <label>New Email Address <span class="required">*</span></label>
-                        <div class="password-wrap">
-                            <input type="email" name="new_email" placeholder="Enter your new email" required>
+        <!-- ===== SECURITY TAB ===== -->
+        <div class="settings-card" id="tab-security">
+            <div class="card-header">
+                <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                <span class="card-subtitle">Protect your account</span>
+            </div>
+            <div class="card-body">
+                <div class="security-item">
+                    <div class="left">
+                        <div class="icon"><i class="fas fa-key"></i></div>
+                        <div class="info">
+                            <div class="title">Change Password</div>
+                            <div class="desc">Update your password regularly for better security</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('change_password') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> Change
+                    </a>
+                </div>
+
+                <div class="security-item">
+                    <div class="left">
+                        <div class="icon"><i class="fas fa-history"></i></div>
+                        <div class="info">
+                            <div class="title">Recent Activity</div>
+                            <div class="desc">View your recent logins and sessions</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('security_center') }}" class="btn btn-outline btn-sm">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                </div>
+
+                <div class="security-item">
+                    <div class="left">
+                        <div class="icon"><i class="fas fa-sign-out-alt"></i></div>
+                        <div class="info">
+                            <div class="title">Active Sessions</div>
+                            <div class="desc">Logout from all devices except this one</div>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('logout_other_sessions') }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Logout from all other devices?')">
+                            <i class="fas fa-sign-out-alt"></i> Logout Others
+                        </button>
+                    </form>
                 </div>
             </div>
-                <div class="form-group">
-                    <label>Confirm with Password <span class="required">*</span></label>
-                    <div class="password-wrap">
-                        <input type="password" name="password" id="emailPassword" placeholder="Enter your current password" required>
-                        <button type="button" class="password-toggle" aria-label="Show password" onclick="togglePasswordVisibility('emailPassword', this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
+        </div>
+
+        <!-- ===== TWO-FACTOR TAB ===== -->
+        <div class="settings-card" id="tab-twofactor">
+            <div class="card-header">
+                <h3><i class="fas fa-mobile-alt"></i> Two-Factor Authentication</h3>
+                <span class="card-subtitle">
+                    {% if user and user.totp_enabled %}
+                        <span style="color:#22C55E;"><i class="fas fa-check-circle"></i> Enabled</span>
+                    {% else %}
+                        <span style="color:#94A3B8;">Disabled</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="toggle-wrapper">
+                    <div class="toggle-info">
+                        <div class="toggle-title">Two-Factor Authentication (TOTP)</div>
+                        <div class="toggle-desc">
+                            {% if user and user.totp_enabled %}
+                                Your account is protected with 2FA. Use your authenticator app to log in.
+                            {% else %}
+                                Add an extra layer of security to your account.
+                            {% endif %}
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('toggle_totp') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="totpToggle" name="totp_enabled" 
+                                   {% if user and user.totp_enabled %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <span class="slider"></span>
+                        </div>
+                    </form>
+                </div>
+
+                {% if user and user.totp_enabled %}
+                <div style="margin-top: 16px; padding: 16px; background: #F0FDF4; border-radius: 14px; border: 1px solid #BBF7D0;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fas fa-info-circle" style="color:#22C55E; font-size:18px; margin-top:2px;"></i>
+                        <div>
+                            <div style="font-weight:600; color:#166534; font-size:14px;">2FA is Active</div>
+                            <div style="font-size:13px; color:#15803D; margin-top:4px;">
+                                Your account is protected with TOTP. You can regenerate backup codes if needed.
+                            </div>
+                            <form method="POST" action="{{ url_for('regenerate_totp_codes') }}" style="margin-top:8px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline btn-sm" style="background:white;">
+                                    <i class="fas fa-sync-alt"></i> Regenerate Backup Codes
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Update Email</button>
-            </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ===== EMAIL TAB ===== -->
+        <div class="settings-card" id="tab-email">
+            <div class="card-header">
+                <h3><i class="fas fa-envelope"></i> Email Settings</h3>
+                <span class="card-subtitle">Manage your email address</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('change_email') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label>Current Email</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" value="{{ user.email if user else '' }}" disabled style="opacity:0.7;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New Email Address <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" name="new_email" placeholder="Enter new email address" required>
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i>
+                            You will need to verify your new email address.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Password <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" name="password" placeholder="Enter your current password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Email
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== ACCOUNT INFO TAB ===== -->
+        <div class="settings-card" id="tab-account">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Account Information</h3>
+                <span class="card-subtitle">Your account details</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Username</span>
+                        <span class="value">{{ user.username if user else 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Email</span>
+                        <span class="value">
+                            {{ user.email if user else 'N/A' }}
+                            <span class="email-verified">
+                                <i class="fas fa-check-circle"></i> Verified
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Role</span>
+                        <span class="value">
+                            <span class="role-badge">
+                                <i class="fas fa-{{ 'user-graduate' if user and user.role == 'student' else 'chalkboard-teacher' }}"></i>
+                                {{ user.role|capitalize if user else 'N/A' }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Last Password Change</span>
+                        <span class="value">
+                            {% if user and user.password_changed_at %}
+                                {{ user.password_changed_at.strftime('%b %d, %Y at %I:%M %p') }}
+                            {% else %}
+                                <span style="color:#94A3B8;">N/A</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 16px; background: #FEF2F2; border-radius: 14px; border: 1px solid #FECACA;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fas fa-shield-alt" style="color:#DC2626; font-size:18px; margin-top:2px;"></i>
+                        <div>
+                            <div style="font-weight:600; color:#991B1B; font-size:14px;">Security Tip</div>
+                            <div style="font-size:13px; color:#7F1D1D; margin-top:4px;">
+                                For security reasons, update your password regularly and enable two-factor authentication.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- ===== PASSWORD STRENGTH SCRIPT ===== -->
 <script>
-    // Toggle password visibility
-    function togglePasswordVisibility(inputId, button) {
-        const input = document.getElementById(inputId);
-        const svgOpen = button.querySelector('svg:first-child');
-        const svgClosed = button.querySelector('svg:last-child');
-        if (input.type === 'password') {
-            input.type = 'text';
-            svgOpen.style.display = 'none';
-            svgClosed.style.display = 'block';
-            button.setAttribute('aria-label', 'Hide password');
-        } else {
-            input.type = 'password';
-            svgOpen.style.display = 'block';
-            svgClosed.style.display = 'none';
-            button.setAttribute('aria-label', 'Show password');
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-        // Password strength indicator for the new password field
-        const newPw = document.getElementById('newPassword');
-        const segments = document.querySelectorAll('.strength-bar .segment');
-        const label = document.getElementById('strengthLabel');
-        if (newPw && segments.length) {
-            newPw.addEventListener('input', function() {
-                const val = this.value;
-                const len = val.length;
-                let strength = 0;
-                if (len >= 8) strength++;
-                if (/[a-z]/.test(val)) strength++;
-                if (/[A-Z]/.test(val)) strength++;
-                if (/\d/.test(val)) strength++;
-                if (/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(val)) strength++;
-                strength = Math.min(strength, 4);
-                const colors = ['#E2E8F0', '#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-                const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-                segments.forEach((seg, i) => {
-                    seg.style.background = i < strength ? colors[strength] : '#E2E8F0';
-                });
-                if (val.length > 0) {
-                    label.textContent = 'Strength: ' + labels[strength];
-                    label.className = 'strength-label visible';
-                    label.style.color = colors[strength];
-                } else {
-                    label.className = 'strength-label';
-                    label.textContent = '';
+        // ===== TAB NAVIGATION =====
+        const navItems = document.querySelectorAll('.settings-nav-horizontal .nav-item');
+        const cards = document.querySelectorAll('.settings-card');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active from all nav items
+                navItems.forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+
+                // Hide all cards
+                cards.forEach(c => c.classList.remove('active'));
+
+                // Show selected card
+                const tabId = this.dataset.tab;
+                const targetCard = document.getElementById('tab-' + tabId);
+                if (targetCard) {
+                    targetCard.classList.add('active');
                 }
             });
+        });
+
+        // ===== AUTO-DISMISS FLASH MESSAGES =====
+        const flashMessages = document.querySelector('.flash-messages');
+        if (flashMessages) {
+            setTimeout(() => {
+                flashMessages.style.opacity = '0';
+                flashMessages.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    flashMessages.style.display = 'none';
+                }, 500);
+            }, 5000);
         }
 
-        // ===== TABS =====
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                tabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                const target = document.getElementById('tab-' + this.dataset.tab);
-                if (target) target.classList.add('active');
-            });
-        });
+        // ===== URL HASH NAVIGATION =====
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+            const targetNav = document.querySelector(`.settings-nav-horizontal .nav-item[data-tab="${hash}"]`);
+            if (targetNav) {
+                targetNav.click();
+            }
+        }
     });
 </script>
 {% endblock %}

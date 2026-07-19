@@ -1,11 +1,11 @@
 {
   "success": true,
   "message": "Model trained and saved successfully.",
-  "samples": 2135,
-  "anomaly_ratio": 0.0525,
+  "samples": 2152,
+  "anomaly_ratio": 0.052,
   "rf_f1": 1.0,
-  "iso_f1": 0.0339,
-  "trained_at": "2026-07-15T15:01:31.437860",
+  "iso_f1": 0.0323,
+  "trained_at": "2026-07-19T21:43:19.097551",
   "features": [
     "hour",
     "ip_changed",

@@ -1,17 +1,32 @@
 {
   "success": true,
-  "message": "Model trained and saved successfully.",
-  "samples": 2152,
-  "anomaly_ratio": 0.052,
-  "rf_f1": 1.0,
-  "iso_f1": 0.0323,
-  "trained_at": "2026-07-19T21:43:19.097551",
+  "message": "Model trained successfully.",
+  "samples": 7748,
+  "anomaly_ratio": 0.1919,
+  "rf_f1": 0.866,
+  "iso_f1": 0.5389,
+  "ensemble_f1": 0.8645,
+  "trained_at": "2026-08-17T09:58:45.443473",
   "features": [
     "hour",
     "ip_changed",
     "device_changed",
-    "old_risk_score",
     "role_enc",
     "isp_enc"
-  ]
+  ],
+  "confusion_matrix": [
+    [
+      1818,
+      61
+    ],
+    [
+      60,
+      386
+    ]
+  ],
+  "rf_precision": 0.8066,
+  "rf_recall": 0.935,
+  "ensemble_precision": 0.8635,
+  "ensemble_recall": 0.8655,
+  "classification_report": "              precision    recall  f1-score   support\n\n           0       0.97      0.97      0.97      1879\n           1       0.86      0.87      0.86       446\n\n    accuracy                           0.95      2325\n   macro avg       0.92      0.92      0.92      2325\nweighted avg       0.95      0.95      0.95      2325\n"
 }

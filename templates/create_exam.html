@@ -1,68 +1,781 @@
 {% extends "base.html" %}
 
-{% block title %}Schedule Exam{% endblock %}
+{% block title %}Schedule Exam - EduShield{% endblock %}
 
 {% block content %}
-<div style="width: 100%; max-width: 700px; margin: 0 auto;">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 25px; margin-bottom: 25px; color: white;">
-        <h2>📅 Schedule New Exam</h2>
-        <p>Add an exam to your course.</p>
+<style>
+    .exam-container {
+        max-width: 100%;
+        padding: 20px 30px;
+    }
+
+    /* ===== HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 28px 36px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header h2 i {
+        font-size: 28px;
+    }
+
+    .page-header .subtitle {
+        font-size: 15px;
+        opacity: 0.85;
+        margin: 6px 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .page-header .subtitle .back-link {
+        color: white;
+        text-decoration: none;
+        opacity: 0.8;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 4px 14px;
+        border-radius: 40px;
+        font-size: 13px;
+    }
+
+    .page-header .subtitle .back-link:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateX(-3px);
+    }
+
+    .page-header .subtitle .separator {
+        opacity: 0.4;
+    }
+
+    /* ===== MAIN CARD ===== */
+    .exam-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #EDF2F7;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ===== FORM ===== */
+    .form-section {
+        padding: 36px 40px;
+    }
+
+    .form-section .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #F1F5F9;
+    }
+
+    .form-section .section-title i {
+        color: #667eea;
+        font-size: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #1E293B;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+
+    .form-group label .required {
+        color: #EF4444;
+        margin-left: 2px;
+    }
+
+    .form-group label .hint-text {
+        font-weight: 400;
+        font-size: 12px;
+        color: #94A3B8;
+        margin-left: 8px;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-wrapper .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94A3B8;
+        font-size: 16px;
+        transition: 0.2s;
+        pointer-events: none;
+    }
+
+    .input-wrapper input,
+    .input-wrapper textarea,
+    .input-wrapper select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #E2E8F0;
+        border-radius: 14px;
+        font-size: 15px;
+        transition: 0.25s ease;
+        background: #FAFBFC;
+        color: #0F172A;
+        font-family: inherit;
+    }
+
+    .input-wrapper input:focus,
+    .input-wrapper textarea:focus,
+    .input-wrapper select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.08);
+    }
+
+    .input-wrapper input::placeholder,
+    .input-wrapper textarea::placeholder {
+        color: #94A3B8;
+    }
+
+    .input-wrapper input {
+        padding-left: 46px;
+    }
+
+    .input-wrapper textarea {
+        resize: vertical;
+        min-height: 80px;
+        padding: 14px 16px;
+        line-height: 1.7;
+    }
+
+    .input-wrapper select {
+        appearance: none;
+        padding-right: 40px;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+    }
+
+    .input-wrapper select option {
+        padding: 8px;
+    }
+
+    .input-wrapper select:focus + .input-icon,
+    .input-wrapper input:focus + .input-icon,
+    .input-wrapper textarea:focus + .input-icon {
+        color: #667eea;
+    }
+
+    .form-hint {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 10px;
+        padding: 10px 14px;
+        background: #F8FAFC;
+        border-radius: 10px;
+        border: 1px solid #F1F5F9;
+        line-height: 1.5;
+    }
+
+    .form-hint i {
+        color: #3B82F6;
+        font-size: 14px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    /* ===== FORM ROW ===== */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    /* ===== CHECKBOX TOGGLE ===== */
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: #F8FAFC;
+        border-radius: 14px;
+        border: 1px solid #F1F5F9;
+        transition: 0.2s;
+    }
+
+    .toggle-wrapper:hover {
+        border-color: #E2E8F0;
+    }
+
+    .toggle-info {
+        flex: 1;
+    }
+
+    .toggle-info .toggle-title {
+        font-weight: 600;
+        color: #0F172A;
+        font-size: 14px;
+    }
+
+    .toggle-info .toggle-desc {
+        font-size: 13px;
+        color: #94A3B8;
+        margin-top: 2px;
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 28px;
+        flex-shrink: 0;
+        margin-left: 16px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-switch .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #CBD5E1;
+        transition: 0.3s;
+        border-radius: 34px;
+    }
+
+    .toggle-switch .slider::before {
+        content: '';
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .toggle-switch input:checked + .slider {
+        background: #667eea;
+    }
+
+    .toggle-switch input:checked + .slider::before {
+        transform: translateX(20px);
+    }
+
+    /* ===== BUTTONS ===== */
+    .form-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 2px solid #F1F5F9;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 32px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 15px;
+        border: none;
+        cursor: pointer;
+        transition: 0.25s ease;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: #F1F5F9;
+        color: #1E293B;
+    }
+
+    .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+
+    /* ===== FLASH MESSAGES ===== */
+    .flash-messages {
+        margin-bottom: 24px;
+    }
+
+    .flash {
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-size: 14px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideDown 0.3s ease;
+    }
+
+    .flash i {
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .flash.error {
+        background: #FEF2F2;
+        color: #991B1B;
+        border: 1px solid #FECACA;
+    }
+
+    .flash.success {
+        background: #F0FDF4;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+    }
+
+    .flash.info {
+        background: #EFF6FF;
+        color: #1E40AF;
+        border: 1px solid #BFDBFE;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+        .exam-container {
+            padding: 16px 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .exam-container {
+            padding: 12px 16px;
+        }
+
+        .page-header {
+            padding: 20px 18px;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .page-header h2 {
+            font-size: 22px;
+        }
+
+        .page-header h2 i {
+            font-size: 22px;
+        }
+
+        .page-header .subtitle {
+            font-size: 14px;
+        }
+
+        .form-section {
+            padding: 24px 20px;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .input-wrapper input,
+        .input-wrapper textarea,
+        .input-wrapper select {
+            font-size: 14px;
+            padding: 12px 14px;
+        }
+
+        .input-wrapper input {
+            padding-left: 42px;
+        }
+
+        .toggle-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            margin-left: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header h2 {
+            font-size: 19px;
+        }
+
+        .form-section {
+            padding: 18px 14px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+        }
+
+        .input-wrapper input,
+        .input-wrapper textarea,
+        .input-wrapper select {
+            font-size: 13px;
+            padding: 10px 12px;
+        }
+
+        .input-wrapper input {
+            padding-left: 38px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+    }
+</style>
+
+<div class="exam-container">
+    <!-- ===== HEADER ===== -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <h2>
+                <i class="fas fa-calendar-plus"></i>
+                Schedule New Exam
+            </h2>
+            <div class="subtitle">
+                <a href="{{ url_for('list_exams') }}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Exams
+                </a>
+                <span class="separator">·</span>
+                <span>Add an exam to your course</span>
+            </div>
+        </div>
     </div>
 
-    <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Course</label>
-                <select name="course_id" required class="form-control" style="width: 100%; padding: 12px; border-radius: 12px;">
-                    {% for course in courses %}
-                    <option value="{{ course.id }}">{{ course.course_name }}</option>
-                    {% endfor %}
-                </select>
+    <!-- ===== FLASH MESSAGES ===== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif category == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
             </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Exam Title</label>
-                <input type="text" name="title" required style="width: 100%; padding: 12px; border-radius: 12px;">
+        {% endif %}
+    {% endwith %}
+
+    <!-- ===== MAIN CARD ===== -->
+    <div class="exam-card">
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-edit"></i>
+                Exam Details
             </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Description</label>
-                <textarea name="description" rows="3" style="width: 100%; padding: 12px; border-radius: 12px;"></textarea>
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Exam Date</label>
-                <input type="date" name="exam_date" required style="width: 100%; padding: 12px; border-radius: 12px;">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Start Time</label>
-                <input type="time" name="start_time" required style="width: 100%; padding: 12px; border-radius: 12px;">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Duration (minutes)</label>
-                <input type="number" name="duration_minutes" required style="width: 100%; padding: 12px; border-radius: 12px;">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label>Total Marks</label>
-                <input type="number" name="total_marks" value="100" required style="width: 100%; padding: 12px; border-radius: 12px;">
-            </div>
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" name="is_online" value="1" style="width: auto;">
-                    Enable online timed exam (MCQ — add questions after scheduling)
-                </label>
-            </div>
-            <button type="submit" class="btn" style="background: #43a047;">Schedule Exam</button>
-        </form>
+
+            <form method="POST" id="examForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- Course Selection -->
+                <div class="form-group">
+                    <label>
+                        Course <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-book input-icon"></i>
+                        <select name="course_id" required>
+                            <option value="">Select a course...</option>
+                            {% for course in courses %}
+                                <option value="{{ course.id }}">{{ course.course_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if not courses %}
+                        <div class="form-hint" style="background: #FEF2F2; border-color: #FECACA;">
+                            <i class="fas fa-exclamation-circle" style="color:#EF4444;"></i>
+                            <span style="color:#991B1B;">You don't have any courses yet. <a href="{{ url_for('create_course') }}" style="color:#667eea; font-weight:600;">Create a course first</a></span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Title -->
+                <div class="form-group">
+                    <label>
+                        Exam Title <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-heading input-icon"></i>
+                        <input type="text" name="title" placeholder="e.g., Midterm Examination" required autofocus>
+                    </div>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Use a clear and descriptive title for the exam.
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label>Description</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-align-left input-icon" style="top: 18px; transform: none;"></i>
+                        <textarea name="description" rows="3" placeholder="Describe the exam, topics covered, and any special instructions..."></textarea>
+                    </div>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Include important details like topics covered, format, and any special instructions.
+                    </div>
+                </div>
+
+                <!-- Date & Time Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            Exam Date <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-calendar-alt input-icon"></i>
+                            <input type="date" name="exam_date" required min="{{ now.strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            Start Time <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-clock input-icon"></i>
+                            <input type="time" name="start_time" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Duration & Marks Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            Duration <span class="required">*</span>
+                            <span class="hint-text">(minutes)</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-hourglass-half input-icon"></i>
+                            <input type="number" name="duration_minutes" placeholder="60" required min="1" max="480">
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i>
+                            Duration in minutes (1-480).
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            Total Marks <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-star input-icon"></i>
+                            <input type="number" name="total_marks" value="100" required min="1" max="1000">
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i>
+                            Maximum marks for this exam (1-1000).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Online Exam Toggle -->
+                <div class="form-group">
+                    <label>Online Timed Exam</label>
+                    <div class="toggle-wrapper">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Enable online timed exam</div>
+                            <div class="toggle-desc">Students can take the exam online with MCQ questions</div>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" name="is_online" value="1" id="onlineToggle">
+                            <span class="slider"></span>
+                        </div>
+                    </div>
+                    <div class="form-hint" id="onlineHint">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="onlineHintText">When enabled, students can take the exam online. You can add MCQ questions after scheduling.</span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-calendar-check"></i> Schedule Exam
+                    </button>
+                    <a href="{{ url_for('list_exams') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<style>
-    .btn {
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 40px;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ===== SET MIN DATE =====
+        const dateInput = document.querySelector('input[name="exam_date"]');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.min = today;
+        }
+
+        // ===== ONLINE TOGGLE HINT =====
+        const toggle = document.getElementById('onlineToggle');
+        const hintText = document.getElementById('onlineHintText');
+        
+        if (toggle) {
+            toggle.addEventListener('change', function() {
+                if (this.checked) {
+                    hintText.textContent = 'Online exam enabled. After scheduling, you can add MCQ questions from the exam page.';
+                } else {
+                    hintText.textContent = 'When enabled, students can take the exam online. You can add MCQ questions after scheduling.';
+                }
+            });
+        }
+
+        // ===== FORM SUBMISSION =====
+        const form = document.getElementById('examForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', function(e) {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scheduling...';
+            submitBtn.disabled = true;
+        });
+
+        // ===== AUTO-DISMISS FLASH MESSAGES =====
+        const flashMessages = document.querySelector('.flash-messages');
+        if (flashMessages) {
+            setTimeout(() => {
+                flashMessages.style.opacity = '0';
+                flashMessages.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    flashMessages.style.display = 'none';
+                }, 500);
+            }, 5000);
+        }
+    });
+</script>
 {% endblock %}

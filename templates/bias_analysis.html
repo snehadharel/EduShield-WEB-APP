@@ -4,136 +4,216 @@
 
 {% block content %}
 <style>
-    /* ===== BIAS ANALYSIS STYLES ===== */
-    .page-header {
-        margin-bottom: 32px;
-    }
-    .page-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .page-header h1 i {
-        color: #667eea;
-    }
-    .page-header p {
-        color: #64748B;
-        font-size: 15px;
+    /* ===== MAIN CONTAINER ===== */
+    .bias-container {
+        max-width: 100%;
+        padding: 20px 30px;
     }
 
-    /* ===== TABS ===== */
-    .tab-header {
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 24px 32px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
         display: flex;
-        gap: 4px;
-        margin-bottom: 28px;
-        background: #F8FAFC;
-        border-radius: 16px;
-        padding: 4px;
-        border: 1px solid #E2E8F0;
+        align-items: center;
+        justify-content: space-between;
         flex-wrap: wrap;
+        gap: 16px;
     }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .page-header-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-header-content h1 {
+        font-size: 26px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header-content h1 i {
+        font-size: 26px;
+    }
+
+    .page-header-content p {
+        font-size: 15px;
+        opacity: 0.85;
+        margin: 4px 0 0 0;
+    }
+
+    /* ===== HEADER RIGHT (TABS) ===== */
+    .header-tabs {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px;
+        border-radius: 12px;
+        backdrop-filter: blur(4px);
+    }
+
     .tab-btn {
-        flex: 1;
-        padding: 12px 16px;
+        padding: 10px 20px;
         border: none;
         background: transparent;
         font-weight: 600;
         font-size: 14px;
-        color: #64748B;
+        color: rgba(255, 255, 255, 0.75);
         cursor: pointer;
-        border-radius: 12px;
-        transition: 0.2s;
+        border-radius: 8px;
+        transition: 0.25s ease;
         text-align: center;
-        min-width: 80px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
+
     .tab-btn:hover {
-        background: #E2E8F0;
-        color: #1E293B;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
     }
+
     .tab-btn.active {
-        background: #FFFFFF;
-        color: #2563EB;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        background: white;
+        color: #667eea;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+
+    /* ===== TAB CONTENT ===== */
     .tab-content {
         display: none;
-        animation: fadeIn 0.25s ease;
+        animation: fadeIn 0.3s ease;
     }
+
     .tab-content.active {
         display: block;
     }
+
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
+        from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ===== CARDS ===== */
-    .chart-card {
-        background: white;
-        border-radius: 20px;
-        padding: 24px;
+    /* ===== COMPACT CHART CARDS ===== */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
         margin-bottom: 24px;
-        border: 1px solid #EDF2F7;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-    .chart-card h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 16px;
-        border-left: 4px solid #667eea;
-        padding-left: 12px;
-    }
-    .chart-card canvas {
-        max-height: 320px;
-        width: 100% !important;
     }
 
-    /* ===== P-VALUE ===== */
-    .p-value {
-        font-size: 14px;
-        margin-top: 16px;
-        padding: 10px 16px;
-        background: #F8FAFC;
-        border-radius: 12px;
-        text-align: center;
-        border: 1px solid #E2E8F0;
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #EDF2F7;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
     }
+
+    .chart-card-header {
+        padding: 14px 20px;
+        border-bottom: 1px solid #F1F5F9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #FAFBFC;
+    }
+
+    .chart-card-header h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chart-card-header h3 i {
+        color: #667eea;
+    }
+
+    .chart-card-header .card-actions {
+        font-size: 12px;
+        color: #94A3B8;
+        font-weight: 500;
+    }
+
+    .chart-card-body {
+        padding: 12px 16px 16px 16px;
+        height: 200px; /* Compact height */
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chart-card-body canvas {
+        max-width: 100%;
+        max-height: 100%;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* ===== P-VALUE FOOTER ===== */
+    .p-value-container {
+        padding: 8px 16px 12px 16px;
+        border-top: 1px solid #F1F5F9;
+        font-size: 13px;
+        text-align: center;
+        color: #475569;
+        background: #F8FAFC;
+        margin: 0;
+    }
+
     .significant {
         color: #d81b60;
-        font-weight: bold;
+        font-weight: 700;
     }
     .not-significant {
         color: #43a047;
-        font-weight: bold;
-    }
-    .text-muted {
-        font-size: 13px;
-        color: #64748B;
-        margin-top: 12px;
-        padding: 8px 12px;
-        background: #F8FAFC;
-        border-radius: 8px;
+        font-weight: 700;
     }
 
     /* ===== SUMMARY TAB ===== */
     .summary-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
         margin-bottom: 24px;
     }
+
     .summary-card {
         background: white;
         padding: 20px;
         border-radius: 16px;
         border: 1px solid #EDF2F7;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
+
     .summary-card h4 {
         font-size: 15px;
         font-weight: 700;
@@ -142,6 +222,7 @@
         border-bottom: 1px solid #F1F5F9;
         padding-bottom: 8px;
     }
+
     .summary-item {
         display: flex;
         justify-content: space-between;
@@ -152,8 +233,9 @@
     }
     .summary-item .label { font-weight: 500; }
     .summary-item .value { font-weight: 600; }
-    .summary-item .alert-rate { color: #d81b60; }
-    .summary-item .alert-rate.low { color: #43a047; }
+
+    .alert-rate { color: #d81b60; }
+    .alert-rate.low { color: #43a047; }
 
     .pvalue-summary {
         margin-top: 16px;
@@ -171,88 +253,129 @@
         font-size: 14px;
     }
 
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
     @media (max-width: 768px) {
+        .bias-container { padding: 12px 16px; }
+        .page-header { flex-direction: column; align-items: flex-start; padding: 20px; }
+        .header-tabs { width: 100%; justify-content: stretch; }
+        .tab-btn { flex: 1; justify-content: center; font-size: 13px; padding: 8px; }
+        .charts-grid { grid-template-columns: 1fr; }
+        .chart-card-body { height: 160px; }
         .summary-grid { grid-template-columns: 1fr; }
-        .tab-btn { font-size: 12px; padding: 10px 8px; }
-        .chart-card canvas { max-height: 250px; }
+    }
+
+    @media (max-width: 480px) {
+        .page-header-content h1 { font-size: 20px; }
+        .tab-btn { font-size: 12px; }
     }
 </style>
 
-<div>
+<div class="bias-container">
     <!-- ===== HEADER ===== -->
     <div class="page-header">
-        <h1><i class="fas fa-chart-bar"></i> Bias Analysis Dashboard</h1>
-        <p>Testing the ethical hypothesis: no disproportionate false positive rates across user groups.</p>
-    </div>
-
-    <!-- ===== TABS ===== -->
-    <div class="tab-header">
-        <button class="tab-btn active" data-tab="charts">📊 Charts</button>
-        <button class="tab-btn" data-tab="summary">📋 Summary</button>
+        <div class="page-header-content">
+            <h1><i class="fas fa-chart-bar"></i> Bias Analysis</h1>
+            <p>Testing the ethical hypothesis: no disproportionate false positive rates across user groups.</p>
+        </div>
+        <div class="header-tabs">
+            <button class="tab-btn active" data-tab="charts"><i class="fas fa-chart-pie"></i> Charts</button>
+            <button class="tab-btn" data-tab="summary"><i class="fas fa-list-ul"></i> Summary</button>
+        </div>
     </div>
 
     <!-- ============================================= -->
-    <!-- TAB 1: CHARTS -->
+    <!-- TAB 1: CHARTS (COMPACT) -->
     <!-- ============================================= -->
     <div id="tab-charts" class="tab-content active">
-        <!-- ISP Analysis -->
-        <div class="chart-card">
-            <h3>🌐 Alert Rate by ISP Type</h3>
-            <canvas id="ispChart" width="400" height="300"></canvas>
-            {% if isp_pvalue %}
-            <div class="p-value">
-                Chi‑square p‑value: 
-                {% if isp_pvalue < 0.05 %}
-                    <span class="significant">{{ isp_pvalue }} (significant difference)</span>
+        <div class="charts-grid">
+            
+            <!-- ISP Analysis -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-wifi"></i> ISP Alert Rate</h3>
+                    <span class="card-actions">by ISP</span>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="ispChart"></canvas>
+                </div>
+                {% if isp_pvalue is not none %}
+                <div class="p-value-container">
+                    p-value: 
+                    {% if isp_pvalue < 0.05 %}
+                        <span class="significant">
+                            {% if isp_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ isp_pvalue }}{% endif %} ⚠️
+                        </span>
+                    {% else %}
+                        <span class="not-significant">
+                            {% if isp_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ isp_pvalue }}{% endif %} ✅
+                        </span>
+                    {% endif %}
+                </div>
                 {% else %}
-                    <span class="not-significant">{{ isp_pvalue }} (no significant difference)</span>
+                <div class="p-value-container">Insufficient data for test.</div>
                 {% endif %}
             </div>
-            {% else %}
-            <div class="p-value">Insufficient data for statistical test.</div>
-            {% endif %}
-            <div class="text-muted">
-                Alert rate = (blocked + OTP‑required) / total logins. Hypothesis: rates should be similar across ISPs (College_WiFi, WorldLink, Ncell, NTC).
-            </div>
-        </div>
 
-        <!-- Device Analysis -->
-        <div class="chart-card">
-            <h3>📱 Alert Rate by Device Type</h3>
-            <canvas id="deviceChart" width="400" height="300"></canvas>
-            {% if device_pvalue %}
-            <div class="p-value">
-                Chi‑square p‑value: 
-                {% if device_pvalue < 0.05 %}
-                    <span class="significant">{{ device_pvalue }} (significant difference)</span>
+            <!-- Device Analysis -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-mobile-alt"></i> Device Alert Rate</h3>
+                    <span class="card-actions">by Device</span>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+                {% if device_pvalue is not none %}
+                <div class="p-value-container">
+                    p-value: 
+                    {% if device_pvalue < 0.05 %}
+                        <span class="significant">
+                            {% if device_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ device_pvalue }}{% endif %} ⚠️
+                        </span>
+                    {% else %}
+                        <span class="not-significant">
+                            {% if device_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ device_pvalue }}{% endif %} ✅
+                        </span>
+                    {% endif %}
+                </div>
                 {% else %}
-                    <span class="not-significant">{{ device_pvalue }} (no significant difference)</span>
+                <div class="p-value-container">Insufficient data for test.</div>
                 {% endif %}
             </div>
-            {% else %}
-            <div class="p-value">Insufficient data for statistical test.</div>
-            {% endif %}
-        </div>
 
-        <!-- Hour Analysis -->
-        <div class="chart-card">
-            <h3>⏰ Alert Rate by Login Hour</h3>
-            <canvas id="hourChart" width="400" height="300"></canvas>
-            {% if hour_pvalue %}
-            <div class="p-value">
-                Chi‑square p‑value: 
-                {% if hour_pvalue < 0.05 %}
-                    <span class="significant">{{ hour_pvalue }} (significant difference)</span>
+            <!-- Hour Analysis -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3><i class="fas fa-clock"></i> Hourly Alert Rate</h3>
+                    <span class="card-actions">Normal vs Late</span>
+                </div>
+                <div class="chart-card-body">
+                    <canvas id="hourChart"></canvas>
+                </div>
+                {% if hour_pvalue is not none %}
+                <div class="p-value-container">
+                    p-value: 
+                    {% if hour_pvalue < 0.05 %}
+                        <span class="significant">
+                            {% if hour_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ hour_pvalue }}{% endif %} ⚠️
+                        </span>
+                    {% else %}
+                        <span class="not-significant">
+                            {% if hour_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ hour_pvalue }}{% endif %} ✅
+                        </span>
+                    {% endif %}
+                </div>
                 {% else %}
-                    <span class="not-significant">{{ hour_pvalue }} (no significant difference)</span>
+                <div class="p-value-container">Insufficient data for test.</div>
                 {% endif %}
             </div>
-            {% else %}
-            <div class="p-value">Insufficient data for statistical test.</div>
-            {% endif %}
-            <div class="text-muted">
-                Unusual hours = 21:00 – 07:59. The system should not penalise students who study late.
-            </div>
+
         </div>
     </div>
 
@@ -309,37 +432,47 @@
             </div>
         </div>
 
-        <!-- P‑Value Summary -->
-        <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #EDF2F7;">
+        <!-- ===== STATISTICAL SUMMARY (FIXED LOGIC) ===== -->
+        <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #EDF2F7; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
             <h3 style="font-size: 16px; font-weight: 700; margin-top: 0; margin-bottom: 12px; border-left: 4px solid #667eea; padding-left: 12px;">📊 Statistical Summary</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+                
                 <div class="pvalue-summary">
                     <strong>ISP</strong>
-                    {% if isp_pvalue %}
-                        <br><span style="font-size: 20px; font-weight: 700; {% if isp_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">{{ isp_pvalue }}</span>
-                        <br><small>{% if isp_pvalue < 0.05 %}⚠️ Significant difference{% else %}✅ No significant difference{% endif %}</small>
+                    {% if isp_pvalue is not none %}
+                        <br><span style="font-size: 20px; font-weight: 700; {% if isp_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">
+                            {% if isp_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ isp_pvalue }}{% endif %}
+                        </span>
+                        <br><small>{% if isp_pvalue < 0.05 %}<span style="color:#d81b60;">⚠️ Bias Detected (Significant)</span>{% else %}✅ No Bias (Not Significant){% endif %}</small>
                     {% else %}
-                        <br><span style="color:#94A3B8;">—</span>
+                        <br><span style="color:#94A3B8; font-size: 18px;">— (Insufficient Data)</span>
                     {% endif %}
                 </div>
+
                 <div class="pvalue-summary">
                     <strong>Device</strong>
-                    {% if device_pvalue %}
-                        <br><span style="font-size: 20px; font-weight: 700; {% if device_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">{{ device_pvalue }}</span>
-                        <br><small>{% if device_pvalue < 0.05 %}⚠️ Significant difference{% else %}✅ No significant difference{% endif %}</small>
+                    {% if device_pvalue is not none %}
+                        <br><span style="font-size: 20px; font-weight: 700; {% if device_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">
+                            {% if device_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ device_pvalue }}{% endif %}
+                        </span>
+                        <br><small>{% if device_pvalue < 0.05 %}<span style="color:#d81b60;">⚠️ Bias Detected (Significant)</span>{% else %}✅ No Bias (Not Significant){% endif %}</small>
                     {% else %}
-                        <br><span style="color:#94A3B8;">—</span>
+                        <br><span style="color:#94A3B8; font-size: 18px;">— (Insufficient Data)</span>
                     {% endif %}
                 </div>
+
                 <div class="pvalue-summary">
                     <strong>Hour</strong>
-                    {% if hour_pvalue %}
-                        <br><span style="font-size: 20px; font-weight: 700; {% if hour_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">{{ hour_pvalue }}</span>
-                        <br><small>{% if hour_pvalue < 0.05 %}⚠️ Significant difference{% else %}✅ No significant difference{% endif %}</small>
+                    {% if hour_pvalue is not none %}
+                        <br><span style="font-size: 20px; font-weight: 700; {% if hour_pvalue < 0.05 %}color:#d81b60;{% else %}color:#43a047;{% endif %}">
+                            {% if hour_pvalue == 0.0 %}&lt; 0.0001{% else %}{{ hour_pvalue }}{% endif %}
+                        </span>
+                        <br><small>{% if hour_pvalue < 0.05 %}<span style="color:#d81b60;">⚠️ Bias Detected (Significant)</span>{% else %}✅ No Bias (Not Significant){% endif %}</small>
                     {% else %}
-                        <br><span style="color:#94A3B8;">—</span>
+                        <br><span style="color:#94A3B8; font-size: 18px;">— (Insufficient Data)</span>
                     {% endif %}
                 </div>
+
             </div>
         </div>
     </div>
@@ -348,112 +481,96 @@
 <!-- ===== CHART SCRIPTS ===== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Store chart instances for resize on tab switch
-    const charts = {};
+    // ============================================================
+    // SETUP: Smaller, cleaner charts
+    // ============================================================
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false, // Let CSS control the height
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { 
+                beginAtZero: true, 
+                max: 100, 
+                grid: { color: '#f1f5f9' },
+                ticks: { stepSize: 25, font: { size: 10 } }
+            },
+            x: { 
+                grid: { display: false },
+                ticks: { font: { size: 10 } }
+            }
+        }
+    };
 
-    // ============================================================
-    // 1. ISP CHART
-    // ============================================================
+    // 1. ISP Chart
     const ispLabels = {{ isp_labels | tojson }};
     const ispRates = {{ isp_rates | tojson }};
     if (ispLabels && ispLabels.length) {
-        charts.isp = new Chart(document.getElementById('ispChart'), {
+        new Chart(document.getElementById('ispChart'), {
             type: 'bar',
             data: {
                 labels: ispLabels,
                 datasets: [{
                     label: 'Alert Rate (%)',
                     data: ispRates,
-                    backgroundColor: '#667eea'
+                    backgroundColor: '#667eea',
+                    borderRadius: 4
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Alert Rate (%)' } }
-                }
-            }
+            options: commonOptions
         });
     }
 
-    // ============================================================
-    // 2. DEVICE CHART
-    // ============================================================
+    // 2. Device Chart
     const deviceLabels = {{ device_labels | tojson }};
     const deviceRates = {{ device_rates | tojson }};
     if (deviceLabels && deviceLabels.length) {
-        charts.device = new Chart(document.getElementById('deviceChart'), {
+        new Chart(document.getElementById('deviceChart'), {
             type: 'bar',
             data: {
                 labels: deviceLabels,
                 datasets: [{
                     label: 'Alert Rate (%)',
                     data: deviceRates,
-                    backgroundColor: '#764ba2'
+                    backgroundColor: '#764ba2',
+                    borderRadius: 4
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Alert Rate (%)' } }
-                }
-            }
+            options: commonOptions
         });
     }
 
-    // ============================================================
-    // 3. HOUR CHART
-    // ============================================================
+    // 3. Hour Chart
     const hourLabels = {{ hour_labels | tojson | safe }};
     const hourRates = {{ hour_rates | tojson | safe }};
     if (hourLabels && hourLabels.length) {
-        charts.hour = new Chart(document.getElementById('hourChart'), {
+        new Chart(document.getElementById('hourChart'), {
             type: 'bar',
             data: {
                 labels: hourLabels,
                 datasets: [{
                     label: 'Alert Rate (%)',
                     data: hourRates,
-                    backgroundColor: '#f39c12'
+                    backgroundColor: '#f39c12',
+                    borderRadius: 4
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, title: { display: true, text: 'Alert Rate (%)' } }
-                }
-            }
+            options: commonOptions
         });
     }
 
     // ============================================================
-    // TAB SWITCHING – resize charts when Charts tab is shown
+    // TAB SWITCHING 
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         const tabs = document.querySelectorAll('.tab-btn');
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
-                // Switch active tab
                 tabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 const target = document.getElementById('tab-' + this.dataset.tab);
                 if (target) target.classList.add('active');
-
-                // If Charts tab is activated, resize all charts
-                if (this.dataset.tab === 'charts') {
-                    Object.values(charts).forEach(chart => {
-                        if (chart && chart.resize) {
-                            setTimeout(() => chart.resize(), 100);
-                        }
-                    });
-                }
             });
         });
     });

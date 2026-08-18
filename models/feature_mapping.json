@@ -1,0 +1,21 @@
+{
+  "features": [
+    "hour",
+    "ip_changed",
+    "device_changed",
+    "role_enc",
+    "isp_enc"
+  ],
+  "role_map": {
+    "student": 0,
+    "teacher": 1,
+    "admin": 2
+  },
+  "isp_map": {
+    "College_WiFi": 0,
+    "WorldLink": 1,
+    "Ncell": 2,
+    "NTC": 3,
+    "Other": 4
+  }
+}

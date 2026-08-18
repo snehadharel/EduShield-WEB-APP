@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}System Performance - Endpoint Response Times{% endblock %}
+
+{% block content %}
+<style>
+    .performance-container {
+        max-width: 100%;
+        padding: 20px 30px;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 24px 32px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header-content h1 {
+        font-size: 26px;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .page-header-content p {
+        font-size: 15px;
+        opacity: 0.85;
+        margin: 4px 0 0 0;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid #EDF2F7;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .chart-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #F1F5F9;
+        padding-bottom: 16px;
+    }
+
+    .chart-card-header h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .chart-card-header h3 i {
+        color: #667eea;
+    }
+
+    .chart-card-header .subtitle {
+        font-size: 13px;
+        color: #64748B;
+    }
+
+    .chart-container {
+        height: 450px;
+        width: 100%;
+        position: relative;
+    }
+
+    .figure-caption {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #334155;
+    }
+
+    .figure-caption strong {
+        color: #0F172A;
+    }
+
+    @media (max-width: 768px) {
+        .performance-container { padding: 12px 16px; }
+        .chart-container { height: 350px; }
+        .page-header-content h1 { font-size: 20px; }
+    }
+</style>
+
+<div class="performance-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1><i class="fas fa-tachometer-alt"></i> System Performance</h1>
+            <p>Endpoint response times based on {{ total_requests }} recorded requests.</p>
+        </div>
+    </div>
+
+    <!-- Chart Card -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3><i class="fas fa-chart-bar"></i> Endpoint Response Times</h3>
+            <span class="subtitle">Showing Fastest and Slowest Operations</span>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+
+        // Data passed from Flask
+        const labels = {{ labels | tojson }};
+        const avgTimes = {{ avg_times | tojson }};
+        const maxTimes = {{ max_times | tojson }};
+
+        new Chart(ctx, {
+            type: 'bar', // Horizontal Bar Chart
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Average Response Time (ms)',
+                        data: avgTimes,
+                        backgroundColor: '#667eea',
+                        borderColor: '#5a67d8',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Max Response Time (ms)',
+                        data: maxTimes,
+                        backgroundColor: 'rgba(214, 39, 40, 0.7)', // Red for slowest
+                        borderColor: 'rgba(214, 39, 40, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y', // This makes the chart HORIZONTAL
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.x + ' ms';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Response Time (milliseconds)',
+                            font: { weight: 'bold' }
+                        },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -163,6 +163,7 @@
     .btn-red { background: #EF4444; color: white; }
     .btn-orange { background: #F59E0B; color: white; }
     .btn-purple { background: #8B5CF6; color: white; }
+    .btn-info { background: #0ea5e9; color: white; } /* New color for performance button */
     .action-group {
         display: flex;
         gap: 8px;
@@ -235,6 +236,9 @@
                 <a href="{{ url_for('generate_report') }}" class="btn-sm btn-purple" style="padding: 8px 20px;">📄 Generate Security Report</a>
                 <a href="{{ url_for('export_logs') }}" class="btn-sm btn-green" style="padding: 8px 20px;">📥 Export Logs</a>
                 <a href="{{ url_for('trusted_networks') }}" class="btn-sm btn-orange" style="padding: 8px 20px;">🏫 Manage Trusted Networks</a>
+                
+                <!-- ✅ NEW BUTTON ADDED HERE -->
+                <a href="{{ url_for('performance_metrics') }}" class="btn-sm btn-info" style="padding: 8px 20px; background: #0ea5e9; color: white;">📊 System Performance</a>
             </div>
         </div>
 

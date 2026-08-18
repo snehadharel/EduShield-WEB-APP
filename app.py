@@ -772,12 +772,12 @@ def extract_ml_features(user_id, ip_address, user_agent):
     elif ip_address.startswith('27.34'):
         isp_type = 'NTC'
     isp_enc = {'College_WiFi':0, 'WorldLink':1, 'Ncell':2, 'NTC':3, 'Other':4}.get(isp_type, 4)
-    old_risk = old_rule_based_risk(user_id, ip_address, user_agent, {}, user['role'] if user else 'student')
+    
+    # REMOVED: old_risk_score calculation - no longer needed
     return {
         'hour': current_hour,
         'ip_changed': ip_changed,
         'device_changed': device_changed,
-        'old_risk_score': old_risk,
         'role_enc': role_enc,
         'isp_enc': isp_enc
     }
@@ -805,10 +805,9 @@ def build_ml_feature_frame(user_id, ip_address, user_agent):
         features['hour'],
         features['ip_changed'],
         features['device_changed'],
-        features['old_risk_score'],
         features['role_enc'],
         features['isp_enc']
-    ]], columns=['hour', 'ip_changed', 'device_changed', 'old_risk_score', 'role_enc', 'isp_enc'])
+    ]], columns=['hour', 'ip_changed', 'device_changed', 'role_enc', 'isp_enc'])
     return X, features
 
 def calculate_risk_score(user_id, ip_address, user_agent, simulation_flags, role):
@@ -1000,7 +999,7 @@ We noticed a new login to your EduShield account from a device or location we ha
 📱 Device: {user_agent}
 
 If this was you, you can ignore this email. We recommend that you:
-- Check your active sessions in the Security Center: {url_for('security_center', _external=True)}
+- Check your active sessions in the Admin Dashboard: {url_for('admin_sessions', _external=True)}
 - If you don't recognise this login, click the link below to logout all other devices:
   {url_for('logout_other_sessions', _external=True)}
 
@@ -4319,6 +4318,8 @@ def security_map_data():
 @admin_required
 def attack_logs():
     db = get_db()
+    
+    # ===== LIST LOGS =====
     logs = db.execute('''
         SELECT a.*, u.username 
         FROM attack_patterns a
@@ -4326,13 +4327,77 @@ def attack_logs():
         ORDER BY a.event_time DESC
         LIMIT 200
     ''').fetchall()
+    
     logs_list = []
+    total_attacks = 0
+    sql_count = 0
+    xss_count = 0
+    blocked_count = 0
+    
     for row in logs:
         row_dict = dict(row)
         if row_dict.get('event_time'):
             row_dict['event_time_local'] = utc_to_nepal_time(row_dict['event_time'])
         logs_list.append(row_dict)
-    return render_template('attack_logs.html', logs=logs_list)
+        
+        total_attacks += 1
+        if row_dict.get('pattern_type') == 'SQLi':
+            sql_count += 1
+        elif row_dict.get('pattern_type') == 'XSS':
+            xss_count += 1
+        if row_dict.get('blocked', 0) == 1:
+            blocked_count += 1
+    
+    # ============================================================
+    # ✅ FIX: CONVERT UTC TO NEPAL TIME INSIDE SQL QUERY
+    # ============================================================
+    daily_attacks = []
+    days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    
+    for i in range(29, -1, -1):  # 30 DAYS
+        date = datetime.now() - timedelta(days=i)
+        day_label = days[date.weekday()]
+        
+        day_start = date.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = date.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # ✅ CRITICAL FIX: Convert the stored DB event_time to Nepal Time BEFORE comparing
+        # SQLite syntax: datetime(event_time, '+5 hours', '+45 minutes')
+        count = db.execute('''
+            SELECT COUNT(*) FROM attack_patterns
+            WHERE datetime(event_time, '+5 hours', '+45 minutes') BETWEEN ? AND ?
+        ''', (day_start, day_end)).fetchone()[0]
+        
+        sql_day = db.execute('''
+            SELECT COUNT(*) FROM attack_patterns
+            WHERE datetime(event_time, '+5 hours', '+45 minutes') BETWEEN ? AND ? 
+            AND pattern_type = 'SQLi'
+        ''', (day_start, day_end)).fetchone()[0]
+        
+        xss_day = db.execute('''
+            SELECT COUNT(*) FROM attack_patterns
+            WHERE datetime(event_time, '+5 hours', '+45 minutes') BETWEEN ? AND ? 
+            AND pattern_type = 'XSS'
+        ''', (day_start, day_end)).fetchone()[0]
+        
+        daily_attacks.append({
+            'label': day_label,
+            'count': count,
+            'type': 'sql' if sql_day > 0 else 'xss' if xss_day > 0 else 'none'
+        })
+    
+    # Debug output - check your terminal to confirm it's counting!
+    print(f"📊 Total: {total_attacks}, SQL: {sql_count}, XSS: {xss_count}")
+    print(f"📈 Daily data: {[d['count'] for d in daily_attacks if d['count'] > 0]}")
+    
+    return render_template('attack_logs.html', 
+                         logs=logs_list,
+                         now=datetime.now(),
+                         total_attacks=total_attacks,
+                         sql_count=sql_count,
+                         xss_count=xss_count,
+                         blocked_count=blocked_count,
+                         daily_attacks=daily_attacks)
 
 @app.route('/admin/activity_logs')
 @login_required
@@ -4682,66 +4747,6 @@ def bias_analysis():
                            device_totals=device_groups,
                            hour_totals=hour_groups)
                            
-
-@app.route('/security')
-@login_required
-def security_center():
-    db = get_db()
-    
-    # 1. Login history (existing)
-    logs = db.execute('''
-        SELECT id, ip_address, device, login_time, status, risk_score, action, risk_factors, geo_country
-        FROM login_logs
-        WHERE user_id = ?
-        ORDER BY login_time DESC
-        LIMIT 50
-    ''', (session['user_id'],)).fetchall()
-    login_history = []
-    for row in logs:
-        entry = dict(row)
-        entry['login_time_local'] = utc_to_nepal_time(entry.get('login_time'))
-        login_history.append(entry)
-
-    # 2. Active Sessions (NEW)
-    # Get the current session token to identify the current device
-    user = db.execute("SELECT session_token FROM users WHERE id = ?", (session['user_id'],)).fetchone()
-    current_token = user['session_token'] if user else None
-
-    # Fetch recent successful logins (last 7 days, or last 10 sessions)
-    sessions = db.execute('''
-        SELECT id, ip_address, device, login_time, geo_country
-        FROM login_logs
-        WHERE user_id = ? AND status = 'success'
-        ORDER BY login_time DESC
-        LIMIT 10
-    ''', (session['user_id'],)).fetchall()
-    
-    session_list = []
-    for idx, row in enumerate(sessions):
-        entry = dict(row)
-        entry['login_time_local'] = utc_to_nepal_time(entry.get('login_time'))
-        # Mark the first (latest) one as "Current" because it matches the current session
-        entry['is_current'] = (idx == 0)
-        session_list.append(entry)
-
-    # 3. Trusted devices (existing)
-    devices = db.execute('''
-        SELECT id, device_label, user_agent, ip_address, is_trusted, last_used, created_at
-        FROM trusted_devices
-        WHERE user_id = ?
-        ORDER BY last_used DESC
-    ''', (session['user_id'],)).fetchall()
-    device_list = []
-    for row in devices:
-        entry = dict(row)
-        entry['last_used_local'] = utc_to_nepal_time(entry.get('last_used'))
-        device_list.append(entry)
-
-    return render_template('security_center.html', 
-                           login_history=login_history,
-                           sessions=session_list,
-                           devices=device_list)
-
 @app.route('/security/logout_others', methods=['POST'])
 @login_required
 def logout_other_sessions():
@@ -5163,6 +5168,43 @@ def admin_logout_user(user_id):
     
     flash(f"✅ User '{user['username']}' has been logged out from all devices.", 'success')
     return redirect(url_for('admin_sessions'))
+
+@app.route('/admin/performance')
+@login_required
+@admin_required
+def performance_metrics():
+    db = get_db()
+    
+    try:
+        # If we have real data, use it
+        results = db.execute('''
+            SELECT 
+                page, 
+                COUNT(*) as request_count,
+                ROUND(AVG(response_time_ms), 1) as avg_time_ms,
+                MAX(response_time_ms) as max_time_ms
+            FROM user_behavior_logs
+            GROUP BY page
+            ORDER BY avg_time_ms DESC
+        ''').fetchall()
+        
+        labels = [row['page'] for row in results]
+        avg_times = [row['avg_time_ms'] for row in results]
+        max_times = [row['max_time_ms'] for row in results]
+        total_requests = sum([row['request_count'] for row in results])
+        
+    except sqlite3.OperationalError:
+        # If columns don't exist, show a helpful message instead of crashing
+        labels = ['No data recorded yet']
+        avg_times = [0]
+        max_times = [0]
+        total_requests = 0
+        
+    return render_template('performance.html', 
+                           labels=labels, 
+                           avg_times=avg_times, 
+                           max_times=max_times, 
+                           total_requests=total_requests)
     
 @app.route('/logout')
 def logout():

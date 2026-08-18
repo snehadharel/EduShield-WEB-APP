@@ -404,9 +404,8 @@
                 <i class="fas fa-chart-line"></i> Grades
             </a>
 {% endif %}
-                <a href="{{ url_for('security_center') }}" class="nav-item {% if request.endpoint == 'security_center' %}active{% endif %}">
-                    <i class="fas fa-shield-alt"></i> Security Center
-                </a>
+                <!-- ⚠️ REMOVED BROKEN SECURITY CENTER LINK HERE -->
+
                 <a href="{{ url_for('profile') }}" class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
                     <i class="fas fa-user-circle"></i> Profile
                 </a>
@@ -450,6 +449,12 @@
                 <a href="{{ url_for('risk_explanations') }}" class="nav-item {% if request.endpoint == 'risk_explanations' %}active{% endif %}">
                     <i class="fas fa-chart-pie"></i> SHAP Explanations
                 </a>
+                
+                <!-- ✅ FIXED: System Performance link now uses "nav-item" class and checks for active endpoint -->
+                <a href="{{ url_for('performance_metrics') }}" class="nav-item {% if request.endpoint == 'performance_metrics' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> System Performance
+                </a>
+
                 <a href="{{ url_for('security_heatmap') }}" class="nav-item {% if request.endpoint == 'security_heatmap' %}active{% endif %}">
                     <i class="fas fa-map-marked-alt"></i> Risk Heatmap
                 </a>

@@ -374,17 +374,19 @@
         margin-left: auto;
     }
 
-    /* ===== BAR CHART ===== */
+    /* ===== BAR CHART CSS ===== */
     .bar-chart-container {
-        padding: 10px 0;
+        height: 100%;
+        width: 100%;
     }
 
     .bar-chart {
         display: flex;
         align-items: flex-end;
-        gap: 16px;
-        height: 180px;
-        padding-top: 10px;
+        justify-content: space-between;
+        gap: 6px;
+        height: 100%;
+        width: 100%;
     }
 
     .bar-item {
@@ -392,40 +394,42 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
-        height: 100%;
         justify-content: flex-end;
+        height: 100%;
+        min-width: 20px;
+    }
+
+    .bar-item .bar-value {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1E293B;
+        margin-bottom: 6px;
     }
 
     .bar-item .bar {
         width: 100%;
-        max-width: 50px;
-        border-radius: 6px 6px 0 0;
-        transition: 0.3s;
-        min-height: 6px;
+        max-width: 45px;
+        border-radius: 6px 6px 2px 2px;
+        transition: height 0.4s ease, opacity 0.2s;
+        min-height: 4px;
         position: relative;
     }
 
     .bar-item .bar:hover {
-        opacity: 0.8;
-        transform: scaleY(1.03);
+        opacity: 0.85;
+        transform: scaleY(1.02);
         transform-origin: bottom;
-    }
-
-    .bar-item .bar-value {
-        font-size: 11px;
-        font-weight: 700;
-        color: #64748B;
-        text-align: center;
     }
 
     .bar-item .bar-label {
         font-size: 11px;
-        color: #94A3B8;
+        color: #64748B;
         font-weight: 500;
+        margin-top: 8px;
         text-align: center;
         word-break: break-word;
         max-width: 60px;
+        line-height: 1.2;
     }
 
     /* ===== TABLE ===== */
@@ -639,14 +643,21 @@
             max-width: 120px;
             font-size: 11px;
         }
-
+        
         .bar-chart {
-            height: 140px;
-            gap: 10px;
+            gap: 4px;
         }
-
         .bar-item .bar {
-            max-width: 35px;
+            max-width: 25px;
+        }
+        .bar-item .bar-label {
+            font-size: 9px;
+            max-width: 40px;
+            margin-top: 4px;
+        }
+        .bar-item .bar-value {
+            font-size: 11px;
+            margin-bottom: 2px;
         }
     }
 
@@ -683,20 +694,6 @@
 
         .donut-wrapper .donut-center .number {
             font-size: 22px;
-        }
-
-        .bar-chart {
-            height: 120px;
-            gap: 8px;
-        }
-
-        .bar-item .bar {
-            max-width: 28px;
-        }
-
-        .bar-item .bar-label {
-            font-size: 9px;
-            max-width: 40px;
         }
 
         .header-right .header-info {
@@ -836,32 +833,40 @@
                 </div>
             </div>
 
-            <!-- Bar Chart -->
+            <!-- Bar Chart (UPDATED WITH LOGIC FIX) -->
             <div class="card">
                 <div class="card-header">
                     <h3><i class="fas fa-chart-bar"></i> Attack Timeline</h3>
-                    <span class="card-actions">last 7 days</span>
+                    <span class="card-actions">last 30 days</span>
                 </div>
-                <div class="card-body">
-                    <div class="bar-chart-container">
-                        <div class="bar-chart">
-                            {% if daily_attacks %}
+                <div class="card-body" style="height: 320px; padding: 20px 24px 20px 24px; display: flex; align-items: center; justify-content: center;">
+                    
+                    <!-- ✅ LOGIC CHECK: Only draw the chart if there are attacks greater than 0 -->
+                    {% if daily_attacks and daily_attacks|selectattr('count', 'gt', 0)|list|length > 0 %}
+                        <div class="bar-chart-container">
+                            <div class="bar-chart">
                                 {% set max_val = daily_attacks|map(attribute='count')|max|default(1) %}
                                 {% for day in daily_attacks %}
                                 <div class="bar-item">
                                     <span class="bar-value">{{ day.count }}</span>
-                                    <div class="bar" style="height: {{ (day.count / max_val * 100)|round|int if max_val > 0 else 0 }}%; background: {{ '#EF4444' if day.type == 'sql' else '#F59E0B' if day.type == 'xss' else '#3B82F6' }};"></div>
+                                    <div class="bar" style="
+                                        height: {{ (day.count / max_val * 100)|round|int if max_val > 0 else 0 }}%; 
+                                        background: {{ '#EF4444' if day.type == 'sql' else '#F59E0B' if day.type == 'xss' else '#3B82F6' }};
+                                    "></div>
                                     <span class="bar-label">{{ day.label }}</span>
                                 </div>
                                 {% endfor %}
-                            {% else %}
-                                <div style="text-align:center; width:100%; color:#94A3B8; padding:20px;">
-                                    <i class="fas fa-chart-line" style="font-size:24px; opacity:0.3; display:block; margin-bottom:8px;"></i>
-                                    No attack data available for timeline
-                                </div>
-                            {% endif %}
+                            </div>
                         </div>
-                    </div>
+                    {% else %}
+                        <!-- ✅ FALLBACK: Show this beautiful No Data message instead of broken squashed bars -->
+                        <div style="text-align: center; color: #94A3B8; padding: 20px;">
+                            <i class="fas fa-shield-alt" style="font-size: 48px; opacity: 0.2; display: block; margin-bottom: 16px; color: #667eea;"></i>
+                            <h4 style="margin: 0 0 6px 0; color: #1E293B; font-weight: 600;">No Attacks Detected</h4>
+                            <p style="margin: 0; font-size: 14px;">Your system has been secure over the last 30 days.</p>
+                        </div>
+                    {% endif %}
+                    
                 </div>
             </div>
         </div>
